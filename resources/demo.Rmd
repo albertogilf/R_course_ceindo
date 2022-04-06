@@ -1,0 +1,71 @@
+---
+title: "Demo Markdown"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown
+
+Esto es un documento Markdown. Markdown permite formatear texto con una sintaxis sencilla
+y legible. Cheatsheets en <https://rmarkdown.rstudio.com/lesson-15.html>.
+
+Al hacer clic en el botón **Knit**, se generará un documento que incluye tanto 
+el contenido Markdown como la salida de cualquier fragmento de código R insertado
+en el documento. Para insertar código R lo mejor es usar `ctrl+alt+i`:
+
+
+```{r cars}
+summary(iris)
+```
+# 1. Regresión
+## Teoría
+
+Si lo consideráis necesario, podéis escribir la teoría en Markdown. Podéis insertar
+listas, imágenes o ecuaciones para la explicación...
+
+El dataset `iris` contiene datos referentes a tres especies de lirios:
+
+* Setosa
+* Versicolor
+* Virginica
+
+![iris dataset](https://s3.amazonaws.com/assets.datacamp.com/blog_assets/Machine+Learning+R/iris-machinelearning.png)
+
+Los modelos lineales son ...
+$$y = \beta_0 + \beta_1 x_1 + \beta_2 x_2.$$
+
+
+## Ejemplo ilustrativo: Regresión 
+Podemos tener secciones de ejemplos a completar de forma conjunta en clase. Podemos
+dar parte del código para no partir de cero. Como mínimo, a mí me gusta poner los
+pasos clave que vamos a cubrir.
+
+Las soluciones de estas secciones las podemos dar en otro cuaderno o PDF. Dado que
+los mensajes y plots de los fragmentos de R se incluyen en el documento generado, 
+dar las soluciones no nos va a costar mucho trabajo. 
+
+Para ejecutar los fragmentos de R podemos usar `ctrl+alt+c` o los botones a la derecha del 
+fragmento de código.
+
+En este ejemplo blablabla...
+
+```{r example}
+# 1) Crear modelo de regresión
+
+# 2) Visualizar predicciones 
+```
+
+
+## Ejercicio 1
+Podemos dejar tiempo para realicen ejercicios de forma individual o que los más
+rezagados resuelvan errores y dudas de los ejemplos. 
+
+**Modifica el modelo de regresión para incluir todos los predictores relativos 
+al pétalo.**
+
+```{r exercise}
+```
+
