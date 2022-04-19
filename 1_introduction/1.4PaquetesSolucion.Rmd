@@ -55,7 +55,7 @@ summary(iris$Sepal.Width)
 Busca en la ayuda como configurar el número de cifras significativas que muestra la función `summary()` y cámbialo para que sólo muestre un decimal
 
 ```{r}
-summary(iris) #Modifica esta línea para cambiar el número de cifras significativas
+summary(iris, digits = 2)
 ```
 
 ## Cargando un paquete en el entorno
