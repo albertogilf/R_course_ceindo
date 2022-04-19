@@ -1,0 +1,115 @@
+---
+title: "Los paquetes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Los Paquetes
+Los paquetes en R son colecciones de funciones y datos generados por la comunidad. Algunos vienen por defecto con el entorno de R, mientras que otros hay que instalarlos desde repositorios. Los principales repositorios son: 
+
+- CRAN <https://cran.r-project.org/> el repositorio oficial de R.
+- Bioconductor <https://www.bioconductor.org/>, que aloja paquetes relacionados con la bioinformática.
+- Github <https://github.com/> no está relacionado con R específicamente, pero es muy popular para proyectos de código abierto.
+
+Podemos ver los paquetes cargados en el entorno con el comando
+
+```{r}
+search()
+
+```
+
+Los paquetes que vemos en este momento son los que están cargados por defecto.  En el paquete `datasets` hay conjuntos de datos de ejemplo que se pueden cargar con el comando `data()`:
+
+```{r}
+data(iris)
+iris
+
+```
+
+Podemos obtener ayuda sobre cualquier comando con `?`
+
+```{r}
+?data
+```
+
+Con el operador `$` podemos acceder a cada una de las variables:
+
+```{r}
+iris$Sepal.Width
+iris$Sepal.Length
+
+```
+
+La función `summary` muestra un resumen de un conjunto de datos
+
+```{r}
+summary(iris)
+summary(iris$Sepal.Width)
+```
+
+
+Busca en la ayuda como configurar el número de cifras significativas que muestra la función `summary()` y cámbialo para que sólo muestre un decimal
+
+```{r}
+summary(iris, digits = 2)
+```
+
+## Cargando un paquete en el entorno
+La función ´bkde()´ calcula una estimación de la densidad de la distribución de un conjunto de datos. Es una función de un paquete que no está cargado por defecto. Si la intentamos invocar no va a funcionar:
+
+```{r}
+#estimacion_densidad = bkde(iris$Sepal.Width)
+```
+
+Podemos buscar en Que paquete esta con el comando `??`
+
+```{r}
+??bkde
+```
+
+
+En la ayuda podemos ver que está en el paquete `KernSmooth`. Para cargar un paquete empleamos la función `library()` y el nombre del paquete, que puede ir entre comillas o sin comillas:
+
+```{r}
+library(KernSmooth)
+estimacion_densidad = bkde(iris$Sepal.Width)
+plot(estimacion_densidad)
+
+```
+
+## Instalando un paquete
+
+El paquete `dplyr` contiene funciones útiles para manipular datos. Pero no está instalado por defecto, sino que hay que instalarlo (Para ejecutar el comando tendrás que quitar el comentario. Pero no podrás compilar todo el archivo .Rmd si no está comentado. La instalación de paquetes es algo que sólo es necesario realizar una vez, y no es algo que se deba hacer en Markdow):
+
+```{r}
+#install.packages("dplyr")
+
+```
+
+Una vez instalado, hay que cargarlo:
+```{r}
+library(dplyr)
+```
+
+Ahora podemos usar sus funciones. Seleccionamos solo las flores Virginica con la función `filter()`
+
+```{r}
+filter(iris,Species=="virginica")
+```
+
+Seleccionamos la misma especie, pero solo aquellas que miden entre 2.7 y 6 cm
+```{r}
+filter(iris,Species=="virginica" & Sepal.Length<6 & Sepal.Width<=2.7)
+```
+
+
+Podemos desinstalar paquetes con el comando remove.packages(). Ojo que está comentado; puedes probar  a descomentarlo y ejecutarlo.
+
+```{r}
+#remove.packages("dplyr")
+```
+
