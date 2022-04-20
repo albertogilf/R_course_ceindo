@@ -3,7 +3,6 @@
 #Sumamos dos números; prueba a teclear esto en la consola (Ventana "Console").
 #Prueba también a poner el cursor en esta línea y pulsar CTRL+Enter
 #Por último, prueba también a poner el cursor en la línea y pulsar el botón de "Run"
-#que puedes encontrar en la esquina superior derecha del editor
 3+4
 
 # Los operadores de suma, resta, multiplicación y división son respectivamente
@@ -25,12 +24,10 @@ x
 
 x = 5
 x
-x = x+1 #En esta sentencia se suma 1 a x, y se vuelve a asignar el valor resultado de la suma a x
-x
 y = 2*x
 y
 
-#Ojo que se distingue entre mayúsculas y minúsculas;la siguiente sentencia da un error al ejecutarse
+#Ojo que se distingue entre mayúsculas y minúsculas;la siguiente sentencia da un error
 
 z = 3*X + y
 
@@ -47,7 +44,6 @@ number <- 5
 
 real = 4.5
 
-#Podemos ver todos los objetos del entorno con el comando objects.
-#Son los mismos objetos que se puede ver en el panel superior derecho
+#Podemos ver todos los objetos del entorno con el comando objects
 
 objects()
