@@ -1,5 +1,5 @@
 ---
-title: "Los paquetes"
+title: "Instalando y usando paquetes"
 output: html_document
 ---
 
@@ -8,14 +8,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-#Los Paquetes
+# 1. Los Paquetes
 Los paquetes en R son colecciones de funciones y datos generados por la comunidad. Algunos vienen por defecto con el entorno de R, mientras que otros hay que instalarlos desde repositorios. Los principales repositorios son: 
 
 - CRAN <https://cran.r-project.org/> el repositorio oficial de R.
 - Bioconductor <https://www.bioconductor.org/>, que aloja paquetes relacionados con la bioinformática.
 - Github <https://github.com/> no está relacionado con R específicamente, pero es muy popular para proyectos de código abierto.
 
-Podemos ver los paquetes cargados en el entorno con el comando
+Podemos ver los paquetes cargados en el entorno con el comando `search()`:
 
 ```{r}
 search()
@@ -30,13 +30,13 @@ iris
 
 ```
 
-Podemos obtener ayuda sobre cualquier comando con `?`
+Podemos obtener ayuda sobre cualquier comando con `?` (observa el panel inferior derecho)
 
 ```{r}
 ?data
 ```
 
-Con el operador `$` podemos acceder a cada una de las variables:
+Con el operador `$` podemos acceder a cada una de las variables del conjunto de datos Iris:
 
 ```{r}
 iris$Sepal.Width
@@ -44,7 +44,7 @@ iris$Sepal.Length
 
 ```
 
-La función `summary` muestra un resumen de un conjunto de datos
+La función `summary()` muestra un resumen de un conjunto de datos:
 
 ```{r}
 summary(iris)
@@ -52,13 +52,13 @@ summary(iris$Sepal.Width)
 ```
 
 
-Busca en la ayuda como configurar el número de cifras significativas que muestra la función `summary()` y cámbialo para que sólo muestre un decimal
+Busca en la ayuda como configurar el número de cifras significativas que muestra la función `summary()` y cámbialo para que sólo muestre un decimal:
 
 ```{r}
-summary(iris) #Modifica esta línea para cambiar el número de cifras significativas
+summary(iris...) #Modifica esta línea
 ```
 
-## Cargando un paquete en el entorno
+## 1.1 Cargando un paquete en el entorno
 La función ´bkde()´ calcula una estimación de la densidad de la distribución de un conjunto de datos. Es una función de un paquete que no está cargado por defecto. Si la intentamos invocar no va a funcionar:
 
 ```{r}
@@ -81,7 +81,7 @@ plot(estimacion_densidad)
 
 ```
 
-## Instalando un paquete
+## 1.2 Instalando un paquete
 
 El paquete `dplyr` contiene funciones útiles para manipular datos. Pero no está instalado por defecto, sino que hay que instalarlo (Para ejecutar el comando tendrás que quitar el comentario. Pero no podrás compilar todo el archivo .Rmd si no está comentado. La instalación de paquetes es algo que sólo es necesario realizar una vez, y no es algo que se deba hacer en Markdow):
 
@@ -112,4 +112,3 @@ Podemos desinstalar paquetes con el comando remove.packages(). Ojo que está com
 ```{r}
 #remove.packages("dplyr")
 ```
-

@@ -9,9 +9,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # R Markdown
 
-Esto es un documento Markdown. Markdown permite formatear texto con una sintaxis sencilla y legible, integrando además código R que puede ejecutarse desde el propio documento. Podéis consultar la sintaxis (cheatsheets en <https://rmarkdown.rstudio.com/lesson-15.html>.
+Esto es un documento Markdown. Markdown permite formatear texto con una sintaxis sencilla y legible, integrando además código R que puede ejecutarse desde el propio documento. Podéis consultar la sintaxis (cheatsheets) en <https://rmarkdown.rstudio.com/lesson-15.html>.
 
-Al hacer clic en el botón **Knit**, se generará un documento que incluye tanto el contenido Markdown como la salida de cualquier fragmento de código R insertado en el documento. Para insertar código R lo más fácil es usar `ctrl+alt+i`.
+Al hacer clic en el botón **Knit**, se generará un documento que incluye tanto el contenido Markdown como la salida de cualquier fragmento de código R insertado en el documento. Para insertar código R lo más fácil es pulsar `ctrl+alt+i`. También podéis usar el botón de **Insert** que se encuentra en la parte superior derecha del editor.
 
 A continuación tenemos el mismo código de nuestro primer script. Prueba ejecutarlo empleando el botón de "Play" que aparece en la parte superior derecha del código.
 
@@ -27,6 +27,7 @@ raiz2 = (-b-discr)/(2*a)
 print(paste("Las raíces son", raiz1, "y", raiz2))
 ```
 
-Prueba ahora hacer clic en el botón "Knit" que aparece en la parte superior izquierda del editor de texto.
+Prueba ahora hacer clic en el botón **Knit** que aparece en la parte superior izquierda del editor de texto.
 
-Finalmente, modifica el valor de c para que sea 3 y vuelve a hacer clic en el botón de "Knit"
+
+Finalmente, modifica el valor de c para que sea 3 y vuelve a hacer clic en el botón de **Knit**.
