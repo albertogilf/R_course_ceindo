@@ -39,6 +39,8 @@ Es instructivo simular datos que sigan este modelo para entender el significado
 de la ecuación:
 
 ```{r sim}
+library('tidyverse') 
+
 x = seq(-2, 2, 0.1)
 expected_behaviour = 2 + 3 * x  # a = 2 y b = 3
 epsilon = rnorm(length(x), sd = 1)
@@ -60,6 +62,184 @@ La primera pregunta a la que nos enfrentamos es la siguiente. Dados los datos
 $(x, y)$, ¿podemos estimar `expected behaviour`? 
 
 ![](https://media.giphy.com/media/l0ErOholJjSmFlMFG/giphy.gif)
+## Ejemplo: lm
 
+```{r lm}
+# 1) crear un modelo lineal
+df = data.frame(xx = x, yy = y)
+model = lm(yy ~ xx, data = df)
+# 2) obtener estimaciones de a y b
+summary(model)
+# 3) visualizar el ajuste
+plot(x, y)
+lines(x, expected_behaviour, col = 2)
+lines(x, predict(model), col = 3)
+legend("topleft", c("Ground truth", "fitted"), col=2:3, lwd=2)
+```
+
+Dado que las estimaciones incorporan el error de estimación, es posible realizar
+inferencia acerca de la **significación** de los parámetros.
+
+## Ejemplo: inferencia con lm
+Un estudiante de biología desea determinar la relación entre
+temperatura ambiente y frecuencia cardíaca en la rana leopardo, *Rana pipiens*.
+Para ello, manipula la temperatura en incrementos de 2ºC que van desde
+2ºC a 18ºC, registrando la frecuencia cardíaca (pulsaciones por minuto) en cada
+intervalo. Los datos están disponibles en "hr.csv".
+
+```{r lm_inference}
+# 1) leer los datos
+frog_df = read.table("data/hr.csv", header = TRUE)
+# 2) Crear un modelo lineal
+frog_model = lm(heart_rate ~ temperature, data = frog_df)
+# 3) Inferencia
+summary(frog_model)
+```
+
+## Ejercicio: predicción de AT abdominal
+Després et al. [^1] señalan que el tejido adiposo (AT) se asocia con complicaciones
+metabólicas consideradas como factores de riesgo para la enfermedad 
+cardiovascular. Es importante, afirman, medir la cantidad de AT intraabdominal
+como parte de la evaluación del riesgo de enfermedad cardiovascular de un 
+individuo. Després y sus colegas realizaron un estudio para predecir la 
+cantidad de AT abdominal a partir de simples mediciones antropométricas. 
+
+Entre las medidas tomadas en cada sujeto, se incluyó la AT abdominal obtenida por
+TC y la circunferencia de la cintura (datos en Wat.csv''). Una pregunta de 
+interés es cómo de bien se puede predecir y estimar la AT abdominal a partir del 
+conocimiento de la circunferencia de la cintura. Construye un modelo lineal y
+plotea sus predicciones. ¿Es significativa la relación entre AT y la circunferencia
+de la cintura?
+
+[^1]: J. Després, D. Homme, M. Pouliot, A. Tremblay,
+and C. Bouchard, ``Estimation of Deep Abdominal Adipose-Tissue Accumulation 
+from Simple Anthropometric Measurements in Men'' American Journal of Clinical
+Nutrition, 54 (1991), 471–477.
+
+```{r}
+
+at_df = read.table("data/at.csv", header=TRUE, sep = ",") 
+names(at_df) = c("subject", "waist", "AT")
+at_model = lm(AT ~ waist, data = at_df)
+print(at_model)
+
+plot(AT ~ waist, data = at_df, xlab = "waist circumference (cm)",
+     ylab = "deep abdominal AT (cm2)")
+abline(at_model, col = 2, lwd = 2)
+```
+
+
+El diseño experimental y los resultados de la inferencia en el ejemplo de las ranas
+nos invitan a concluirque "el aumento de la temperatura *causa* un incremento de 
+la frecuencia cardíaca". Sin embargo, esto no es correcto. Por muy fuerte que 
+parezca la relación entre las variables $x$ e $y$, **nunca debemos interpretar 
+una variable como la causa de la otra**. Una relación significativa entre $x$ e 
+$y$ puede ocurrir por varios motivos:
+
+1. $x$ causa $y$.
+2. $y$ causa $x$.
+3. Existe un tercer factor (llamado *variable de confusión*) que, bien directa
+o indirectamente, causa $x$ e $y$.
+
+![](https://qph.fs.quoracdn.net/main-qimg-13d22f6fda3811a9108d18b71c46e933-pjlq)
+
+Para lidiar con situaciones como la ilustrada en el gráfico anterior 
+necesitamos emplear modelos de **regresión múltiple**, dado que estos permiten 
+"controlar" las variables de confusión. Crear un modelo de regresión múltiple
+es análogo al caso unidimensional...
+
+### Ejemplo: regresión múltiple
+Jansen y Keller[^2] utilizaron la edad y el nivel de educación para predecir la
+capacidad de dirigir la atención (CDA) en sujetos ancianos. CDA se refiere a
+los mecanismos neuronales que enfocan la mente en lo que es significativo al
+tiempo que bloquea las distracciones. El estudio recopiló información sobre 71
+mujeres mayores con estado mental normal. En este estudio las puntuaciones
+más altas se corresponden con un mejor funcionamiento de la atención. Las
+mediciones en CDA, edad en años y el nivel de educación (años de escolaridad)
+están recogidos en “cda.csv”. Crea un modelo de regresión múltiple para predecir la
+puntuación de CDA.
+
+[^2] D. Jansen, M. Keller, Çognitive Function in Community-Dwelling Elderly Women”, Journal of
+Gerontological Nursing, 29 (2003), 34-43.
+
+```{r cda}
+df = read.csv("data/cda.csv")
+cda_model = lm(CDA ~ ., df)
+df$predictions = predict(cda_model)
+
+summary(cda_model)
+```
+
+Hasta ahora solo hemos usado datos continuos, pero nada evita usar datos categóricos
+como predictores. ¡Ojo! Los coeficientes asociados a datos categóricos no deben 
+interpretarse como una pendiente.
+
+### Ejemplo: regresión múltiple con datos categóricos
+Construye un modelo de regresión lineal para predecir el peso de una persona a partir
+de los datos contenidos en "antrop.csv".
+
+```{r}
+antrop = read.csv("data/antrop.csv")
+antrop = mutate(antrop, male = factor(male))
+antrop_model = lm(weight ~ height + male, data = antrop)
+summary(antrop_model)
+
+male_preds = predict(
+  antrop_model, 
+  antrop %>% mutate(male = 1, male = factor(male, levels = c(0, 1)))
+)
+female_preds = predict(
+  antrop_model, 
+  antrop %>% mutate(male = 0, male = factor(male, levels = c(0, 1)))
+)
+plot(weight ~ height, antrop)
+lines(antrop$height, male_preds, col = 2, type = "l", lwd=2)
+lines(antrop$height, female_preds, col = 3, lwd=2)
+summary(antrop_model)
+```
+
+
+### Ejercicio: Howell
+Los datos contenidos en "howell1.csv" son datos censales parciales del 
+área !Kung San compilados a partir de entrevistas realizadas a finales de la década
+de 1960. Crea un modelo para predecir el peso de los individuos a partir 
+de la altura y el sexo. Evalúa la bondad del modelo.
+
+```{r howell1}
+howell = read.csv("data/howell1.csv", sep = ";")
+howell = mutate(howell, male = factor(male))
+howell_model = lm(weight ~ height + male, data = howell)
+summary(howell_model)
+
+male_preds = predict(
+  howell_model, 
+  howell %>% mutate(male = 1, male = factor(male, levels = c(0, 1)))
+)
+female_preds = predict(
+  howell_model, 
+  howell %>% mutate(male = 0, male = factor(male, levels = c(0, 1)))
+)
+# plot(weight ~ height, howell)
+plot(howell$height, male_preds, col = 2, type = "l")
+lines(howell$height, female_preds, col = 3)
+```
+
+
+
+
+### Ejercicio: dummy variables
+```{r iris}
+data(iris)
+model = lm(Sepal.Length ~ Species, iris)
+print(coef(model))
+
+plot(Sepal.Length ~ Species, iris)
+predictions = predict(model)
+points(iris$Species, predictions, col = iris$Species, pch = 15)
+
+plot(iris$Sepal.Length, col = iris$Species,
+xlab = "Observation number", ylab = "Sepal Length")
+points(predictions, col = iris$Species, cex = 0.7, pch = 15)
+```
 
 
