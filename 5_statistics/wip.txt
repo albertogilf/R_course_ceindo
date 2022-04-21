@@ -1,0 +1,14 @@
+
+¿Como interpretar, por tanto, los resultados? No rechazar la $H_0$ de que
+$b=0$ no significa que $x$ e $y$ no estén relacionados. En primer lugar, es posible
+que se haya cometido un error de tipo II. Por otro lado, $x$ e $y$ pueden estar
+relacionados de manera no lineal.
+
+Por otro lado, cuando rechazamos la $H_0$ de que $b=0$, no podemos concluir que
+la verdadera relación entre $x$ e $y$ sea lineal. Nuevamente, puede ser que aunque
+los datos se ajusten bastante bien al modelo de regresión lineal (como lo
+                                                                  demuestra el hecho de que se rechaza la hipótesis nula), algún modelo no lineal
+proporcione un ajuste aún mejor. En consecuencia, cuando el valor b es
+significativamente distinto de 0, lo mejor que podemos decir es que se pueden
+obtener mejores predicciones teniendo en cuenta la regresión de $y$ sobre $x$
+  que ignorándola.

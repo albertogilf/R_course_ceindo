@@ -29,6 +29,7 @@ clásica. El siguiente notebook cubre modelos basados en aprendizaje automático
 (Otras lecturas interesante sobre las dos culturas es [To explain or to predict?](https://www.stat.berkeley.edu/~aldous/157/Papers/shmueli.pdf).)
 
 ## Regression is all you need
+### Regresión simple
 
 El modelo básico sobre el que se construye gran parte de la "Estadística clásica"
 es el modelo de **regresión lineal**:
@@ -67,13 +68,13 @@ $(x, y)$, ¿podemos estimar `expected behaviour`?
 ```{r lm}
 # 1) crear un modelo lineal
 df = data.frame(xx = x, yy = y)
-model = lm(yy ~ xx, data = df)
+naive_model = lm(yy ~ xx, data = df)
 # 2) obtener estimaciones de a y b
-summary(model)
+summary(naive_model)
 # 3) visualizar el ajuste
 plot(x, y)
 lines(x, expected_behaviour, col = 2)
-lines(x, predict(model), col = 3)
+lines(x, predict(naive_model), col = 3)
 legend("topleft", c("Ground truth", "fitted"), col=2:3, lwd=2)
 ```
 
@@ -143,6 +144,32 @@ o indirectamente, causa $x$ e $y$.
 
 ![](https://qph.fs.quoracdn.net/main-qimg-13d22f6fda3811a9108d18b71c46e933-pjlq)
 
+Evidentemente cualquier interpretación está supeditada a que el modelo sea 
+correcto. Debemos ser muy cuidadosos a la hora de verificar que se cumplan las
+asunciones del modelo de regresión lineal. Podemos usar el acrónimo **LINE** para
+recordar las asunciones más importantes del modelo: 
+**Linear, Independent, Normal, Equal variances**.
+
+### Ejemplo: evaluación del modelo `naive_model`
+```{r}
+plot(naive_model, ask = FALSE)
+```
+
+La gráfica más difícil de interpretar es `Residuals Vs Leverage``:
+![](figures/lev_ll-1.png)
+![](figures/lev_lh-1.png)
+![](figures/lev_hl-1.png)
+![](figures/lev_ll-1.png)
+
+### Ejercicio: asunciones en el problema de AT abdominal
+¿Se cumplan las asunciones de la regresión lineal en el problema de AT abdominal?
+```{r bondad_at}
+plot(at_model, ask = FALSE)
+library(lmtest)
+lmtest::bptest(at_model) # Heterocedastic!!!!
+```
+
+### Regresión múltiple
 Para lidiar con situaciones como la ilustrada en el gráfico anterior 
 necesitamos emplear modelos de **regresión múltiple**, dado que estos permiten 
 "controlar" las variables de confusión. Crear un modelo de regresión múltiple
@@ -176,7 +203,7 @@ interpretarse como una pendiente.
 
 ### Ejemplo: regresión múltiple con datos categóricos
 Construye un modelo de regresión lineal para predecir el peso de una persona a partir
-de los datos contenidos en "antrop.csv".
+de los datos contenidos en "antrop.csv". Interpreta los coeficientes de la regresión.
 
 ```{r}
 antrop = read.csv("data/antrop.csv")
@@ -225,16 +252,19 @@ lines(howell$height, female_preds, col = 3)
 ```
 
 
+### Ejemplo: dummy variables y contrastes
+El dataset `iris` (puedes obtenerlo con `data(iris)`) contiene medidas del sépalo
+y pétalo de varias especies de iris. Construye un modelo lineal para predecir
+la longitud del sépalo únicamente en funciónde la especie. Interpreta los coeficientes
+de la regresión.
 
-
-### Ejercicio: dummy variables
 ```{r iris}
 data(iris)
-model = lm(Sepal.Length ~ Species, iris)
-print(coef(model))
+iris_model = lm(Sepal.Length ~ Species, iris)
+print(coef(iris_model))
 
 plot(Sepal.Length ~ Species, iris)
-predictions = predict(model)
+predictions = predict(iris_model)
 points(iris$Species, predictions, col = iris$Species, pch = 15)
 
 plot(iris$Sepal.Length, col = iris$Species,
@@ -242,4 +272,159 @@ xlab = "Observation number", ylab = "Sepal Length")
 points(predictions, col = iris$Species, cex = 0.7, pch = 15)
 ```
 
+Al interpretar los coeficientes de la regresión, quizás hayas observado que 
+`lm` ha tomado como referencia la especie `setosa`. Esto se puede observar usando
+`contrasts`. De hecho, `contrast` se puede modificar para usar como referencia
+otro nivel del factor:
+
+### Ejemplo: contrastes
+```{r contrastes}
+contrasts(iris$Species)
+# Usamos versicolor como referencia
+contrasts(iris$Species) = contr.treatment(3, 2)
+contrasts(iris$Species)
+summary(lm(Sepal.Length ~ Species, iris))
+```
+
+
+## T-tests: comparación de dos grupos
+
+## Ejemplo: dependen los datos
+¿Depende la altura de los !Kung adultos del sexo del inviduo? Emplea los datos en 
+"howell1.csv".
+
+```{r kung_sex}
+adult_howell = filter(howell, age >= 18)
+height_model = lm(height ~ male, data = adult_howell)
+summary(height_model)
+```
+
+### Ejercicio: histogramas 
+Apoya tus conclusiones dibujando el histograma de las alturas por sexo
+
+```{r}
+ggplot(adult_howell, aes(x = height, fill=male)) + geom_density(alpha=0.2)
+```
+
+### Ejercicio: evaluación del modelo
+¿Cumple el modelo las asunciones de la regresión lineal?
+```{r}
+hist(resid(height_model))
+```
+
+Lo cierto es que, aunque correcto, nuestra aproximación no es la habitual a la
+hora de **comparar la media de dos poblaciones**. Si las poblaciones son normales
+(o si podemos invocar el Teorema Central del Límite), podemos hacer uso del 
+`t.test`.
+
+### Ejemplo: T-test para comparación de medias
+```{r ttest}
+male_heights = filter(adult_howell, male == 1)$height
+female_heights = filter(adult_howell, male == 0)$height
+t.test(male_heights, female_heights)
+```
+
+### Ejemplo: T-test de una sola cola 
+¿Podemos concluir que los hombres son más altos que las mujeres?
+
+```{r one_sided_ttest}
+t.test(male_heights, female_heights, alternative="greater")
+```
+
+### Ejercicio: T-test apareado
+John M. Morton et al. [^3] examinaron la función de la vesı́cula biliar antes y
+después de la fundoplicatura, una cirugı́a para detener el reflujo. Los autores
+midieron la funcionalidad de la vesı́cula biliar calculando la fracción de eyección
+de la vesı́cula biliar (GBEF) antes y después de la fundoplicatura. El objetivo de
+la fundoplicatura es aumentar la GBEF, que se mide como un porcentaje. ¿Hay
+evidencia para concluir que la fundoplicatura aumenta el funcionamiento de la
+GBEF? Datos en "gbef_long.csv" (o "gbef.csv", para un reto).
+
+```{r gbef}
+# df = read.table("data/gbef_long.csv", header = TRUE)
+df = read.table("data/gbef.csv")
+df
+df = 
+  df %>% 
+  pivot_longer(-(V1:V2), names_to="junk",  values_to = "gbef") %>% 
+  select(-V2, -junk) %>%
+  rename(class = V1)
+df_sp = split(df, df$class)
+t.test(df_sp$Postop$gbef, df_sp$Preop$gbef, paired = TRUE, alternative = "greater")
+```
+
+### Ejercicio: evaluación del modelo de datos apareados
+```{r paired_hist}
+d = df_sp$Postop$gbef - df_sp$Preop$gbef
+hist(d)
+```
+
+## ANOVA: comparación de medias para múltiples grupos
+
+
+### Ejemplo: One-way ANOVA
+Veinticuatro animales fueron asignados aleatoriamente a cuatro dietas diferentes
+y se tomaron muestras de sangre en un orden aleatorio. Se midió el tiempo de 
+coagulación de la sangre. Datos en "coagulation.csv". ¿Influye la dieta en 
+el tiempo de coagulación?
+
+
+```{r coagulation}
+library("car")
+coagulation = read.csv("data/coagulation.csv")
+options(contrasts = c("contr.sum", "contr.poly")) # for type 3 contrast
+coagulation_lm = lm(coag ~ diet, data = coagulation)
+coagulation_aov = Anova(coagulation_lm, type = 3)
+print(coagulation_aov)
+```
+
+
+```{r coagulation_plot}
+print(ggplot(coagulation, aes(x = diet, y = coag, fill = diet)) +
+        geom_boxplot() + coord_flip())
+```
+
+
+En general, ANOVA asume:
+
+* Las observaciones son independientes dentro de los grupos y entre los grupos.
+* Los datos dentro de cada grupo son normales.
+* La variabilidad dentro de cada grupo es aproximadamente igual a la  
+variabilidad en los otros grupos. 
+
+```{r}
+plot(coagulation_lm, which = c(1, 2), ask=FALSE)
+```
+
+
+```{r}
+pairwise.t.test(coagulation$coag, coagulation$diet, p.adj = "bonf")
+pairwise.t.test(coagulation$coag, coagulation$diet, p.adj = "BH")  # Benjamini–Hochberg
+```
+
+```{r}
+library("agricolae")
+HSD.test(coagulation_lm, "diet", group=TRUE, console=TRUE)
+```
+
+<!-- https://digitalcommons.wayne.edu/cgi/viewcontent.cgi?article=2088&context=jmasm -->
+<!-- https://stats.stackexchange.com/questions/2962/omega-squared-for-measure-of-effect-in-r -->
+```{r}
+library("multcomp") #glht
+data("anxiety", package = "datarium")
+anxiety <- anxiety %>%
+  dplyr::select(id, group, t1, t3) %>%
+  rename(pretest = t1, posttest = t3)
+anxiety[14, "posttest"] <- 19
+```
+```{r}
+anxiety_lm = lm(posttest ~ pretest + group, anxiety)
+Anova(anxiety_lm, type=3)
+# we want to test differences between the adjusted means, we can use only
+# the glht() function; the pairwise.t.test() function will not test the adjusted means. As such,
+# we are limited to using Tukey or Dunnett’s post hoc tests.
+postHocs<-glht(anxiety_lm, linfct = mcp(group = "Tukey"))
+summary(postHocs)
+confint(postHocs)
+```
 
