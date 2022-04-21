@@ -1,0 +1,294 @@
+---
+title: "Estructuras de datos"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+En este apartado vamos a cubrir el uso de vectores, listas, matrices y factores. En un tercer apartado de este capítulo cubriremos el uso de Data Frames, la estructura más  versátil y más empleada en R para representar los datos. Pero en ocasiones con estructuras más sencillas puede resolverse perfectamente un problema.
+
+# 1. Vectores
+Se corresponde con el concepto de vector de álgebra. Son una colección de datos homogéneos, esto es, datos de un mismo tipo; por ejemplo, todos son cadenas de caracteres, o todos son numéricos. Pueden crearse con la función `c()`:
+
+```{r}
+vector_numerico = c(1, 2, 3, 4)
+vector_numerico
+vector_cracteres = c("a", "b", "c", "d")
+vector_cracteres
+```
+
+Si realizamos una operación con vectores se operarán elemento a elemento
+
+```{r}
+v1 = c (2, 4, 6, 8, 10)
+v2 = c (1, 2, 3, 4, 5)
+
+v_sum = v1+v2
+v_sum
+v_mul = v1*v2
+v_mul
+v_sum > 9 #La comparación se aplicará también elemento a elemento, devolviendo TRUE o FALSE para cada uno
+v_sum <= 9
+```
+
+Para acceder a una posición determinada del vector podemos emplear el operador `[]`.
+El primer elemento del vector es el 1. Dado un vector v, podemos averiguar su tamaño con
+la función `length(v)`
+
+```{r}
+v = 1:10 # Ejercicio: ¿Que significa 1:10?.Pruebalo en la consola
+v
+v[1]
+v[5]
+v[length(v)]
+v[10]
+v[c(1,5)] #Mostramos los elementos 1 y 5
+```
+
+También se puede seleccionar elementos de un vector mediante un vector de valores lógicos
+```{r}
+seleccionados  = v > 5
+seleccionados
+v_subconjunto = v[seleccionados]
+v_subconjunto
+```
+
+
+Podemos darles nombres a las posiciones de los vectores con la función `names()`
+
+```{r}
+paciente = c (35, 68.2, 1.73)
+names (paciente) = c( "Edad", "Peso", "Altura")
+paciente["Edad"]
+paciente["Peso"]
+paciente["Altura"]
+```
+
+Para modificar la posición de un vector simplemente le asignamos el nuevo valor:
+
+```{r}
+paciente
+paciente["Edad"]= 42
+paciente[2]=99 #La posición 2 se corresponde con el peso
+paciente
+
+```
+
+## 1.1 Ejercicios:
+Dado el siguiente vector
+
+```{r}
+vec = seq(1, 30, by=0.2)
+```
+
+¿Qué es lo que a hecho exactamente la función `seq ()`? ¿Cuántos elementos tiene `vec`?
+```{r}
+vec
+length(vec)
+
+```
+
+Crea un nuevo vector que contenga los elementos de `vec` que se encuentren entre 8.0 y 12.0. ¿Cuántos elementos son?
+
+```{r}
+vec2 = vec[vec >= 8 & vec <= 12]
+vec2
+length(vec2)
+```
+
+Súmale 1 a todos los elementos del nuevo vector**
+
+```{r}
+vec2 = vec2+1
+vec2
+```
+
+# 2. Listas
+
+Las listas se diferencian de los vectores de que son estructuras heterogéneas; esto es, cada elemento de una lista puede ser de un tipo diferente. Por ejemplo, el primero puede ser numérico, el segundo puede ser un valor lógico y el tercero una cadena de caracteres. Se pueden crear con la función `list ()`
+
+```{r}
+lista = list (1, "Hola", TRUE)
+lista
+```
+
+Para acceder a sus distintas posiciones debemos usar el operador `[[]]`:
+
+```{r}
+lista [[1]]
+lista [[2]]
+lista [[1]]= 25 #Modificamos el elemento que está en la posición 1
+lista [[1]]
+```
+
+También le podemos dar nombres a las posiciones de la lista usando la función `names()`; aunque en este caso tendremos que usar el operador `$` para acceder a cada campo mediante su nombre:
+```{r}
+names (lista) = c( "Numero", "Cadena", "Bool")
+lista$Numero
+lista$Cadena
+lista$Bool
+
+```
+
+Podemos indicar los nombres de cada campo a la hora de crear la lista:
+
+```{r}
+juan = list("Nombre" = "Juan Martinez", "Peso" = 72, "Altura" = 176, "Edad" = 26 )
+```
+
+Una lista puede contener otras listas:
+
+```{r}
+juan = list("Nombre" = "Juan Martínez", "Peso" = 72, "Altura" = 176, "Edad" = 26 )
+marta = list("Nombre" = "Marta Otero", "Peso" = 52, "Altura" = 166, "Edad" = 16 )
+julia = list("Nombre" = "Julia Gil", "Peso" = 62, "Altura" = 178, "Edad" = 23 )
+personas = list (juan, marta, julia) # Creamos una lista con las tres listas  anteriores
+personas
+personas[[1]]
+personas[[2]]
+personas[[3]]
+```
+
+Para eliminar un elemento de una lista podemos emplear índices negativos; por ejemplo, borramos a Marta:
+
+```{r}
+personas = personas[-2] #Todos los elementos de la lista personas "menos/excepto" el que está en la segunda posición
+personas # Ahora la lista tiene sólo dos componentes
+```
+
+## 2.1 Ejercicios
+
+Crea una lista de la compra que contenga los nombres de los productos a comprar y las unidades. Necesitamos comprar  10 manzanas, 2 zumos de naranja, 3 barras de pan y 1 bote de suavizante.
+
+```{r}
+producto1 = list("Nombre" = "Manzana", "Unidades" = 10)
+producto2 = list("Nombre" = "Zumo de naranja", "Unidades" = 2)
+producto3 = list("Nombre" = "Barra de pan", "Unidades" = 3)
+producto4 = list("Nombre" = "Suavizante", "Unidades" = 1)
+lista_compra = list (producto1, producto2, producto3, producto4)
+lista_compra
+```
+
+Modifica la lista de la compra para que sólo compremos 2 barras de pan
+
+```{r}
+lista_compra[[3]]$Unidades = 2
+lista_compra
+```
+
+Elimina de la lista de la compra el suavizante
+```{r}
+lista_compra = lista_compra[-4]
+lista_compra
+```
+
+# 3. Matrices
+
+Se corresponden con el concepto algebraico de matriz. Se pueden crear con la función ´matrix()´
+
+```{r}
+mat = matrix(
+  1:12, #Los datos serán los números enteros entre el 1 y el 12
+  nrow = 3, #Este parámetro especifica el número de  filas
+  ncol = 4, #Este parámetro especifica el número de columnas
+  byrow = TRUE #Los números indicados en el primer argumento se irán rellenando por filas
+  )
+
+mat 
+```
+
+Veamos otro ejemplo:
+```{r}
+mat2 = matrix(
+  1:12,
+  nrow = 3, 
+  ncol = 4,
+  byrow = FALSE 
+  )
+
+mat2 
+```
+
+Se accede sus elementos mediante el operador ´[]´:
+
+```{r}
+mat[1,1]
+mat[2,2]
+mat[3,2]
+mat[1,]#Al dejar en blanco la columna se mostrará toda la primera fila
+mat[,1]#Al dejar en blanco la fila se mostrará toda la primera columna
+mat[,4]#Mostramos la cuarta columna
+```
+
+## 3.1 Ejercicios
+
+Crea una matriz con cinco filas y cuatro columnas que contenga los 20 primeros números enteros. Los números se deberán asignar por columnas; es decir, la primera columna de la matriz deberán ser los números 1, 2, 3, 4 y 5; la segunda columna deberán ser los números 6, 7, 8, 9 y 10; y así sucesivamente.
+```{r}
+matriz = matrix(
+  1:20, 
+  nrow = 5, 
+  ncol = 4, 
+  byrow = FALSE
+  )
+
+matriz
+```
+
+Muestra la tercera columna y la cuarta fila de la matriz.
+```{r}
+matriz[,3]
+matriz[4,]
+```
+
+# 4. Factores
+
+Los factores representan datos que sólo pueden tomar un conjunto finito y acotado de valores, como por ejemplo los palos de la baraja española, el género de una persona, o los días de la semana. Representemos los palos de cinco cartas de la baraja española; los palos de dichas cartas van a ser copas, copas, bastos, espadas y bastos, respectivamente:
+
+```{r}
+cartas = factor(c("Copas", "Copas", "Bastos", "Espadas", "Bastos"), #Estos son los palos de las 5 cartas
+          levels = c("Copas", "Espadas", "Bastos","Oros")); #Estos son los 4 posibles valores de los palos
+cartas
+```
+
+Podemos conocer los distintos "levels" de un factor empleando la función `levels ()`
+
+```{r}
+levels(cartas)
+```
+
+La forma de acceder a un elemento concreto del factor es igual que a un vector:
+
+```{r}
+cartas[1]
+cartas[2]
+cartas[3]
+```
+
+Un factor puede transformarse en una cadena de caracteres empleando la función `as.character()`:
+
+```{r}
+
+cartas_texto = as.character(cartas)
+cartas_texto
+```
+
+A su vez, un conjunto de cadenas de caracteres (como las contenidas ahora en la variable `cartas_texto`) pueden transformarse en un factor mediante `as.factor()`:
+
+```{r}
+cartas_factor = as.factor(cartas)
+cartas_factor
+```
+
+## 4.1 Ejercicios
+
+Crea una variable tipo factor que represente el género de un conjunto de personas; en este conjunto habrá, en el siguiente orden, los siguientes géneros: mujer, hombre, hombre, mujer, mujer.
+
+```{r}
+generos = factor(c("Mujer", "Hombre", "Hombre", "Mujer", "Mujer"),
+          levels = c("Hombre", "Mujer"));
+generos
+```

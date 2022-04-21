@@ -1,0 +1,300 @@
+---
+title: "Data Frames"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Los Data Frames son probablemente el tipo de dato más empleado en R. Internamente son una colección de listas. Pero conceptualmente es más sencillo pensar en ellos como en una hoja de Excel con filas y columnas. Cada columna puede ser de un tipo diferente. 
+
+# 1. Creando Data Frames
+
+Se pueden crear con la función `data.frame()`.
+
+```{r}
+pacientes = data.frame(
+  Nombre = c("Juan Martínez", "Marta Otero", "Julia Gil"),#La primera columna contendrán nombres de personas
+  Peso = c(72, 52, 62),#La segunda columna contiene su peso
+  Altura = c(176, 166, 178),#La tercera columna contiene la altura
+  Edad = c(26, 16, 23)#La cuarta columna contiene la edad
+)
+
+pacientes
+pacientes$Nombre
+pacientes[,1] #Primera componente, los nombres
+pacientes[1,] #Primera fila, todos los datos de Juan Martínez; aparecerá como un Data Frame de una fila
+pacientes[1,]$Peso #El peso del primer elemento, de Juan Martínez
+```
+
+Podemos conocer el número de filas y de columnas empleando las funciones `nrow()` y `ncol`:
+
+```{r}
+nrow(pacientes)
+ncol(pacientes)
+```
+Podemos acceder a los datos de los Data Frames empleando el operador `[]`, como ya hemos visto previamente:
+
+```{r}
+pacientes[1,1] #Primera fila, primera columna, el nombre del primer el registro
+pacientes[1,4] #Primera fila, cuarta columna, la edad del primer registro
+pacientes[1,] #Mostramos toda la primera fila
+pacientes[,1] #Mostramos toda la primera columna
+pacientes[c(1,3),c(2,3)] #Mostramos sólo el peso y la altura c(2,3) de la primera y la tercera filas c(1,3)
+```
+También podemos acceder a los datos a partir de los nombres de sus columnas mediante el operador `$`:
+
+```{r}
+pacientes$Nombre #Nombre de todos los pacientes
+pacientes$Altura #Altura de todos los pacientes
+pacientes$Nombre[2] #Nombre del paciente que está en la segunda fila
+```
+
+# 2. Manipulando Data Frames
+
+A menudo tendremos que añadir o eliminar piezas de información de nuestro conjunto de datos, bien sean columnas o filas. También tendremos que aplicar modificaciones, como  reemplazar valores perdidos, normalizar datos, cambiar las unidades, extraer un subconjunto de datos, unir varios conjuntos de datos en uno solo, etc. Veremos cómo realizar este tipo de operaciones empleando el paquete `dply`, que simplifica considerablemente estas manipulaciones de datos. Para ello tendremos que cargar el paquete (y previamente necesitaremos instalarlo si no lo hemos hecho antes):
+
+```{r}
+library(dplyr)
+```
+
+Trabajaremos sobre el conjunto de datos Iris:
+
+```{r}
+library(datasets)
+data(iris)
+summary(iris)
+head(iris) #head muestra los seis primeros datos, la "cabeza" del dataset
+```
+
+Con la función podemos visualizar los datos ordenados por algún criterio. Por ejemplo, podemos ordenarlos acorde a la longitud de el sépalo:
+```{r}
+head(iris)#Los datos originales
+head(arrange(iris, Sepal.Length)) #Ordenados por la longitud del sépalo
+head(arrange(iris, desc(Sepal.Length))) #Ordenados de mayor a menor ("descendiente") por la longitud del sépalo
+```
+
+
+## 2.1 Seleccionando subconjuntos de los datos
+La función `slice()` nos permite seleccionar conjuntos de datos a través de su índice. Por ejemplo, si queremos seleccionar las 20 primeras flores podemos hacer:
+
+```{r}
+iris_20_primeras = slice(iris, 1:20)
+nrow(iris_20_primeras)
+```
+
+
+La función `filter()` permite seleccionar subconjuntos de datos que cumplan un determinado criterio. Le tenemos que pasar el conjunto de datos, y algún criterio de filtrado en base a las columnas. Por ejemplo, seleccionamos sólo la especie versicolor
+
+```{r}
+versicolor <- filter(iris, Species == "versicolor") #Selecciona sólo las flores cuya especie es igual a versicolor
+head(versicolor) 
+```
+Podemos emplear los operadores lógicos que hemos visto en la primera parte de este tema para crear condiciones de filtrado más sofisticadas. Por ejemplo, vamos a seleccionar flores que pertenezcan a la especie versicolor **o** (or logico, operador `|`) a setosa:
+
+```{r}
+versicolor_o_setosa <- filter(iris, Species == "versicolor"|Species == "setosa")
+head(versicolor_o_setosa) 
+```
+Ahora vamos a seleccionar estas dos especies, pero sólo aquellas cuya longitud de sépalo sea mayor que 5.0 cm. La condición es que sea versicolor **o** setosa, **y** (and lógico, '&') que su longitud de sépalo sea mayor que 5.0 centímetros:
+
+```{r}
+versicolor_o_setosa_grandes <- filter(iris, 
+                              (Species == "versicolor" | Species == "setosa")  # Es versicolor o setosa
+                              & Sepal.Length > 5.0) # y además tiene que cumplir esta condición
+summary(versicolor_o_setosa_grandes)
+```
+Vamos a seleccionar aquellas flores cuya longitud de sépalo sea mayor que el promedio. La longitud promedio la podemos obtener con la función `mean()`
+
+```{r}
+promedio_sepalos = mean(iris$Sepal.Length)
+iris_grandes <- filter(iris, Sepal.Length > promedio_sepalos)
+summary(iris_grandes)
+```
+
+
+### 2.1.1 Ejercicios
+
+Selecciona todas las flores que pertenezcan a la especie virginica.
+```{r}
+virginica <- filter(iris, Species == "virginica")
+head(virginica) 
+```
+Selecciona todas las flores que pertenezcan a la especie virginica, y cuyo ancho de sépalo sea menor que 3.0 cm
+```{r}
+virginica <- filter(iris, Species == "virginica"&Sepal.Width <3.0)
+head(virginica) 
+```
+
+En el último ejemplo del apartado 2.1 la selección que se realizó devolvió 0 flores de la especie setosa, 26 de versicilor y 44 de virginica. Nos gustaría seleccionar aproximadamente la mitad de las flores más grandes de cada especie. ¿Cómo podríamos hacerlo?. Es decir, queremos seleccionar aquellas flores que sean versicolor **y** su longitud del pétalo sea mayor que el promedio de las flores versicolor, **o** que sean setosa **y** su longitud del pétalo sea mayor que el promedio de las flores setosa, **o** que sean virginica **y** su longitud del pétalo sea mayor que el promedio de las flores virginica. 
+```{r}
+versicolor <- filter(iris, Species == "versicolor")
+setosa <- filter(iris, Species == "setosa")
+virginica <- filter(iris, Species == "virginica")
+promedio_sepalos_versicolor = mean(versicolor$Sepal.Length)
+promedio_sepalos_setosa = mean(setosa$Sepal.Length)
+promedio_sepalos_virginica = mean(virginica$Sepal.Length)
+iris_grandes <- filter(iris,
+                       (Species == "versicolor" & Sepal.Length > promedio_sepalos_versicolor) |
+                       (Species == "setosa" & Sepal.Length > promedio_sepalos_setosa) |
+                       (Species == "virginica" & Sepal.Length > promedio_sepalos_virginica))
+summary(iris_grandes)
+
+```
+
+## 2.2 Seleccionando parte de las columnas
+La función `select()` permite seleccionar columnas a partir de su nombre. Por ejemplo, quedémonos solo con la información relativa a los sépalos Y a la especie, y emitamos la información de los pétalos:
+
+```{r}
+seleccionado <- select(iris, Sepal.Length, Sepal.Width, Species)
+head (seleccionado)
+```
+### 2.2.1 Ejercicios
+
+Dado el conjunto de datos "USArrests":
+```{r}
+data("USArrests")
+head(USArrests)
+```
+Selecciona los asesinatos y los atracos.
+
+
+```{r}
+asesinatos_y_atracos <- select(USArrests, Murder, Assault)
+head (asesinatos_y_atracos)
+```
+
+¿Cuáles son los estados que tienen un número de muertes mayor que el doble del promedio?
+```{r}
+asesinatos_altos = filter(asesinatos_y_atracos, Murder > 2*mean(Murder))
+asesinatos_altos
+
+```
+
+## 2.3 Modificar los datos
+
+A menudo tendremos que aplicar algún tipo de modificación a los datos. Este tipo de operaciones podemos conseguirlas con la función `mutate()`. Por ejemplo, supongamos que  queremos crear una columna adicional cuyo valor sea la suma de la longitud y el ancho de los sépalos y los pétalos, y cuyo nombre sea "Suma":
+
+```{r}
+iris_mutado = mutate(iris, Suma=Sepal.Length + Sepal.Width + Petal.Length + Petal.Width)
+summary(iris_mutado)
+```
+
+A menudo una de las transformaciones que tenemos que realizar con los datos es algún tipo de normalización/escalado. La función `scale()` nos puede ayudar con esto. Veamos un ejemplo:
+
+```{r}
+scale(1:10)
+```
+Observa en la salida del código anterior como además de los datos escalados, hay dos atributos adicionales que se llaman `attr(,"scaled:center")` y `ttr(,"scaled:scale")`. Si sólo queremos los datos escalados y no los parámetros empleados en la transformación, debemos quedarnos con la primera columna del objeto que nos devuelve (`[,1]`):
+
+```{r}
+scale(1:10)[,1]
+```
+Vamos a estandarizar todos los datos del conjunto iris. En esta ocasión los nombres de las columnas que se estamos indicando son los mismos que los originales, por lo que se va a reemplazar los datos originales por los datos estandarizados, En vez de añadirse una nueva columna como en el ejemplo de la suma de la longitud de los sépalos y pétalos.
+```{r}
+iris_escalado = mutate(iris, Sepal.Length = scale(Sepal.Length)[,1],
+                       Sepal.Width = scale(Sepal.Width)[,1], Petal.Length = scale(Petal.Length)[,1],
+                       Petal.Width = scale(Petal.Width)[,1])
+summary(iris_escalado)
+```
+
+Supongamos que ahora queremos generar un Data Frame que contenga los datos originales, y los datos escalados que acabamos de generar. Pero no queremos que se repita la columna "Species", que está presente en ambos conjuntos de datos. Lo primero que tendremos que hacer es eliminarla en uno de los casos. Esto lo podemos hacer con la función `select()` indicando que queremos seleccionar un índice negativo:
+```{r}
+iris_escalado_sinespecie = select(iris_escalado, -Species) #Eliminamos ("restamos") la columna Species
+head(iris_escalado_sinespecie)
+```
+Y ahora vamos a "pegar" ambos Data Frames con la función `cbind()`
+```{r}
+final_iris = cbind(iris_escalado_sinespecie,iris)
+head(final_iris)
+```
+
+### 2.3.1 Ejercicios
+
+Vamos a volver a trabajar sobre el conjunto de datos USArrests:
+```{r}
+data("USArrests")
+head(USArrests)
+```
+
+Añade al conjunto de datos una columna que sea la suma total de los distintos números de crímenes (asesinatos, robos y violaciones):
+```{r}
+USArrestsConTotal = mutate(USArrests, TotalCrime = Murder + Assault + Rape)
+head(USArrestsConTotal)
+```
+
+
+Genera una versión del conjunto de datos anterior que esté estandarizada.
+
+```{r}
+USArrests_escalado = mutate(USArrestsConTotal, Murder = scale(Murder)[,1],
+                       Assault = scale(Assault)[,1], UrbanPop = scale(UrbanPop)[,1],
+                       Rape = scale(Rape)[,1], TotalCrime = scale(TotalCrime)[,1])
+summary(USArrests_escalado)
+```
+
+ Ahora fusiona este conjunto de datos con el original:
+ 
+```{r}
+final_USArrests = cbind(USArrests_escalado,USArrests)
+head(final_USArrests)
+```
+ 
+# 3 El operador en cadena %>% 
+ 
+Como habrás podido ver, al manipular el conjunto de datos continuamente estamos creando nuevas versiones a las que les tenemos que dar nuevos nombres. El operador `%>%` puede servirnos para evitar esto. Este operador "toma" los datos que haya a la izquierda y los modifica con la operación que hay a la derecha, devolviendo los datos modificados. A su vez los datos modificados pueden volverse a encadenar con el mismo operador y realizarse otra modificación.
+ 
+ Por ejemplo, supongamos que dado un vector con los números enteros del 1 al 10, queremos calcular el cuadrado de cada uno de los números, sumar todos los cuadrados, y calcular la raíz cuadrada de la suma. Podríamos hacerlo así:
+ 
+```{r}
+datos = 1:10
+datos_1 = datos^2
+datos_2 = sum(datos_1)
+datos_3 = sqrt(datos_2)
+datos_3
+
+```
+O empleando el operador en cadena podemos hacerlo así:
+
+```{r}
+datos = 1:10
+datos^2 %>% sum() %>% sqrt ()
+```
+
+Si queremos repetir todas las transformaciones sobre el conjunto de datos Iris (calcular la suma total de los pétalos y los sépalos para cada flor, estandarizar las cuatro medidas, eliminar la columna repetida de Species, y combinar los datos con los originales) podemos hacer:
+ 
+```{r}
+new_iris=iris %>% 
+  mutate(Suma=Sepal.Length + Sepal.Width + Petal.Length + Petal.Width) %>% #Suma de pétalos y sépalos
+  mutate(iris, Sepal.Length.scale = scale(Sepal.Length)[,1], 
+         Sepal.Width.scale = scale(Sepal.Width)[,1], 
+         Petal.Length.scale = scale(Petal.Length)[,1], 
+         Petal.Width.scale = scale(Petal.Width)[,1],) %>% #Estandarización de los datos
+  select(-Species) %>% #Eliminamos la columna repetida
+  cbind(iris)#Pegamos las columnas resultados de las operaciones anteriores con las originales
+  
+head(new_iris)
+
+```
+ 
+## 3.1 Ejercicios
+ 
+Repite el análisis del último ejercicio sobre el conjunto de datos USArrests, pero empleando en esta ocasión el operador de encadenamiento.
+ 
+```{r}
+new_USArrests = USArrests %>% 
+                     mutate(Total = Murder + Assault + Rape) %>% 
+                     mutate(Murder.scale = scale(Murder)[,1],
+                            Assault.scale = scale(Assault)[,1], 
+                            UrbanPop.scale = scale(UrbanPop)[,1],
+                            Rape.scale = scale(Rape)[,1], 
+                            Total.scale = scale(Total)[,1]) %>%               
+                     cbind(USArrests)
+head(new_USArrests)
+```
+ 
+ 
+
