@@ -1,6 +1,8 @@
 ---
 title: "Instalando y usando paquetes"
-output: html_document
+output: 
+  html_document:
+    toc: TRUE
 ---
 
 ```{r setup, include=FALSE}
