@@ -30,7 +30,7 @@ pacientes[1,] #Primera fila, todos los datos de Juan Martínez; aparecerá como 
 pacientes[1,]$Peso #El peso del primer elemento, de Juan Martínez
 ```
 
-Podemos conocer el número de filas y de columnas empleando las funciones `nrow()` y `ncol`:
+Podemos conocer el número de filas y de columnas empleando las funciones `nrow()` y `ncol()`:
 
 ```{r}
 nrow(pacientes)
