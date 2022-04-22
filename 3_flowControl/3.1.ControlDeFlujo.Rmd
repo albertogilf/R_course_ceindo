@@ -1,0 +1,224 @@
+---
+title: "Control de flujo"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Condicionales
+En ocasiones, el procesamiento que necesitamos hacer sobre los datos va a variar dependiendo de ciertas condiciones. Por ejemplo, en el capítulo 1 vimos un código que calculaban las raíces de una ecuación de segundo grado. Pero si el discriminante era negativo, se calculaba la raíz cuadrada de un valor negativo y los resultados no tenían sentido. Sería interesante que el código tuviese en cuenta esta situación y la gestiónase adecuadamente.
+
+Los condicionales son una herramienta que nos permite ejecutar unas u otras sentencias dependiendo de una determinada condición. Esa condición es un valor lógico. Por ejemplo:
+
+```{r}
+x = 40
+if(x > 10){
+  print(paste(x, "es más grande que 10"))
+}
+```
+
+Prueba a cambiar en el código anterior el valor de `x` a 4. En ese caso no se imprime ningún mensaje.
+
+El condicional `if` pueden ir acompañado de una sentencia `else` que se ejecuta cuando no se cumple la condición
+
+
+```{r}
+x = 4
+if(x > 10){
+  print(paste(x, "es más grande que 10"))
+}else{
+   print(paste(x, "es más pequeño que 10"))
+}
+```
+Prueba a cambiar en el código anterior el valor de `x` por 20.
+
+Las condiciones del `if` pueden emplear operadores lógicos para generar condiciones más sofisticadas
+
+```{r}
+x = 4
+if(x > 10 & x <= 30){ #Se imprimirá para valores extrictamente mayores que 10 y menores o iguales que 30
+  print(paste(x, "el valor está entre 10 y 30"))
+}else{
+   print(paste(x, "es más pequeño que 10"))
+}
+```
+Empleando un condicional podemos resolver el problema de las raíces cuadradas negativas del ejemplo del primer capítulo:
+
+```{r}
+a = 1
+b = 2
+c = 3
+
+discr = b*b -4*a*c
+if(discr < 0){
+  print("La ecuación no tiene raíces reales")#Indicamos que no se puede resolver, y no se ejecutarán más sentencias
+}else{#Si el discrimínante es no negativo, resolvemos la ecuación
+  discr = sqrt(discr)
+  raiz1 = (-b+discr)/(2*a)
+  raiz2 = (-b-discr)/(2*a)
+  print(paste("Las raíces son", raiz1, "y", raiz2))
+}
+```
+
+## 1.1 Ejercicios
+Prueba a cambiar en el código anterior el valor de 'a' por 0. ¿Qué pasa?. ¿Podrías gestionar esta situación con otro condicional?
+
+```{r}
+a = 0
+b = 2
+c = 3
+if(a==0){
+   print("No es una ecuación de segundo grado ya que a es 0")
+}else{
+  discr = b*b -4*a*c
+  if(discr < 0){
+    print("La ecuación no tiene raíces reales")#Indicamos que no se puede resolver, y no se ejecutarán más sentencias
+  }else{#Si el discrimínante es no negativo, resolvemos la ecuación
+    discr = sqrt(discr)
+    raiz1 = (-b+discr)/(2*a)
+    raiz2 = (-b-discr)/(2*a)
+    print(paste("Las raíces son", raiz1, "y", raiz2))
+  }
+}
+```
+
+# 2.Bucles
+En ocasiones, es necesario repetir una misma acción múltiples veces; por ejemplo, cargar  múltiples ficheros con datos, o realizar un mismo procesamiento múltiples veces sobre distintos conjuntos de datos. Los bucles nos pueden permitir hacer esto de un modo sencillo.
+
+## 2.1 El bucle for
+
+El bucle `for` nos permite repetir una acción para todos los valores de una colección de elementos (como un vector o una lista)
+
+```{r}
+for (i in 1:10)
+{
+    print(i)
+}
+```
+
+Por ejemplo, calculamos la suma de los 'n' primeros números enteros:
+
+```{r}
+n = 40
+suma = 0 # Inicialmente no hemos sumado nada, por lo que el valor de la suma es 0
+for (i in 1:n)
+{
+    suma = suma + i
+}
+print(paste ("La suma es ", suma))
+```
+
+Un bucle puede anidarse dentro de otro bucle. Esto hace que para el bucle externo se repitan todas las operaciones del bucle interno. Por ejemplo, mostremos la tabla de multiplicar de los 10 primeros números**:
+
+```{r}
+for (numero in 1:10)
+{
+    for (mult in 1:10)
+  {
+    print(paste (numero, "*", mult, "=", numero*mult))
+  }
+}
+
+```
+Vamos a calcular el índice de masa corporal para todos los elementos de un Data Frame. El índice de masa corporal es el peso dividido por el cuadrado de la altura, medida esta última en metros.
+
+```{r}
+pacientes = data.frame(
+  Nombre = c("Juan Martínez", "Marta Otero", "Julia Gil", "Antonio Pajares"),
+  Peso = c(72, 52, 62, 93),
+  Altura = c(176, 166, 178, 189),
+  Edad = c(26, 16, 23, 62)
+)
+
+for (i in 1:nrow(pacientes))
+{
+  print(paste (pacientes[i,]$Nombre, "IMC: ", pacientes[i,]$Peso/((pacientes[i,]$Altura/100)^2)))
+}
+```
+### 2.1.1 Ejercicios
+Escribe un código que dado un número entero `n` calcule su factorial:
+
+```{r}
+n = 5
+fact = 1
+for (i in 1:n)
+{
+    fact = fact * i
+}
+print(paste ("El factorial es ", fact))
+
+```
+Dado el Data Frame pacientes, calcula la suma de todos los pesos y de todas las alturas de los pacientes.
+```{r}
+suma_pesos =0  
+suma_alturas = 0
+for (i in 1:nrow(pacientes))
+{
+   suma_pesos = suma_pesos + pacientes[i,]$Peso
+   suma_alturas = suma_alturas + pacientes[i,]$Altura
+}
+  print(paste ("La suma de los pesos es", suma_pesos, "y la de las alturas", suma_alturas))
+```
+
+## 2.1 El bucle while
+Este bucle se repite mientras que una condición que lleva entre paréntesis, que debe ser un valor lógico, tome el valor cierto. Por ejemplo
+
+```{r}
+i=0
+while(i<10){
+  print(i)
+  i=i+1
+}
+
+```
+La función `rnorm()` genera números según una distribución normal de media 0 y desviación estándar 1. ¿Cuál es la probabilidad de que esta función genere un número > 3?. Podemos estimarlo numéricamente:
+
+```{r}
+numeros_generoados = 0
+n = 0
+while (n<3){
+  n = rnorm(1) #Generamos un único número aleatorio con una distribución normal de media 0 y desviación estándar 1
+  numeros_generoados = numeros_generoados + 1
+}
+
+print(paste("La probabilidad es ", 1/numeros_generoados))
+
+```
+Ejecuta varias veces el código anterior. Podrás ver que la estimación varía bastante dependiendo de cada vez que se ejecuta. A veces tenemos más "suerte" y a veces tenemos menos suerte a la hora de generar el valor numérico > 3. En uno de los ejercicios te propondré que trates de resolver esto.
+
+### 2.2.1 Ejercicios
+Calcula nuevamente el factorial de un número, pero empleando un bucle While en esta ocasión:
+```{r}
+n = 5
+i = 1
+fact = 1
+while (i <= 5)
+{
+    fact = fact * i
+    i = i +1
+}
+print(paste ("El factorial es ", fact))
+
+```
+
+Volvamos al ejemplo que estimaba la probabilidad de generar un número aleatorio > 3 con la función `rnorm()`. Si repetimos 1000 veces el proceso, y calculamos el promedio de las 1000 repeticiones, tendremos  una mejor estimación. Intenta escribir el código para hacerlo.
+
+```{r}
+numeros_generoados = 0
+n = 0
+rep=1000
+for(i in 1:rep){
+  while (n<3){
+    n = rnorm(1)
+    numeros_generoados = numeros_generoados + 1
+  }
+  n=0
+}
+
+print(paste("La probabilidad es ", rep/numeros_generoados))
+
+```

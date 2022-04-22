@@ -77,6 +77,12 @@ head(arrange(iris, Sepal.Length)) #Ordenados por la longitud del sépalo
 head(arrange(iris, desc(Sepal.Length))) #Ordenados de mayor a menor ("descendiente") por la longitud del sépalo
 ```
 
+Dado un Dataframe una de las primeras cosas que necesitamos comprender es su estructura; esto es, que columnas tiene, cuantas filas tiene, y cuál es el **tipo de dato** de cada columna. Esto es importante porque a veces al importar datos aunque las columnas sean realmente numéricas, pueden haberse importado por error como texto (Por ejemplo, porque los números decimales usaban comas en vez de puntos). O en ocasiones el texto se importa como factores, y cuando, por ejemplo, intentamos añadir una nueva fila al Data Frame la rechaza porque el texto que contiene la nueva fila no es uno de los levels permitidos para el factor. La función `str()` es muy útil para conocer la estructura de los Data Frames:
+
+```{r}
+str(iris)
+```
+Observa como nos da información del número de filas ("obs", observaciones), y del número de columnas (variables). Observa también como para cada columna nos dice el tipo de dato; las longitudes y anchos de los sépalos y los pétalos son numéricos, mientras que la especie es un factor.
 
 ## 2.1 Seleccionando subconjuntos de los datos
 La función `slice()` nos permite seleccionar conjuntos de datos a través de su índice. Por ejemplo, si queremos seleccionar las 20 primeras flores podemos hacer:

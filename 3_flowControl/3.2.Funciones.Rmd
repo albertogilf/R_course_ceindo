@@ -1,0 +1,222 @@
+---
+title: "Control de flujo"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Las funciones
+Una función es un fragmento de código con nombre, al cual se le pueden pasar unos parámetros y puede  devolver un dato como resultado de su ejecución. Ya hemos empleado múltiples funciones a lo largo de este curso. Por ejemplo, la función `mean()` recibe un conjunto de valores numéricos, calcula su promedio, y devuelve este promedio. Más allá de usar las funciones que ya están definidas en R, podemos crear nuevas funciones.
+
+La sintaxis general para declarar una función en R es:
+
+```{r}
+mombreFuncion = function(argumentos_de_la_funcion){
+  #Realizar aquí los cálculos 
+  resultado = 2 #Supondremos que este es el resultado de las operaciones
+  return (resultado) #La sentencia return indica que queremos devolver de la función
+}
+```
+Veamos un ejemplo concreto; hagamos una función sencilla que calcula el área de un rectángulo:
+
+```{r}
+areaRectangulo = function(largo, ancho){
+  area = largo * ancho
+  return(area)
+}
+```
+
+Cuando se ejecuta el código anterior  no aparece nada en la consola, pero se ha creado la función con nombre `areaRectangulo()`. Puedes verla entre el contenido del Global Environment del panel que aparece en la parte superior derecha. Una vez que se ha creado y existe en el entorno, podemos llamarla para hacer cálculos. Por ejemplo:
+
+```{r}
+areaRectangulo (2, 4)
+areaRectangulo (3.4, 4)
+```
+
+Veamos otro ejemplo. Esta vez vamos a crear una función que calcule el promedio de un conjunto de números que se le pasan, exactamente igual que la función `mean()` que ya existe en R:
+
+```{r}
+promedio = function(datos){
+  num_datos = length(datos)
+  suma = 0
+  for (dato in datos) {#Calculamos la suma de todos los datos con un bucle
+    suma = suma + dato
+  }
+  promedio = suma/num_datos
+  return (promedio)
+}
+```
+
+Probemos nuestra función y comparemos sus resultados con la función `mean()`
+
+```{r}
+mean(1:10)
+promedio(1:10)
+```
+
+
+### 1.1 Ejercicios
+Escribe una función a la cual se le pase un número `n` y que devuelva su factorial. Prueba la función con un par de llamadas.
+
+```{r}
+factorial = function(n){
+  fact = 1
+  for (i in 1:n)
+  {
+    fact = fact * i
+  }
+  return (fact)
+}
+
+factorial (5)
+factorial (10)
+```
+
+Escribe una función que calcule el máximo de un conjunto de números. Para ello, puedes suponer inicialmente que el máximo del conjunto es el primero de los números, y a continuación comparar el máximo que tienes en ese momento con todos los demás números; si alguno de los demás números es mayor que el máximo que tienes hasta ese momento, ese número pasa a ser el máximo.
+
+```{r}
+maximo = function(datos){
+  mayor = datos[1]
+  for (dato in datos) {
+    if(dato > mayor){
+      mayor = dato
+    }
+  }
+  return (mayor)
+}
+
+maximo(1:20)
+```
+
+# 2 Aplicando funciones a Data Frames
+
+A menudo querremos aplicar una función a una columna o una fila de un Data Frame. Esto podría hacerse recorriendo el Data Frame mediante un bucle. Por ejemplo, si queremos calcular el promedio de cada una de las columnas del conjunto de datos iris, podríamos hacerlo del siguiente modo
+
+```{r}
+library(datasets)
+data(iris)
+
+for (i in 1:(ncol(iris)-1)){#Para cada columna menos para la de la especie
+    prom = promedio(iris[,i]) #Vamos calculando el valor promedio con nuestra función de cada columna ([,i]); podíamos haber usado también la función mean() de R
+    print(paste("El promedio de", names(iris)[i], "es", prom))
+}
+```
+
+Por supuesto, en vez de usar nuestra función ´promedio()´ también se podía haber usado la función `mean()` de R. Si lo que nos interesa es calcular el valor promedio de la longitud y del ancho de los sépalos y de los pétalos para cada una de las 150 flores, podríamos hacerlo así:
+```{r}
+for (i in 1:(nrow(iris))){#Para cada fila
+    prom = promedio(iris[i,1:4]) #Valor promedio de cada fila ([i,]), menos la de especies (1:4)
+    print(paste("El promedio de la fila ", i, "es", prom))
+}
+```
+Sin embargo en R tenemos una forma más fácil de aplicar una función a todas las columnas o todas las filas de un conjunto de datos: la función ´apply()´, que aplica una determinada función a las filas (en ese caso el valor del segundo argumento que hay que pasarle la función es 1) o a las columnas (en ese caso hay que pasar el valor de 2 como segundo argumento) de un conjunto de datos:
+
+```{r}
+library(dplyr) #Vamos a usar la función select para seleccionar todas las columnas menos la de la especie
+apply(select(iris, -Species), 2, promedio) #Promedio de cada columna; eliminamos primero el atributo de las especies
+apply(select(iris, -Species), 1, promedio) #Promedio de cada fila
+```
+
+# 2.1 Ejercicios
+
+Dado el conjunto de datos "USArrests":
+```{r}
+data("USArrests")
+head(USArrests)
+```
+Calcula el promedio y la desviación estándar de cada uno de los tipos de crímenes para Estados Unidos.
+
+```{r}
+library(dplyr) #Vamos a usar la función select para seleccionar todas las columnas menos la de la especie
+apply(USArrests, 2, mean) #Promedio de cada columna; eliminamos primero el atributo de las especies
+apply(USArrests, 2, sd) #Promedio de cada columna; eliminamos primero el atributo de las especies
+```
+
+A continuación calcula la suma de todos los tipos de crímenes para cada estado:
+
+```{r}
+apply(select(USArrests, -UrbanPop), 1, promedio) 
+```
+
+# 2.2 Apoyándonos las funciones para imputar valores perdidos
+
+Una de las tareas típicas que tenemos que hacer con un conjunto de datos es imputar valores perdidos. Estos valores en R se representa como `NA`. Vamos a generar una versión del Iris dataset donde aleatoriamente vamos a reemplazar algunos de sus valores con `NA`:
+
+```{r}
+data(iris)
+for (i in 1:(ncol(iris)-1)){#Para cada columna menos para la de la especie
+    for (j in 1:nrow(iris)){#Para cada fila
+      if(rnorm(1)>2){#Si el valor de una distribución normal con media 0 y desviación 1 es mayor que 2
+        iris[j,i]=NA #Ponemos un NA en esa posición
+      }
+    }
+}
+```
+¿Cuántos valores perdidos tenemos ahora en el conjunto de datos?. Estos valores se pueden identificar con la función `is.na()`, que devuelve `TRUE` si un dato es `NA` y `FALSE` en caso contrario. Si se suman, los valores `TRUE` equivalen a 1 y los `FALSE` a 0:
+
+```{r}
+vector = c(TRUE, FALSE, TRUE, TRUE, FALSE)
+sum(vector)
+```
+Por lo tanto, con la siguiente sentencia podemos calcular cuántos valores perdidos hay en el conjunto iris modificado:
+
+```{r}
+sum(is.na(iris))
+```
+
+Dado un conjunto de datos, como por ejemplo una columna de un Data Frame, la siguiente función teemplaza todos los `NA` por el valor promedio de todos los datos que se encuentran presentes. En el caso de emplear otro valor para la imputación, habría que sustituir el valor promedio por ese valor en esta función:
+
+```{r}
+inputarPromedio = function(datos){
+  prom=mean(datos, na.rm = TRUE)#Calculamos el valor promedio de los datos ignorando los valores perdidos
+  datos[is.na(datos)] = prom #Todas las posiciones con NA se cambian al valor promedio
+  return (datos) #Devolvemos los datos imputados
+}
+
+```
+Empleando el operador de encadenamiento, y esta función, podemos hacer:
+```{r}
+
+iris_inputado = iris %>% #Los datos con missing values
+                select(-Species)  %>%  #La especie no se imputa, la retiramos
+                apply( 2, inputarPromedio) %>% #Inputamos con nuestra función, plicada con apply
+                cbind.data.frame(iris$Species) #Ponemos devuelta la columna de la especie
+sum(is.na(iris_inputado))
+
+```
+
+
+## 2.2.1 Ejercicios
+
+Dado el conjunto de datos "USArrests", donde artificialmente se han añadido varios `NA`:
+```{r}
+data("USArrests")
+for (i in 1:ncol(USArrests)){#Para cada columna menos para la de la especie
+    for (j in 1:nrow(USArrests)){#Para cada fila
+      if(rnorm(1)>1.5){#Si el valor de una distribución normal con media 0 y desviación 1 es mayor que 1.5
+        USArrests[j,i]=NA #Ponemos un NA en esa posición
+      }
+    }
+}
+
+sum(is.na(USArrests))
+head(USArrests)
+
+```
+
+Imputa los valores perdidos empleando la función `imputarPromedio()`
+```{r}
+
+USArrests_inputado = apply(USArrests, 2, inputarPromedio)
+sum(is.na(USArrests_inputado))
+
+```
+
+
+
+
+
