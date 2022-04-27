@@ -1,0 +1,597 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Instalando y usando paquetes},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{Instalando y usando paquetes}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{los-paquetes}{%
+\section{1. Los Paquetes}\label{los-paquetes}}
+
+Los paquetes en R son colecciones de funciones y datos generados por la
+comunidad. Algunos vienen por defecto con el entorno de R, mientras que
+otros hay que instalarlos desde repositorios. Los principales
+repositorios son:
+
+\begin{itemize}
+\tightlist
+\item
+  CRAN \url{https://cran.r-project.org/} el repositorio oficial de R.
+\item
+  Bioconductor \url{https://www.bioconductor.org/}, que aloja paquetes
+  relacionados con la bioinformática.
+\item
+  Github \url{https://github.com/} no está relacionado con R
+  específicamente, pero es muy popular para proyectos de código abierto.
+\end{itemize}
+
+Podemos ver los paquetes cargados en el entorno con el comando
+\texttt{search()}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{search}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] ".GlobalEnv"        "package:stats"     "package:graphics" 
+## [4] "package:grDevices" "package:utils"     "package:datasets" 
+## [7] "package:methods"   "Autoloads"         "package:base"
+\end{verbatim}
+
+Los paquetes que vemos en este momento son los que están cargados por
+defecto. En el paquete \texttt{datasets} hay conjuntos de datos de
+ejemplo que se pueden cargar con el comando \texttt{data()}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{data}\NormalTok{(iris)}
+\NormalTok{iris}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##     Sepal.Length Sepal.Width Petal.Length Petal.Width    Species
+## 1            5.1         3.5          1.4         0.2     setosa
+## 2            4.9         3.0          1.4         0.2     setosa
+## 3            4.7         3.2          1.3         0.2     setosa
+## 4            4.6         3.1          1.5         0.2     setosa
+## 5            5.0         3.6          1.4         0.2     setosa
+## 6            5.4         3.9          1.7         0.4     setosa
+## 7            4.6         3.4          1.4         0.3     setosa
+## 8            5.0         3.4          1.5         0.2     setosa
+## 9            4.4         2.9          1.4         0.2     setosa
+## 10           4.9         3.1          1.5         0.1     setosa
+## 11           5.4         3.7          1.5         0.2     setosa
+## 12           4.8         3.4          1.6         0.2     setosa
+## 13           4.8         3.0          1.4         0.1     setosa
+## 14           4.3         3.0          1.1         0.1     setosa
+## 15           5.8         4.0          1.2         0.2     setosa
+## 16           5.7         4.4          1.5         0.4     setosa
+## 17           5.4         3.9          1.3         0.4     setosa
+## 18           5.1         3.5          1.4         0.3     setosa
+## 19           5.7         3.8          1.7         0.3     setosa
+## 20           5.1         3.8          1.5         0.3     setosa
+## 21           5.4         3.4          1.7         0.2     setosa
+## 22           5.1         3.7          1.5         0.4     setosa
+## 23           4.6         3.6          1.0         0.2     setosa
+## 24           5.1         3.3          1.7         0.5     setosa
+## 25           4.8         3.4          1.9         0.2     setosa
+## 26           5.0         3.0          1.6         0.2     setosa
+## 27           5.0         3.4          1.6         0.4     setosa
+## 28           5.2         3.5          1.5         0.2     setosa
+## 29           5.2         3.4          1.4         0.2     setosa
+## 30           4.7         3.2          1.6         0.2     setosa
+## 31           4.8         3.1          1.6         0.2     setosa
+## 32           5.4         3.4          1.5         0.4     setosa
+## 33           5.2         4.1          1.5         0.1     setosa
+## 34           5.5         4.2          1.4         0.2     setosa
+## 35           4.9         3.1          1.5         0.2     setosa
+## 36           5.0         3.2          1.2         0.2     setosa
+## 37           5.5         3.5          1.3         0.2     setosa
+## 38           4.9         3.6          1.4         0.1     setosa
+## 39           4.4         3.0          1.3         0.2     setosa
+## 40           5.1         3.4          1.5         0.2     setosa
+## 41           5.0         3.5          1.3         0.3     setosa
+## 42           4.5         2.3          1.3         0.3     setosa
+## 43           4.4         3.2          1.3         0.2     setosa
+## 44           5.0         3.5          1.6         0.6     setosa
+## 45           5.1         3.8          1.9         0.4     setosa
+## 46           4.8         3.0          1.4         0.3     setosa
+## 47           5.1         3.8          1.6         0.2     setosa
+## 48           4.6         3.2          1.4         0.2     setosa
+## 49           5.3         3.7          1.5         0.2     setosa
+## 50           5.0         3.3          1.4         0.2     setosa
+## 51           7.0         3.2          4.7         1.4 versicolor
+## 52           6.4         3.2          4.5         1.5 versicolor
+## 53           6.9         3.1          4.9         1.5 versicolor
+## 54           5.5         2.3          4.0         1.3 versicolor
+## 55           6.5         2.8          4.6         1.5 versicolor
+## 56           5.7         2.8          4.5         1.3 versicolor
+## 57           6.3         3.3          4.7         1.6 versicolor
+## 58           4.9         2.4          3.3         1.0 versicolor
+## 59           6.6         2.9          4.6         1.3 versicolor
+## 60           5.2         2.7          3.9         1.4 versicolor
+## 61           5.0         2.0          3.5         1.0 versicolor
+## 62           5.9         3.0          4.2         1.5 versicolor
+## 63           6.0         2.2          4.0         1.0 versicolor
+## 64           6.1         2.9          4.7         1.4 versicolor
+## 65           5.6         2.9          3.6         1.3 versicolor
+## 66           6.7         3.1          4.4         1.4 versicolor
+## 67           5.6         3.0          4.5         1.5 versicolor
+## 68           5.8         2.7          4.1         1.0 versicolor
+## 69           6.2         2.2          4.5         1.5 versicolor
+## 70           5.6         2.5          3.9         1.1 versicolor
+## 71           5.9         3.2          4.8         1.8 versicolor
+## 72           6.1         2.8          4.0         1.3 versicolor
+## 73           6.3         2.5          4.9         1.5 versicolor
+## 74           6.1         2.8          4.7         1.2 versicolor
+## 75           6.4         2.9          4.3         1.3 versicolor
+## 76           6.6         3.0          4.4         1.4 versicolor
+## 77           6.8         2.8          4.8         1.4 versicolor
+## 78           6.7         3.0          5.0         1.7 versicolor
+## 79           6.0         2.9          4.5         1.5 versicolor
+## 80           5.7         2.6          3.5         1.0 versicolor
+## 81           5.5         2.4          3.8         1.1 versicolor
+## 82           5.5         2.4          3.7         1.0 versicolor
+## 83           5.8         2.7          3.9         1.2 versicolor
+## 84           6.0         2.7          5.1         1.6 versicolor
+## 85           5.4         3.0          4.5         1.5 versicolor
+## 86           6.0         3.4          4.5         1.6 versicolor
+## 87           6.7         3.1          4.7         1.5 versicolor
+## 88           6.3         2.3          4.4         1.3 versicolor
+## 89           5.6         3.0          4.1         1.3 versicolor
+## 90           5.5         2.5          4.0         1.3 versicolor
+## 91           5.5         2.6          4.4         1.2 versicolor
+## 92           6.1         3.0          4.6         1.4 versicolor
+## 93           5.8         2.6          4.0         1.2 versicolor
+## 94           5.0         2.3          3.3         1.0 versicolor
+## 95           5.6         2.7          4.2         1.3 versicolor
+## 96           5.7         3.0          4.2         1.2 versicolor
+## 97           5.7         2.9          4.2         1.3 versicolor
+## 98           6.2         2.9          4.3         1.3 versicolor
+## 99           5.1         2.5          3.0         1.1 versicolor
+## 100          5.7         2.8          4.1         1.3 versicolor
+## 101          6.3         3.3          6.0         2.5  virginica
+## 102          5.8         2.7          5.1         1.9  virginica
+## 103          7.1         3.0          5.9         2.1  virginica
+## 104          6.3         2.9          5.6         1.8  virginica
+## 105          6.5         3.0          5.8         2.2  virginica
+## 106          7.6         3.0          6.6         2.1  virginica
+## 107          4.9         2.5          4.5         1.7  virginica
+## 108          7.3         2.9          6.3         1.8  virginica
+## 109          6.7         2.5          5.8         1.8  virginica
+## 110          7.2         3.6          6.1         2.5  virginica
+## 111          6.5         3.2          5.1         2.0  virginica
+## 112          6.4         2.7          5.3         1.9  virginica
+## 113          6.8         3.0          5.5         2.1  virginica
+## 114          5.7         2.5          5.0         2.0  virginica
+## 115          5.8         2.8          5.1         2.4  virginica
+## 116          6.4         3.2          5.3         2.3  virginica
+## 117          6.5         3.0          5.5         1.8  virginica
+## 118          7.7         3.8          6.7         2.2  virginica
+## 119          7.7         2.6          6.9         2.3  virginica
+## 120          6.0         2.2          5.0         1.5  virginica
+## 121          6.9         3.2          5.7         2.3  virginica
+## 122          5.6         2.8          4.9         2.0  virginica
+## 123          7.7         2.8          6.7         2.0  virginica
+## 124          6.3         2.7          4.9         1.8  virginica
+## 125          6.7         3.3          5.7         2.1  virginica
+## 126          7.2         3.2          6.0         1.8  virginica
+## 127          6.2         2.8          4.8         1.8  virginica
+## 128          6.1         3.0          4.9         1.8  virginica
+## 129          6.4         2.8          5.6         2.1  virginica
+## 130          7.2         3.0          5.8         1.6  virginica
+## 131          7.4         2.8          6.1         1.9  virginica
+## 132          7.9         3.8          6.4         2.0  virginica
+## 133          6.4         2.8          5.6         2.2  virginica
+## 134          6.3         2.8          5.1         1.5  virginica
+## 135          6.1         2.6          5.6         1.4  virginica
+## 136          7.7         3.0          6.1         2.3  virginica
+## 137          6.3         3.4          5.6         2.4  virginica
+## 138          6.4         3.1          5.5         1.8  virginica
+## 139          6.0         3.0          4.8         1.8  virginica
+## 140          6.9         3.1          5.4         2.1  virginica
+## 141          6.7         3.1          5.6         2.4  virginica
+## 142          6.9         3.1          5.1         2.3  virginica
+## 143          5.8         2.7          5.1         1.9  virginica
+## 144          6.8         3.2          5.9         2.3  virginica
+## 145          6.7         3.3          5.7         2.5  virginica
+## 146          6.7         3.0          5.2         2.3  virginica
+## 147          6.3         2.5          5.0         1.9  virginica
+## 148          6.5         3.0          5.2         2.0  virginica
+## 149          6.2         3.4          5.4         2.3  virginica
+## 150          5.9         3.0          5.1         1.8  virginica
+\end{verbatim}
+
+Podemos obtener ayuda sobre cualquier comando con \texttt{?} (observa el
+panel inferior derecho):
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{?data}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## starting httpd help server ... done
+\end{verbatim}
+
+Con el operador \texttt{\$} podemos acceder a cada una de las variables
+del conjunto de datos Iris:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{iris}\OperatorTok{$}\NormalTok{Sepal.Width}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   [1] 3.5 3.0 3.2 3.1 3.6 3.9 3.4 3.4 2.9 3.1 3.7 3.4 3.0 3.0 4.0 4.4 3.9 3.5
+##  [19] 3.8 3.8 3.4 3.7 3.6 3.3 3.4 3.0 3.4 3.5 3.4 3.2 3.1 3.4 4.1 4.2 3.1 3.2
+##  [37] 3.5 3.6 3.0 3.4 3.5 2.3 3.2 3.5 3.8 3.0 3.8 3.2 3.7 3.3 3.2 3.2 3.1 2.3
+##  [55] 2.8 2.8 3.3 2.4 2.9 2.7 2.0 3.0 2.2 2.9 2.9 3.1 3.0 2.7 2.2 2.5 3.2 2.8
+##  [73] 2.5 2.8 2.9 3.0 2.8 3.0 2.9 2.6 2.4 2.4 2.7 2.7 3.0 3.4 3.1 2.3 3.0 2.5
+##  [91] 2.6 3.0 2.6 2.3 2.7 3.0 2.9 2.9 2.5 2.8 3.3 2.7 3.0 2.9 3.0 3.0 2.5 2.9
+## [109] 2.5 3.6 3.2 2.7 3.0 2.5 2.8 3.2 3.0 3.8 2.6 2.2 3.2 2.8 2.8 2.7 3.3 3.2
+## [127] 2.8 3.0 2.8 3.0 2.8 3.8 2.8 2.8 2.6 3.0 3.4 3.1 3.0 3.1 3.1 3.1 2.7 3.2
+## [145] 3.3 3.0 2.5 3.0 3.4 3.0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{iris}\OperatorTok{$}\NormalTok{Sepal.Length}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   [1] 5.1 4.9 4.7 4.6 5.0 5.4 4.6 5.0 4.4 4.9 5.4 4.8 4.8 4.3 5.8 5.7 5.4 5.1
+##  [19] 5.7 5.1 5.4 5.1 4.6 5.1 4.8 5.0 5.0 5.2 5.2 4.7 4.8 5.4 5.2 5.5 4.9 5.0
+##  [37] 5.5 4.9 4.4 5.1 5.0 4.5 4.4 5.0 5.1 4.8 5.1 4.6 5.3 5.0 7.0 6.4 6.9 5.5
+##  [55] 6.5 5.7 6.3 4.9 6.6 5.2 5.0 5.9 6.0 6.1 5.6 6.7 5.6 5.8 6.2 5.6 5.9 6.1
+##  [73] 6.3 6.1 6.4 6.6 6.8 6.7 6.0 5.7 5.5 5.5 5.8 6.0 5.4 6.0 6.7 6.3 5.6 5.5
+##  [91] 5.5 6.1 5.8 5.0 5.6 5.7 5.7 6.2 5.1 5.7 6.3 5.8 7.1 6.3 6.5 7.6 4.9 7.3
+## [109] 6.7 7.2 6.5 6.4 6.8 5.7 5.8 6.4 6.5 7.7 7.7 6.0 6.9 5.6 7.7 6.3 6.7 7.2
+## [127] 6.2 6.1 6.4 7.2 7.4 7.9 6.4 6.3 6.1 7.7 6.3 6.4 6.0 6.9 6.7 6.9 5.8 6.8
+## [145] 6.7 6.7 6.3 6.5 6.2 5.9
+\end{verbatim}
+
+La función \texttt{summary()} muestra un resumen de un conjunto de datos
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(iris)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Sepal.Length    Sepal.Width     Petal.Length    Petal.Width   
+##  Min.   :4.300   Min.   :2.000   Min.   :1.000   Min.   :0.100  
+##  1st Qu.:5.100   1st Qu.:2.800   1st Qu.:1.600   1st Qu.:0.300  
+##  Median :5.800   Median :3.000   Median :4.350   Median :1.300  
+##  Mean   :5.843   Mean   :3.057   Mean   :3.758   Mean   :1.199  
+##  3rd Qu.:6.400   3rd Qu.:3.300   3rd Qu.:5.100   3rd Qu.:1.800  
+##  Max.   :7.900   Max.   :4.400   Max.   :6.900   Max.   :2.500  
+##        Species  
+##  setosa    :50  
+##  versicolor:50  
+##  virginica :50  
+##                 
+##                 
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(iris}\OperatorTok{$}\NormalTok{Sepal.Width)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   2.000   2.800   3.000   3.057   3.300   4.400
+\end{verbatim}
+
+\hypertarget{ejercicios}{%
+\subsection{1.1 Ejercicios}\label{ejercicios}}
+
+Busca en la ayuda como configurar el número de cifras significativas que
+muestra la función \texttt{summary()} y cámbialo para que sólo muestre
+un decimal:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#summary(iris ...)#Modifica esta línea}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{cargando-un-paquete-en-el-entorno}{%
+\subsection{1.2 Cargando un paquete en el
+entorno}\label{cargando-un-paquete-en-el-entorno}}
+
+La función ´bkde()´ calcula una estimación de la densidad de la
+distribución de un conjunto de datos. Es una función de un paquete que
+no está cargado por defecto. Si la intentamos invocar no va a funcionar:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#estimacion_densidad = bkde(iris$Sepal.Width)}
+\end{Highlighting}
+\end{Shaded}
+
+Podemos buscar en Que paquete esta con el comando \texttt{??}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{??bkde}
+\end{Highlighting}
+\end{Shaded}
+
+En la ayuda podemos ver que está en el paquete \texttt{KernSmooth}. Para
+cargar un paquete empleamos la función \texttt{library()} y el nombre
+del paquete, que puede ir entre comillas o sin comillas:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(KernSmooth)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## KernSmooth 2.23 loaded
+## Copyright M. P. Wand 1997-2009
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{estimacion_densidad =}\StringTok{ }\KeywordTok{bkde}\NormalTok{(iris}\OperatorTok{$}\NormalTok{Sepal.Width)}
+\KeywordTok{plot}\NormalTok{(estimacion_densidad)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{1.4Paquetes_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\hypertarget{instalando-un-paquete}{%
+\subsection{1.3 Instalando un paquete}\label{instalando-un-paquete}}
+
+El paquete \texttt{dplyr} contiene funciones útiles para manipular
+datos. Pero no está instalado por defecto, sino que hay que instalarlo
+(Para ejecutar el comando tendrás que quitar el comentario. Pero no
+podrás compilar todo el archivo .Rmd si no está comentado. La
+instalación de paquetes es algo que sólo es necesario realizar una vez,
+y no es algo que se deba hacer en Markdow):
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#install.packages("dplyr")}
+\end{Highlighting}
+\end{Shaded}
+
+Una vez instalado, hay que cargarlo:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(dplyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Registered S3 methods overwritten by 'tibble':
+##   method     from  
+##   format.tbl pillar
+##   print.tbl  pillar
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+Ahora podemos usar sus funciones. Seleccionamos solo las flores
+Virginica con la función \texttt{filter()}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{filter}\NormalTok{(iris,Species}\OperatorTok{==}\StringTok{"virginica"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Sepal.Length Sepal.Width Petal.Length Petal.Width   Species
+## 1           6.3         3.3          6.0         2.5 virginica
+## 2           5.8         2.7          5.1         1.9 virginica
+## 3           7.1         3.0          5.9         2.1 virginica
+## 4           6.3         2.9          5.6         1.8 virginica
+## 5           6.5         3.0          5.8         2.2 virginica
+## 6           7.6         3.0          6.6         2.1 virginica
+## 7           4.9         2.5          4.5         1.7 virginica
+## 8           7.3         2.9          6.3         1.8 virginica
+## 9           6.7         2.5          5.8         1.8 virginica
+## 10          7.2         3.6          6.1         2.5 virginica
+## 11          6.5         3.2          5.1         2.0 virginica
+## 12          6.4         2.7          5.3         1.9 virginica
+## 13          6.8         3.0          5.5         2.1 virginica
+## 14          5.7         2.5          5.0         2.0 virginica
+## 15          5.8         2.8          5.1         2.4 virginica
+## 16          6.4         3.2          5.3         2.3 virginica
+## 17          6.5         3.0          5.5         1.8 virginica
+## 18          7.7         3.8          6.7         2.2 virginica
+## 19          7.7         2.6          6.9         2.3 virginica
+## 20          6.0         2.2          5.0         1.5 virginica
+## 21          6.9         3.2          5.7         2.3 virginica
+## 22          5.6         2.8          4.9         2.0 virginica
+## 23          7.7         2.8          6.7         2.0 virginica
+## 24          6.3         2.7          4.9         1.8 virginica
+## 25          6.7         3.3          5.7         2.1 virginica
+## 26          7.2         3.2          6.0         1.8 virginica
+## 27          6.2         2.8          4.8         1.8 virginica
+## 28          6.1         3.0          4.9         1.8 virginica
+## 29          6.4         2.8          5.6         2.1 virginica
+## 30          7.2         3.0          5.8         1.6 virginica
+## 31          7.4         2.8          6.1         1.9 virginica
+## 32          7.9         3.8          6.4         2.0 virginica
+## 33          6.4         2.8          5.6         2.2 virginica
+## 34          6.3         2.8          5.1         1.5 virginica
+## 35          6.1         2.6          5.6         1.4 virginica
+## 36          7.7         3.0          6.1         2.3 virginica
+## 37          6.3         3.4          5.6         2.4 virginica
+## 38          6.4         3.1          5.5         1.8 virginica
+## 39          6.0         3.0          4.8         1.8 virginica
+## 40          6.9         3.1          5.4         2.1 virginica
+## 41          6.7         3.1          5.6         2.4 virginica
+## 42          6.9         3.1          5.1         2.3 virginica
+## 43          5.8         2.7          5.1         1.9 virginica
+## 44          6.8         3.2          5.9         2.3 virginica
+## 45          6.7         3.3          5.7         2.5 virginica
+## 46          6.7         3.0          5.2         2.3 virginica
+## 47          6.3         2.5          5.0         1.9 virginica
+## 48          6.5         3.0          5.2         2.0 virginica
+## 49          6.2         3.4          5.4         2.3 virginica
+## 50          5.9         3.0          5.1         1.8 virginica
+\end{verbatim}
+
+Seleccionamos la misma especie, pero solo aquellas que miden entre 2.7 y
+6 cm
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{filter}\NormalTok{(iris,Species}\OperatorTok{==}\StringTok{"virginica"} \OperatorTok{&}\StringTok{ }\NormalTok{Sepal.Length}\OperatorTok{<}\DecValTok{6} \OperatorTok{&}\StringTok{ }\NormalTok{Sepal.Width}\OperatorTok{<=}\FloatTok{2.7}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Sepal.Length Sepal.Width Petal.Length Petal.Width   Species
+## 1          5.8         2.7          5.1         1.9 virginica
+## 2          4.9         2.5          4.5         1.7 virginica
+## 3          5.7         2.5          5.0         2.0 virginica
+## 4          5.8         2.7          5.1         1.9 virginica
+\end{verbatim}
+
+Podemos desinstalar paquetes con el comando remove.packages(). Ojo que
+está comentado; puedes probar a descomentarlo y ejecutarlo.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#remove.packages("dplyr")}
+\end{Highlighting}
+\end{Shaded}
+
+\end{document}

@@ -63,13 +63,33 @@ promedio(1:10)
 Escribe una función a la cual se le pase un número `n` y que devuelva su factorial. Prueba la función con un par de llamadas.
 
 ```{r}
+factorial = function(n){
+  fact = 1
+  for (i in 1:n)
+  {
+    fact = fact * i
+  }
+  return (fact)
+}
 
+factorial (5)
+factorial (10)
 ```
 
 Escribe una función que calcule el máximo de un conjunto de números. Para ello, puedes suponer inicialmente que el máximo del conjunto es el primero de los números, y a continuación comparar el máximo que tienes en ese momento con todos los demás números; si alguno de los demás números es mayor que el máximo que tienes hasta ese momento, ese número pasa a ser el máximo.
 
 ```{r}
+maximo = function(datos){
+  mayor = datos[1]
+  for (dato in datos) {
+    if(dato > mayor){
+      mayor = dato
+    }
+  }
+  return (mayor)
+}
 
+maximo(1:20)
 ```
 
 # 2 Aplicando funciones a Data Frames
@@ -111,13 +131,15 @@ head(USArrests)
 Calcula el promedio y la desviación estándar de cada uno de los tipos de crímenes para Estados Unidos.
 
 ```{r}
-
+library(dplyr) #Vamos a usar la función select para seleccionar todas las columnas menos la de la especie
+apply(USArrests, 2, mean) #Promedio de cada columna; eliminamos primero el atributo de las especies
+apply(USArrests, 2, sd) #Promedio de cada columna; eliminamos primero el atributo de las especies
 ```
 
 A continuación calcula la suma de todos los tipos de crímenes para cada estado:
 
 ```{r}
-
+apply(select(USArrests, -UrbanPop), 1, promedio) 
 ```
 
 # 2.2 Apoyándonos las funciones para imputar valores perdidos
@@ -189,6 +211,8 @@ head(USArrests)
 Imputa los valores perdidos empleando la función `imputarPromedio()`
 ```{r}
 
+USArrests_inputado = apply(USArrests, 2, inputarPromedio)
+sum(is.na(USArrests_inputado))
 
 ```
 

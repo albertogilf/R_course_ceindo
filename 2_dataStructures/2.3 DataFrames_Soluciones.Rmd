@@ -145,16 +145,28 @@ summary(iris_grandes)
 
 Selecciona todas las flores que pertenezcan a la especie virginica.
 ```{r}
-
+virginica = filter(iris, Species == "virginica")
+head(virginica) 
 ```
 Selecciona todas las flores que pertenezcan a la especie virginica, y cuyo ancho de sépalo sea menor que 3.0 cm
 ```{r}
- 
+virginica = filter(iris, Species == "virginica"&Sepal.Width <3.0)
+head(virginica) 
 ```
 
 En el último ejemplo del apartado 2.1 la selección que se realizó devolvió 0 flores de la especie setosa, 26 de versicilor y 44 de virginica. Nos gustaría seleccionar aproximadamente la mitad de las flores más grandes de cada especie. ¿Cómo podríamos hacerlo?. Es decir, queremos seleccionar aquellas flores que sean versicolor **y** su longitud del pétalo sea mayor que el promedio de las flores versicolor, **o** que sean setosa **y** su longitud del pétalo sea mayor que el promedio de las flores setosa, **o** que sean virginica **y** su longitud del pétalo sea mayor que el promedio de las flores virginica. 
 ```{r}
-
+versicolor = filter(iris, Species == "versicolor")
+setosa = filter(iris, Species == "setosa")
+virginica = filter(iris, Species == "virginica")
+promedio_sepalos_versicolor = mean(versicolor$Sepal.Length)
+promedio_sepalos_setosa = mean(setosa$Sepal.Length)
+promedio_sepalos_virginica = mean(virginica$Sepal.Length)
+iris_grandes = filter(iris,
+                       (Species == "versicolor" & Sepal.Length > promedio_sepalos_versicolor) |
+                       (Species == "setosa" & Sepal.Length > promedio_sepalos_setosa) |
+                       (Species == "virginica" & Sepal.Length > promedio_sepalos_virginica))
+summary(iris_grandes)
 
 ```
 
@@ -176,12 +188,14 @@ Selecciona los asesinatos y los atracos.
 
 
 ```{r}
-
+asesinatos_y_atracos = select(USArrests, Murder, Assault)
+head (asesinatos_y_atracos)
 ```
 
 ¿Cuáles son los estados que tienen un número de muertes mayor que el doble del promedio?
 ```{r}
-
+asesinatos_altos = filter(asesinatos_y_atracos, Murder > 2*mean(Murder))
+asesinatos_altos
 
 ```
 
@@ -233,20 +247,25 @@ head(USArrests)
 
 Añade al conjunto de datos una columna que sea la suma total de los distintos números de crímenes (asesinatos, robos y violaciones):
 ```{r}
-
+USArrestsConTotal = mutate(USArrests, TotalCrime = Murder + Assault + Rape)
+head(USArrestsConTotal)
 ```
 
 
 Genera una versión del conjunto de datos anterior que esté estandarizada.
 
 ```{r}
-
+USArrests_escalado = mutate(USArrestsConTotal, Murder = scale(Murder)[,1],
+                       Assault = scale(Assault)[,1], UrbanPop = scale(UrbanPop)[,1],
+                       Rape = scale(Rape)[,1], TotalCrime = scale(TotalCrime)[,1])
+summary(USArrests_escalado)
 ```
 
  Ahora fusiona este conjunto de datos con el original:
  
 ```{r}
-
+final_USArrests = cbind(USArrests_escalado,USArrests)
+head(final_USArrests)
 ```
  
 # 3 El operador en cadena %>% 
@@ -291,7 +310,15 @@ head(new_iris)
 Repite el análisis del último ejercicio sobre el conjunto de datos USArrests, pero empleando en esta ocasión el operador de encadenamiento.
  
 ```{r}
-
+new_USArrests = USArrests %>% 
+                     mutate(Total = Murder + Assault + Rape) %>% 
+                     mutate(Murder.scale = scale(Murder)[,1],
+                            Assault.scale = scale(Assault)[,1], 
+                            UrbanPop.scale = scale(UrbanPop)[,1],
+                            Rape.scale = scale(Rape)[,1], 
+                            Total.scale = scale(Total)[,1]) %>%               
+                     cbind(USArrests)
+head(new_USArrests)
 ```
  
  

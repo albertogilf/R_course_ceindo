@@ -68,7 +68,22 @@ if(discr < 0){
 Prueba a cambiar en el código anterior el valor de 'a' por 0. ¿Qué pasa?. ¿Podrías gestionar esta situación con otro condicional?
 
 ```{r}
-
+a = 0
+b = 2
+c = 3
+if(a==0){
+   print("No es una ecuación de segundo grado ya que a es 0")
+}else{
+  discr = b*b -4*a*c
+  if(discr < 0){
+    print("La ecuación no tiene raíces reales")#Indicamos que no se puede resolver, y no se ejecutarán más sentencias
+  }else{#Si el discrimínante es no negativo, resolvemos la ecuación
+    discr = sqrt(discr)
+    raiz1 = (-b+discr)/(2*a)
+    raiz2 = (-b-discr)/(2*a)
+    print(paste("Las raíces son", raiz1, "y", raiz2))
+  }
+}
 ```
 
 # 2.Bucles
@@ -128,11 +143,25 @@ for (i in 1:nrow(pacientes))
 Escribe un código que dado un número entero `n` calcule su factorial:
 
 ```{r}
+n = 5
+fact = 1
+for (i in 1:n)
+{
+    fact = fact * i
+}
+print(paste ("El factorial es ", fact))
 
 ```
 Dado el Data Frame pacientes, calcula la suma de todos los pesos y de todas las alturas de los pacientes.
 ```{r}
-
+suma_pesos =0  
+suma_alturas = 0
+for (i in 1:nrow(pacientes))
+{
+   suma_pesos = suma_pesos + pacientes[i,]$Peso
+   suma_alturas = suma_alturas + pacientes[i,]$Altura
+}
+  print(paste ("La suma de los pesos es", suma_pesos, "y la de las alturas", suma_alturas))
 ```
 
 ## 2.1 El bucle while
@@ -164,13 +193,32 @@ Ejecuta varias veces el código anterior. Podrás ver que la estimación varía 
 ### 2.2.1 Ejercicios
 Calcula nuevamente el factorial de un número, pero empleando un bucle While en esta ocasión:
 ```{r}
-
+n = 5
+i = 1
+fact = 1
+while (i <= 5)
+{
+    fact = fact * i
+    i = i +1
+}
+print(paste ("El factorial es ", fact))
 
 ```
 
 Volvamos al ejemplo que estimaba la probabilidad de generar un número aleatorio > 3 con la función `rnorm()`. Si repetimos 1000 veces el proceso, y calculamos el promedio de las 1000 repeticiones, tendremos  una mejor estimación. Intenta escribir el código para hacerlo.
 
 ```{r}
+numeros_generoados = 0
+n = 0
+rep=1000
+for(i in 1:rep){
+  while (n<3){
+    n = rnorm(1)
+    numeros_generoados = numeros_generoados + 1
+  }
+  n=0
+}
 
+print(paste("La probabilidad es ", rep/numeros_generoados))
 
 ```

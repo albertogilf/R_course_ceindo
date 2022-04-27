@@ -82,25 +82,29 @@ paciente
 Dado el siguiente vector
 
 ```{r}
-
+vec = seq(1, 30, by=0.2)
 ```
 
 ¿Qué es lo que a hecho exactamente la función `seq ()`? ¿Cuántos elementos tiene `vec`?
 ```{r}
-
+vec
+length(vec)
 
 ```
 
 Crea un nuevo vector que contenga los elementos de `vec` que se encuentren entre 8.0 y 12.0. ¿Cuántos elementos son?
 
 ```{r}
-
+vec2 = vec[vec >= 8 & vec <= 12]
+vec2
+length(vec2)
 ```
 
 Súmale 1 a todos los elementos del nuevo vector**
 
 ```{r}
-
+vec2 = vec2+1
+vec2
 ```
 
 # 2. Listas
@@ -178,18 +182,25 @@ personas[2][[1]] #personas[2] devuelve una lista con un único elemento; [[1]] a
 Crea una lista de la compra que contenga los nombres de los productos a comprar y las unidades. Necesitamos comprar  10 manzanas, 2 zumos de naranja, 3 barras de pan y 1 bote de suavizante.
 
 ```{r}
-
+producto1 = list("Nombre" = "Manzana", "Unidades" = 10)
+producto2 = list("Nombre" = "Zumo de naranja", "Unidades" = 2)
+producto3 = list("Nombre" = "Barra de pan", "Unidades" = 3)
+producto4 = list("Nombre" = "Suavizante", "Unidades" = 1)
+lista_compra = list (producto1, producto2, producto3, producto4)
+lista_compra
 ```
 
 Modifica la lista de la compra para que sólo compremos 2 barras de pan
 
 ```{r}
-
+lista_compra[[3]]$Unidades = 2 
+lista_compra
 ```
 
 Elimina de la lista de la compra el suavizante
 ```{r}
-
+lista_compra = lista_compra[-4]
+lista_compra
 ```
 
 # 3. Matrices
@@ -234,12 +245,20 @@ mat[,4]#Mostramos la cuarta columna
 
 Crea una matriz con cinco filas y cuatro columnas que contenga los 20 primeros números enteros. Los números se deberán asignar por columnas; es decir, la primera columna de la matriz deberán ser los números 1, 2, 3, 4 y 5; la segunda columna deberán ser los números 6, 7, 8, 9 y 10; y así sucesivamente.
 ```{r}
+matriz = matrix(
+  1:20, 
+  nrow = 5, 
+  ncol = 4, 
+  byrow = FALSE
+  )
 
+matriz
 ```
 
 Muestra la tercera columna y la cuarta fila de la matriz.
 ```{r}
-
+matriz[,3]
+matriz[4,]
 ```
 
 # 4. Factores
@@ -286,5 +305,7 @@ cartas_factor
 Crea una variable tipo factor que represente el género de un conjunto de personas; en este conjunto habrá, en el siguiente orden, los siguientes géneros: mujer, hombre, hombre, mujer, mujer.
 
 ```{r}
-
+generos = factor(c("Mujer", "Hombre", "Hombre", "Mujer", "Mujer"),
+          levels = c("Hombre", "Mujer"));
+generos
 ```
