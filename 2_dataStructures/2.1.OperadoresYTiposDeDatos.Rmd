@@ -86,7 +86,7 @@ sub_nombre
 Los datos lógicos pueden solo tomar valor `TRUE` o `FALSE`. Representan una condición que o bien puede cumplirse (`TRUE`), o bien no se cumple (`FALSE`), pero no existen situaciones intermedias. Por ejemplo ser o no ser mayor de edad, o estar vivo o no estar vivo.
 
 ```{r}
-bool= TRUE
+bool = TRUE
 bool2 = FALSE
 ```
 

@@ -19,7 +19,7 @@
 #de la caja". Creemos una variable con nombre "x" y con valor 2
 
 x = 2 #Observa cómo ha aparecido la variable en el "Global Environment" a la derecha
-x
+x # En modo interactivo al teclear una variable se muestra su valor.
 
 # Una variable puede cambiar de valor
 
@@ -29,6 +29,12 @@ x = x+1 #En esta sentencia se suma 1 a x, y se vuelve a asignar el valor resulta
 x
 y = 2*x
 y
+
+#También puede emplearse el operador <- como asignación, aunque en este curso emplearemos =
+
+x <- 6
+
+#Puedes probar a ejecutar las sentencias anteriores desde este archivo pulsando ctrl + enter
 
 #Ojo que se distingue entre mayúsculas y minúsculas;la siguiente sentencia da un error al ejecutarse
 

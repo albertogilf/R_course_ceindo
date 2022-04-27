@@ -28,6 +28,7 @@ pacientes$Nombre
 pacientes[,1] #Primera componente, los nombres
 pacientes[1,] #Primera fila, todos los datos de Juan Martínez; aparecerá como un Data Frame de una fila
 pacientes[1,]$Peso #El peso del primer elemento, de Juan Martínez
+pacientes[1, "Peso"] #También podemos usar el nombre de la columna como segundo subíndice
 ```
 
 Podemos conocer el número de filas y de columnas empleando las funciones `nrow()` y `ncol()`:
@@ -96,19 +97,19 @@ nrow(iris_20_primeras)
 La función `filter()` permite seleccionar subconjuntos de datos que cumplan un determinado criterio. Le tenemos que pasar el conjunto de datos, y algún criterio de filtrado en base a las columnas. Por ejemplo, seleccionamos sólo la especie versicolor
 
 ```{r}
-versicolor <- filter(iris, Species == "versicolor") #Selecciona sólo las flores cuya especie es igual a versicolor
+versicolor = filter(iris, Species == "versicolor") #Selecciona sólo las flores cuya especie es igual a versicolor
 head(versicolor) 
 ```
 Podemos emplear los operadores lógicos que hemos visto en la primera parte de este tema para crear condiciones de filtrado más sofisticadas. Por ejemplo, vamos a seleccionar flores que pertenezcan a la especie versicolor **o** (or logico, operador `|`) a setosa:
 
 ```{r}
-versicolor_o_setosa <- filter(iris, Species == "versicolor"|Species == "setosa")
+versicolor_o_setosa = filter(iris, Species == "versicolor"|Species == "setosa")
 head(versicolor_o_setosa) 
 ```
 Ahora vamos a seleccionar estas dos especies, pero sólo aquellas cuya longitud de sépalo sea mayor que 5.0 cm. La condición es que sea versicolor **o** setosa, **y** (and lógico, '&') que su longitud de sépalo sea mayor que 5.0 centímetros:
 
 ```{r}
-versicolor_o_setosa_grandes <- filter(iris, 
+versicolor_o_setosa_grandes = filter(iris, 
                               (Species == "versicolor" | Species == "setosa")  # Es versicolor o setosa
                               & Sepal.Length > 5.0) # y además tiene que cumplir esta condición
 summary(versicolor_o_setosa_grandes)
@@ -117,7 +118,7 @@ Vamos a seleccionar aquellas flores cuya longitud de sépalo sea mayor que el pr
 
 ```{r}
 promedio_sepalos = mean(iris$Sepal.Length)
-iris_grandes <- filter(iris, Sepal.Length > promedio_sepalos)
+iris_grandes = filter(iris, Sepal.Length > promedio_sepalos)
 summary(iris_grandes)
 ```
 
@@ -126,24 +127,24 @@ summary(iris_grandes)
 
 Selecciona todas las flores que pertenezcan a la especie virginica.
 ```{r}
-virginica <- filter(iris, Species == "virginica")
+virginica = filter(iris, Species == "virginica")
 head(virginica) 
 ```
 Selecciona todas las flores que pertenezcan a la especie virginica, y cuyo ancho de sépalo sea menor que 3.0 cm
 ```{r}
-virginica <- filter(iris, Species == "virginica"&Sepal.Width <3.0)
+virginica = filter(iris, Species == "virginica"&Sepal.Width <3.0)
 head(virginica) 
 ```
 
 En el último ejemplo del apartado 2.1 la selección que se realizó devolvió 0 flores de la especie setosa, 26 de versicilor y 44 de virginica. Nos gustaría seleccionar aproximadamente la mitad de las flores más grandes de cada especie. ¿Cómo podríamos hacerlo?. Es decir, queremos seleccionar aquellas flores que sean versicolor **y** su longitud del pétalo sea mayor que el promedio de las flores versicolor, **o** que sean setosa **y** su longitud del pétalo sea mayor que el promedio de las flores setosa, **o** que sean virginica **y** su longitud del pétalo sea mayor que el promedio de las flores virginica. 
 ```{r}
-versicolor <- filter(iris, Species == "versicolor")
-setosa <- filter(iris, Species == "setosa")
-virginica <- filter(iris, Species == "virginica")
+versicolor = filter(iris, Species == "versicolor")
+setosa = filter(iris, Species == "setosa")
+virginica = filter(iris, Species == "virginica")
 promedio_sepalos_versicolor = mean(versicolor$Sepal.Length)
 promedio_sepalos_setosa = mean(setosa$Sepal.Length)
 promedio_sepalos_virginica = mean(virginica$Sepal.Length)
-iris_grandes <- filter(iris,
+iris_grandes = filter(iris,
                        (Species == "versicolor" & Sepal.Length > promedio_sepalos_versicolor) |
                        (Species == "setosa" & Sepal.Length > promedio_sepalos_setosa) |
                        (Species == "virginica" & Sepal.Length > promedio_sepalos_virginica))
@@ -155,7 +156,7 @@ summary(iris_grandes)
 La función `select()` permite seleccionar columnas a partir de su nombre. Por ejemplo, quedémonos solo con la información relativa a los sépalos Y a la especie, y emitamos la información de los pétalos:
 
 ```{r}
-seleccionado <- select(iris, Sepal.Length, Sepal.Width, Species)
+seleccionado = select(iris, Sepal.Length, Sepal.Width, Species)
 head (seleccionado)
 ```
 ### 2.2.1 Ejercicios
@@ -169,7 +170,7 @@ Selecciona los asesinatos y los atracos.
 
 
 ```{r}
-asesinatos_y_atracos <- select(USArrests, Murder, Assault)
+asesinatos_y_atracos = select(USArrests, Murder, Assault)
 head (asesinatos_y_atracos)
 ```
 

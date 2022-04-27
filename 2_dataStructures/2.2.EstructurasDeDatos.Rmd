@@ -116,13 +116,18 @@ lista = list (1, "Hola", TRUE)
 lista
 ```
 
-Para acceder a sus distintas posiciones debemos usar el operador `[[]]`:
+Podemos acceder a las posiciones de una lista empleando el operador `[]`, pero de ese caso cada uno de los elementos que devuelva va a ser una lista  con un único elemento:
 
 ```{r}
-lista [[1]]
-lista [[2]]
-lista [[1]]= 25 #Modificamos el elemento que está en la posición 1
-lista [[1]]
+lista [2] #Observa la sintaxis en la consola; [[1]] significa que es una lista de un elemento, y su único elemento es [1] 1
+lista [1]= 25 #Modificamos el elemento que está en la posición 1
+lista [1]
+```
+
+Si queremos acceder a una lista y que nos devuelva el elemento que está en una determinada posición, y no una lista con  un único elemento, debemos emplear `[[]]`:
+
+```{r}
+lista [[2]] #Observa que en esta ocasión directamente aparece "Hola", sin estar precedido de [[1]]
 ```
 
 También le podemos dar nombres a las posiciones de la lista usando la función `names()`; aunque en este caso tendremos que usar el operador `$` para acceder a cada campo mediante su nombre:
@@ -148,9 +153,9 @@ marta = list("Nombre" = "Marta Otero", "Peso" = 52, "Altura" = 166, "Edad" = 16 
 julia = list("Nombre" = "Julia Gil", "Peso" = 62, "Altura" = 178, "Edad" = 23 )
 personas = list (juan, marta, julia) # Creamos una lista con las tres listas  anteriores
 personas
-personas[[1]]
-personas[[2]]
-personas[[3]]
+personas[1]
+personas[2]
+personas[3]
 ```
 
 Para eliminar un elemento de una lista podemos emplear índices negativos; por ejemplo, borramos a Marta:
@@ -159,6 +164,18 @@ Para eliminar un elemento de una lista podemos emplear índices negativos; por e
 personas = personas[-2] #Todos los elementos de la lista personas "menos/excepto" el que está en la segunda posición
 personas # Ahora la lista tiene sólo dos componentes
 ```
+
+Si queremos modificar la edad de Julia podemos hacer:
+
+```{r}
+personas[[2]]$Edad=24 
+```
+En este caso es necesario usar el operador `[[]]`; si hubiéramos puesto `personas[2]` lo que nos del volvería es una lista de un único elemento, que no tienen ningún campo con nombre, el único elemento de esta lista sería la lista correspondiente con Julia:
+
+```{r}
+personas[2][[1]] #personas[2] devuelve una lista con un único elemento; [[1]] accede a dicho elemento
+```
+
 
 ## 2.1 Ejercicios
 
@@ -176,7 +193,7 @@ lista_compra
 Modifica la lista de la compra para que sólo compremos 2 barras de pan
 
 ```{r}
-lista_compra[[3]]$Unidades = 2
+lista_compra[[3]]$Unidades = 2 
 lista_compra
 ```
 
