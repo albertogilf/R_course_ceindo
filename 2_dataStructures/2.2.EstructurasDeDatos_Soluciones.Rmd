@@ -68,7 +68,7 @@ paciente["Peso"]
 paciente["Altura"]
 ```
 
-Para modificar la posición de un vector simplemente le asignamos el nuevo valor:
+Para modificar el valor de la posición de un vector simplemente le asignamos el nuevo valor:
 
 ```{r}
 paciente
@@ -116,7 +116,7 @@ lista = list (1, "Hola", TRUE)
 lista
 ```
 
-Podemos acceder a las posiciones de una lista empleando el operador `[]`, pero de ese caso cada uno de los elementos que devuelva va a ser una lista  con un único elemento:
+Podemos acceder a las posiciones de una lista empleando el operador `[]`, pero en ese caso cada uno de los elementos que devuelva va a ser una lista  con un único elemento:
 
 ```{r}
 lista [2] #Observa la sintaxis en la consola; [[1]] significa que es una lista de un elemento, y su único elemento es [1] 1

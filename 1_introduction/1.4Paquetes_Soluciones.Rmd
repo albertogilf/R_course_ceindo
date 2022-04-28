@@ -86,7 +86,7 @@ plot(estimacion_densidad)
 
 ## 1.3 Instalando un paquete
 
-El paquete `dplyr` contiene funciones útiles para manipular datos. Pero no está instalado por defecto, sino que hay que instalarlo (Para ejecutar el comando tendrás que quitar el comentario. Pero no podrás compilar todo el archivo .Rmd si no está comentado. La instalación de paquetes es algo que sólo es necesario realizar una vez, y no es algo que se deba hacer en Markdow):
+El paquete `dplyr` contiene funciones útiles para manipular datos. Pero no está instalado por defecto, sino que hay que instalarlo (Para ejecutar el comando tendrás que quitar el comentario. Pero no podrás compilar todo el archivo .Rmd si no está comentado. La instalación de paquetes es algo que sólo es necesario realizar una vez, y no es algo que se deba hacer en Markdown):
 
 ```{r}
 #install.packages("dplyr")

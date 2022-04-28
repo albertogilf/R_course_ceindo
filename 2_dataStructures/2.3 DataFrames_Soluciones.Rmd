@@ -71,14 +71,14 @@ summary(iris)
 head(iris) #head muestra los seis primeros datos, la "cabeza" del dataset
 ```
 
-Con la función podemos visualizar los datos ordenados por algún criterio. Por ejemplo, podemos ordenarlos acorde a la longitud de el sépalo:
+Con la función arrange podemos visualizar los datos ordenados por algún criterio. Por ejemplo, podemos ordenarlos acorde a la longitud de el sépalo:
 ```{r}
 head(iris)#Los datos originales
 head(arrange(iris, Sepal.Length)) #Ordenados por la longitud del sépalo
 head(arrange(iris, desc(Sepal.Length))) #Ordenados de mayor a menor ("descendiente") por la longitud del sépalo
 ```
 
-Dado un Dataframe una de las primeras cosas que necesitamos comprender es su estructura; esto es, que columnas tiene, cuantas filas tiene, y cuál es el **tipo de dato** de cada columna. Esto es importante porque a veces al importar datos aunque las columnas sean realmente numéricas, pueden haberse importado por error como texto (Por ejemplo, porque los números decimales usaban comas en vez de puntos). O en ocasiones el texto se importa como factores, y cuando, por ejemplo, intentamos añadir una nueva fila al Data Frame la rechaza porque el texto que contiene la nueva fila no es uno de los levels permitidos para el factor. La función `str()` es muy útil para conocer la estructura de los Data Frames:
+Dado un Dataframe una de las primeras cosas que necesitamos comprender es su estructura; esto es, qué columnas tiene, cuántas filas tiene, y cuál es el **tipo de dato** de cada columna. Esto es importante porque a veces al importar datos aunque las columnas sean realmente numéricas, pueden haberse importado por error como texto (Por ejemplo, porque los números decimales usaban comas en vez de puntos). O en ocasiones el texto se importa como factores, y cuando, por ejemplo, intentamos añadir una nueva fila al Data Frame la rechaza porque el texto que contiene la nueva fila no es uno de los levels permitidos para el factor. La función `str()` es muy útil para conocer la estructura de los Data Frames:
 
 ```{r}
 str(iris)
@@ -171,7 +171,7 @@ summary(iris_grandes)
 ```
 
 ## 2.2 Seleccionando parte de las columnas
-La función `select()` permite seleccionar columnas a partir de su nombre. Por ejemplo, quedémonos solo con la información relativa a los sépalos Y a la especie, y emitamos la información de los pétalos:
+La función `select()` permite seleccionar columnas a partir de su nombre. Por ejemplo, quedémonos solo con la información relativa a los sépalos Y a la especie, y omitamos la información de los pétalos:
 
 ```{r}
 seleccionado = select(iris, Sepal.Length, Sepal.Width, Species)
@@ -213,7 +213,7 @@ A menudo una de las transformaciones que tenemos que realizar con los datos es a
 ```{r}
 scale(1:10)
 ```
-Observa en la salida del código anterior como además de los datos escalados, hay dos atributos adicionales que se llaman `attr(,"scaled:center")` y `ttr(,"scaled:scale")`. Si sólo queremos los datos escalados y no los parámetros empleados en la transformación, debemos quedarnos con la primera columna del objeto que nos devuelve (`[,1]`):
+Observa en la salida del código anterior como además de los datos escalados, hay dos atributos adicionales que se llaman `attr(,"scaled:center")` y `attr(,"scaled:scale")`. Si sólo queremos los datos escalados y no los parámetros empleados en la transformación, debemos quedarnos con la primera columna del objeto que nos devuelve (`[,1]`):
 
 ```{r}
 scale(1:10)[,1]

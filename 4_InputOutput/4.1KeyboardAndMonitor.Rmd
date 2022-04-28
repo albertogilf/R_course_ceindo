@@ -1,0 +1,21 @@
+---
+title: "Input and output data. Keyboard, Monitor, CSV, XLS, XLSX, Matlab and SPSS"
+author: "Alberto Gil"
+output: html_document: 
+toc: TRUE
+---
+
+# 1. Accessing the Keyboard and Monitor
+
+Para solicitar la entrada de datos de teclado del usuario podemos utilizar tres funciones: scan(), readline() y print(). \## 1.1 scan() Función utilizada para leer datos en un vector de entrada o en una lista de entrada desde la consola o un fichero. Como habitualmente, accedamos a la ayuda de la función para ver su documentación.
+
+```{r}
+?scan
+```
+
+Se pueden apreciar todos los parámetros que recibe esta función y sus valores por defecto, pero algunos de ellos
+
+```{r}
+inp = scan()
+inp
+```
