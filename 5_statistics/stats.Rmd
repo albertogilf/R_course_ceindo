@@ -428,3 +428,47 @@ summary(postHocs)
 confint(postHocs)
 ```
 
+
+# TODO: ANCOVA
+
+Los diseño de **ANOVA factoriales (factorial = más de un factor)** permiten el efecto
+individual y conjunto de uno o más factores. Podemos distinguir varios tipos de
+análisis factoriales:
+
+* Diseños independientes.
+* Diseños con medidas repetidas.
+* Diseños mixtos.
+
+## Ejemplo: Sin interacción entre los factores principales
+Estudiamos el efecto de tres drogas sobre el tiempo de reacción, teniendo en 
+cuenta además el sexo de los pacientes que toman el medicamento. Supongamos que 
+el efecto de las drogas y edad se mide  en términos de reducción del tiempo de 
+reacción a algún estímulo y que se obtienen los resultados del fichero
+"drugs_1.csv". Visualiza el efecto de las drogas y sexo en los tiempos de reacción
+y reflexiona sobre cómo modelarlo.
+
+#TODO: remove
+```{r GEN1}
+drugs_df <- data.frame(drug=rep(c("A", "B", "C"), 10), sex=rep(c("Male", "Female"),15))
+drugs_df$response_time = NA
+drugs_df[drugs_df$drug == "A", "response_time"] = 10 + rnorm(10, sd=1) 
+drugs_df[drugs_df$drug == "B", "response_time"] = 20 + rnorm(10, sd=1) 
+drugs_df[drugs_df$drug == "C", "response_time"] = 30 + rnorm(10, sd=1) 
+drugs_df[drugs_df$sex == "Female", "response_time"] =  drugs_df[drugs_df$sex == "Female", "response_time"] + rnorm(15, 4, sd=0.1)
+write.csv(drugs_df, "data/drugs_1.csv", row.names = FALSE, )
+```
+
+```{r drugs_1}
+drugs_df = 
+  read.csv("data/drugs_1.csv") %>%
+  mutate(drug = factor(drug), sex = factor(sex))
+
+# interaction.plot(drugs_df$sex, drugs_df$drug, response = drugs_df$response_time)
+ggplot(drugs_df, aes(x=drug, y=response_time, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+```
+
+
+
+
