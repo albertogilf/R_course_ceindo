@@ -113,6 +113,22 @@ getwd() # conocer el path de ejecución del programa
 
 
 
+# 2.2 Ejercicios
+
+¿Cómo puedo leer datos de tipo lista con la función scan? Guarda en una variable con cuatro listas diferentes los valores "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20". 
+
+```{r}
+myList = scan(text = "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20", what=list("", "", "", ""))
+```
+Quiero leer un vector con los elementos 1, 2, 3, 4 y 5 utilizando la función scan. Recuerda que se puede hacer un cambio de tipo de lista a vector mediante la función unlist
+
+```{r}
+myList = scan(text = "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20", what=list("", "", "", ""))
+myVector = unlist(myList)
+myVector
+typeof(myVector)
+```
+
 ## 2.2 readline()
 
 La función readline es mucho más simple que scan. Lee una línea de texto 
@@ -150,31 +166,6 @@ print(myValue, digits = 4) # 4 decimales impresos
 ```
 
 
-# 4 Ejercicios
-
-1. ¿Cómo puedo leer datos de tipo lista con la función scan? Guarda en una variable con cuatro listas diferentes los valores "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20". 
-
-```{r}
-myList = scan(text = "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20", what=list("", "", "", ""))
-```
-2. Quiero leer un vector con los elementos 1, 2, 3, 4 y 5 utilizando la función scan. Recuerda que se puede hacer un cambio de tipo de lista a vector mediante la función unlist
-
-```{r}
-myList = scan(text = "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20", what=list("", "", "", ""))
-myVector = unlist(myList)
-myVector
-typeof(myVector)
-```
-
-3. Imprime tres cadenas de texto recogidas con la función readline, guardalas en una lista, e imprímelas justificadas y alineadas a la derecha. 
-
-```{r}
-var1 = readline()
-var2 = readline()
-var3 =readline()
-myList = list(var1, var2, var3)
-print(myList, right=TRUE, justify="right")
-```
 
 
 

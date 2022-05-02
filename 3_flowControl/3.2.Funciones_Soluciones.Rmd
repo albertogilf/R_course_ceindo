@@ -3,6 +3,7 @@ title: "Control de flujo"
 output: 
   html_document:
     toc: TRUE
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
@@ -100,7 +101,7 @@ A menudo querremos aplicar una función a una columna o una fila de un Data Fram
 library(datasets)
 data(iris)
 
-for (i in 1:(ncol(iris)-1)){#Para cada columna menos para la de la especie
+for (i in 1:(ncol(iris)-1)){#Para cada columna menos para la de la especie, ya que es la última
     prom = promedio(iris[,i]) #Vamos calculando el valor promedio con nuestra función de cada columna ([,i]); podíamos haber usado también la función mean() de R
     print(paste("El promedio de", names(iris)[i], "es", prom))
 }
@@ -131,12 +132,12 @@ head(USArrests)
 Calcula el promedio y la desviación estándar de cada uno de los tipos de crímenes para Estados Unidos.
 
 ```{r}
-library(dplyr) #Vamos a usar la función select para seleccionar todas las columnas menos la de la especie
-apply(USArrests, 2, mean) #Promedio de cada columna; eliminamos primero el atributo de las especies
-apply(USArrests, 2, sd) #Promedio de cada columna; eliminamos primero el atributo de las especies
+library(dplyr) 
+apply(USArrests, 2, mean) #Promedio de cada columna
+apply(USArrests, 2, sd) #Standar deviation de cada columna; 
 ```
 
-A continuación calcula la suma de todos los tipos de crímenes para cada estado:
+A continuación calcula la suma de todos los tipos de crímenes para cada estado, eliminando la columna UrbanPop:
 
 ```{r}
 apply(select(USArrests, -UrbanPop), 1, promedio) 
@@ -172,7 +173,7 @@ Dado un conjunto de datos, como por ejemplo una columna de un Data Frame, la sig
 
 ```{r}
 inputarPromedio = function(datos){
-  prom=mean(datos, na.rm = TRUE)#Calculamos el valor promedio de los datos ignorando los valores perdidos
+  prom=mean(datos, na.rm = TRUE) #Calculamos el valor promedio de los datos ignorando los valores perdidos
   datos[is.na(datos)] = prom #Todas las posiciones con NA se cambian al valor promedio
   return (datos) #Devolvemos los datos imputados
 }
@@ -183,7 +184,7 @@ Empleando el operador de encadenamiento, y esta función, podemos hacer:
 
 iris_inputado = iris %>% #Los datos con missing values
                 select(-Species)  %>%  #La especie no se imputa, la retiramos
-                apply( 2, inputarPromedio) %>% #Inputamos con nuestra función, plicada con apply
+                apply( 2, inputarPromedio) %>% #Inputamos con nuestra función, aplicada con apply
                 cbind.data.frame(iris$Species) #Ponemos devuelta la columna de la especie
 sum(is.na(iris_inputado))
 
