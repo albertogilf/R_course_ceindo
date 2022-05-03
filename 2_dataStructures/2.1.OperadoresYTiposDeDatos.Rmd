@@ -68,7 +68,7 @@ La función `substring()` permite obtener una subcadena de caracteres indicando 
 sub_cadena = substring(saludo, 3,7)
 sub_cadena
 ```
-
+## 1.2.1  Ejercicios
 Dada la siguiente cadena de caracteres:
 ```{r}
 nombre = "Antonio Santos Gil"
@@ -77,8 +77,7 @@ nombre = "Antonio Santos Gil"
 Escribe el código necesario para extraer el primer apellido de la persona:
 
 ```{r}
-sub_nombre = substring(nombre, 9,14)
-sub_nombre
+#sub_nombre = ...
 ```
 
 
@@ -127,5 +126,15 @@ El operador `==` permite testear igualdad entre dos valores, y devuelve `TRUE` o
 2 == 3
 2 != 3
 2 != 2
+```
+
+Los operadores `>`, `<`, `>=` y `<=` Permiten testé a sus respectivas relaciones de orden:
+
+```{r}
+4 > 4
+4 >= 4
+4 > 2
+4 < 6
+4 <= 3
 ```
 

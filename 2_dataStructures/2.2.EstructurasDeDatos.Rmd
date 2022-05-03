@@ -82,7 +82,7 @@ paciente
 Dado el siguiente vector
 
 ```{r}
-
+vec = seq(1, 30, by=0.2)
 ```
 
 ¿Qué es lo que a hecho exactamente la función `seq ()`? ¿Cuántos elementos tiene `vec`?
@@ -97,7 +97,7 @@ Crea un nuevo vector que contenga los elementos de `vec` que se encuentren entre
 
 ```
 
-Súmale 1 a todos los elementos del nuevo vector**
+Súmale 1 a todos los elementos del nuevo vector.
 
 ```{r}
 
@@ -269,7 +269,6 @@ cartas[3]
 Un factor puede transformarse en una cadena de caracteres empleando la función `as.character()`:
 
 ```{r}
-
 cartas_texto = as.character(cartas)
 cartas_texto
 ```
