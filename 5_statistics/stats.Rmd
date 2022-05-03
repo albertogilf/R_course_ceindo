@@ -719,42 +719,88 @@ contrasts(attitude_df_long$drink)
 contrasts(attitude_df_long$imagery) = cbind(NegativevsOther, PositivevsNeutral)
 contrasts(attitude_df_long$imagery)
 
+library('nlme')
 
-
-
-#using ezAnova
-
-attitudeModel = ezANOVA(
-  data = attitude_df_long, 
-  dv = .(attitude),  # dv: dependent variable
-  wid = .(participant), # 
-  within = .(drink, imagery),  # sin c() !!:
-  type = 3, 
-  detailed = TRUE, 
-  return_aov = TRUE
+attitudeModel = lme(
+  attitude ~ drink * imagery, 
+  random = ~1|participant,
+  data=attitude_df_long,
+  method = "ML"
 )
-options(digits = 3)
+
+summary(attitudeModel)
+
+postHocs<-glht(attitudeModel, linfct = mcp(drink = "Tukey"))
+summary(postHocs)
+confint(postHocs)
+
+# X <- model.matrix(~ drink * imagery, data = attitude_df_long)
+# glht(attitudeModel, linfct = X)
+
+# emms1 <- emmeans(attitudeModel)
+# con1 <- contrast(emms1, interaction = "pairwise")
+# pairs(con1, by = NULL)
+
+
+# If you need more comparisons, you could run post hoc tests (as explained earlier in the chapter)
+
+# #using ezAnova
+# 
+attitudeModel = ezANOVA(
+  data = attitude_df_long,
+  dv = .(attitude),  # dv: dependent variable
+  wid = .(participant), #
+  within = .(drink, imagery),  # sin c() !!:
+  type = 3,
+  detailed = TRUE
+)
+# options(digits = 3)
 print(attitudeModel)
-print(attitudeModel$ANOVA$ges) # generalized eta-squared
+# print(attitudeModel$ANOVA$ges) # generalized eta-squared
+# 
+# library('emmeans')
+# emm <- emmeans(attitudeModel$aov,  ~ drink * imagery)
+# 
+# 
+# attitude_df_groups = 
+#   attitude_df_long %>% 
+#   unite(group, all_of(c('drink', 'imagery')))
+# 
+# contrast(
+#   emm, 
+#   list(c1 = c(1, -1, 0, 0, 0, 0), # reproduces first pairwise comparison
+#        # emmean of row 1 - (emmean of row 1 + emmean of row 2) / 2; see EMMs table
+#        # 381.5546 - (379.9286 + 381.6363) / 2
+#        c2 = c(1, -0.5, -0.5, 0, 0, 0))
+#  )
+# 
+# pairwise.t.test(attitude_df_groups$attitude, attitude_df_groups$group, paired = TRUE, p.adjust.method = "bonferroni")
+# pairs(emm, adjust = "Holm")
 
-library('emmeans')
-emm <- emmeans(attitudeModel$aov,  ~ drink * imagery)
+```
 
 
-attitude_df_groups = 
-  attitude_df_long %>% 
-  unite(group, all_of(c('drink', 'imagery')))
+##
+Enter data: which is about as awkward as it was for repeated-measures designs.
+Explore your data: as with repeated-measures designs, look at graphs, descriptive
+statistics and check sphericity if you’re using ANOVA (boo, hiss) rather than a mul-
+tilevel model (hooray!).
+Construct or choose contrasts: you need to decide what contrasts to do and to specify
+them appropriately for all of the independent variables in your analysis.
+Compute the main model: you can then run the main analysis. Depending on what
+you found in the previous step, you might need to run a robust version of the test.
+Compute contrasts or post hoc tests: having conducted the main analysis, you can
+follow it up with post hoc tests or look
 
-contrast(
-  emm, 
-  list(c1 = c(1, -1, 0, 0, 0, 0), # reproduces first pairwise comparison
-       # emmean of row 1 - (emmean of row 1 + emmean of row 2) / 2; see EMMs table
-       # 381.5546 - (379.9286 + 381.6363) / 2
-       c2 = c(1, -0.5, -0.5, 0, 0, 0))
- )
 
-pairwise.t.test(attitude_df_groups$attitude, attitude_df_groups$group, paired = TRUE, p.adjust.method = "bonferroni")
-pairs(emm, adjust = "Holm")
+# Example: Split-plot 
+Las unidades experimentales se organizaron en seis bloques, cada uno con tres parcelas completas subdivididas en cuatro subparcelas. Las variedades de avena se asignaron aleatoriamente a las parcelas enteras y las concentraciones de nitrógeno a las subparcelas. Se usaron las cuatro concentraciones de nitrógeno en cada parcela completa.
 
+![](https://kwstat.github.io/desplot/reference/figures/yates_oats_design.png?raw=true)
+
+```{r}
+Oats = Oats %>% mutate(nitro = ordered(nitro))
+lme(yield ~ nitro + Variety, random =~ 1 | Block/Variety, data = Oats) %>% 
+  summary
 ```
 
