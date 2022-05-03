@@ -1,0 +1,19 @@
+---
+title: "Input and output data. Keyboard, Monitor, CSV, XLS, XLSX, Matlab and SPSS"
+author: "Alberto Gil"
+output: 
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Descargando datos de la red
+
+
+# 4 Ejercicios
+
+

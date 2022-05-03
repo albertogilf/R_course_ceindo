@@ -1,0 +1,172 @@
+---
+title: "Input and output data. Keyboard, Monitor, CSV, XLS, XLSX, Matlab and SPSS"
+author: "Alberto Gil"
+output: 
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Introduction
+
+Se define la entrada y salida del ordenador como la comunicación entre un programa y cualquier fuente (entrada) o sumidero (salida) de datos. Esta entrada y salida de datos puede ser de diferente naturaleza, y el objetivo de esta sesión es conocer la entrada y salida de datos estándar de cualquier programa R: la entrada por teclado y la salida por pantalla, y la entrada y salida a un dispositivo de almacenamiento, comúnmente denominado entrada y salida de ficheros. Existen alternativas a esta entrada y salida como diferentes periféricos que se listan a continuación: 
+
+- Dispositivos de entrada:
+  - **Teclado**
+  - **Dispositivos de almacenamiento: disco duro**
+  - Ratón
+  - Tableta táctil
+  - Joystick
+  - Cámara
+  - Scanner
+  - Scanner 3D
+  - Micrófono
+  - Red
+
+- Dispositivos de salida: 
+  - **Pantalla**
+  - **Dispositivos de almacenamiento: disco duro**
+  - Impresora
+  - Impresora 3D
+  - Red
+
+
+# 2. Reading from the Keyboard
+
+Para solicitar la entrada de datos de teclado del usuario podemos utilizar tres funciones: scan(), readline() y print(). 
+
+## 2.1 scan() 
+
+Función utilizada para leer datos en un vector de entrada o en una lista de entrada desde la consola o un fichero. Como habitualmente, accedamos a la ayuda de la función para ver su documentación o [a la ayuda en línea de R](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/scan).
+
+```{r}
+?scan
+```
+
+Se pueden apreciar todos los parámetros que recibe esta función y sus valores por defecto, pero algunos de ellos
+
+```{r}
+inp = scan() # estoy leyendo datos por pantalla y guardándolos en la variable inp
+inp # imprimo los datos leídos por pantalla. 
+typeof (inp) # ¿De qué tipo son los datos leídos?
+
+```
+
+```{r}
+# Todos los parámetros de la función scan con sus valores por defecto. 
+scan(file = "", what = double(), nmax = -1, n = -1, sep = "",
+     quote = if(identical(sep, "\n")) "" else "'\"", dec = ".",
+     skip = 0, nlines = 0, na.strings = "NA",
+     flush = FALSE, fill = FALSE, strip.white = FALSE,
+     quiet = FALSE, blank.lines.skip = TRUE, multi.line = TRUE,
+     comment.char = "", allowEscapes = FALSE,
+     fileEncoding = "", encoding = "unknown", text, skipNul = FALSE)
+```
+
+Esta función nos va a permitir a través de sus parámetros especificar diferentes opciones, siendo las más relevantes las siguientes:
+
+1. **file**: el nombre del fichero sobre el que se van a leer los datos. Este parámetro es opcional y, en caso de tomar el valor por defecto '""', esperará la introducción de datos por la entrada estándar del programa, que habitualmente es el teclado. En este caso, la entrada de datos terminará cuando se introduzca un retorno de carro. Si se indica un fichero, se puede indicar el path relativo al lugar de ejecución de R (ejecutar función 'getwd()' para conocer el path), o el path relativo si es un path absoluto. 
+
+**Recordatorio**: un path es un directorio del equipo donde se ejecuta el programa. Puede ser absoluto empieza por '/...' en sistemas operativos unix-like o por el nombre de la unidad ('C:/...') en sistemas operativos windows-like, o relativo si comienza por cualquier otro directorio. 
+
+2. **what**: tipo de dato que va a ser leído. Los tipos soportados son **'logical', 'integer', 'numeric', 'complex', 'character', 'raw' and 'list'**.
+
+3. **nmax**: máximo número de datos a ser leído. Muy útil para leer las n primeras líneas de un fichero. Por defecto, ilimitado.
+
+4. **n**: número de datos a ser leído. Muy útil para leer las n primeras líneas de un fichero. Por defecto, ilimitado.
+
+5. **skip**: número de líneas a saltar antes de leer datos. 
+
+6. **sep**: por defecto, la función scan separa los valores con un espacio, pero el parámetro sep puede especificar un carácter diferente como puede ser ',', ';' o '|', muy utilizados en formatos CSV. 
+
+7. **fill**: logical. Si toma el valor 'TRUE', automáticamente rellenará con campos vacíos todas las líneas con menos campos que los especificados en el parámetro 'what'. 
+
+8. **fileEncoding**: cadena de caracteres especificando el tipo de codificación del fichero. Si no lo sabemos, R no puede detectarlo automáticamente, y se puede recurrir a programas específicos que lo hacen. Esto es importante porque ficheros que contienen datos numéricos pueden estar separados por ',' o por '.', o puede que se utilicen caracteres específicos como la 'ñ'. Si tenemos problemas al leer un ficheor y no lee los datos como se desea, prestad atención a el fileEncoding.
+
+9. **encoding**: Set de caracteres para las cadenas de texto. 
+
+
+```{r}
+inp = scan() # estoy leyendo datos por pantalla y guardándolos en la variable inp
+inp # imprimo los datos leídos por pantalla. 
+typeof (inp) # ¿De qué tipo son los datos leídos?
+
+other_input = scan(text = "1 2 3") # se puede especificar el texto en el parámetro text
+typeof (other_input) # ¿De qué tipo son los datos?
+other_input = scan(text = "1 2 3", what=integer()) # y se puede cambiar el tipo a entero
+typeof (other_input) # ¿De qué tipo son los datos ahora?
+other_input = scan(text = "1 2 2223", what=character()) 
+typeof (other_input) # ¿De qué tipo son los datos ahora?
+other_input = scan(text = "1 2 2223 5 7 8 9 10 11", what=list(integer(),""))  # Ahora podemos leer los datos como una serie de listas. En este caso, son dos listas, la primera de enteros y la segunda de caracteres. 
+typeof (other_input) # ¿De qué tipo son los datos ahora?
+# other_input = scan(text = "asd") # ¿Qué ocurre si intento leer una cadena de carácteres?
+```
+
+
+```{r}
+getwd() # conocer el path de ejecución del programa
+```
+
+
+
+# 2.2 Ejercicios
+
+¿Cómo puedo leer datos de tipo lista con la función scan? Guarda en una variable con cuatro listas diferentes los valores "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20". 
+
+```{r}
+myList = scan(text = "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20", what=list("", "", "", ""))
+```
+Quiero leer un vector con los elementos 1, 2, 3, 4 y 5 utilizando la función scan. Recuerda que se puede hacer un cambio de tipo de lista a vector mediante la función unlist
+
+```{r}
+myList = scan(text = "est1 est2 est3 est4 est5 est6 est7 est8 est9 est10 est11 est12 est13 est14 est15 est16 est17 est18 est19 est20", what=list("", "", "", ""))
+myVector = unlist(myList)
+myVector
+typeof(myVector)
+```
+
+## 2.2 readline()
+
+La función readline es mucho más simple que scan. Lee una línea de texto 
+
+```{r}
+myLine = readline()
+print(myLine)
+typeof(myLine)
+```
+Como podéis ver, en este caso el tipo de dato recogido es siempre character y lee todos los datos como una única línea. 
+
+# 3. Printing in the monitor
+
+## 3.1 The print() function
+
+Hasta ahora, todas las operaciones que hemos realizado se han visualizado a través de la pantalla, que es capaz de imprimir de forma textual aquello que nosotros le indiquemos: el valor de una variable, la cabecera de un conjunto de datos (head(mySet)), el conjunto de datos en sí mismo (mySet) o el resumen del conjunto de datos (summary(mySet)), pero existe una función específica para imprimir nuestras variables en la línea de comando de R: la función print(x, ...). 
+
+La función print(x) recibe un objeto que es la variable a imprimir y un número variable de parámetros opcionales, como pueden ser los dígitos significativos a imprimir, si las cadenas de caracteres deben ir entrecomilladas o no, etc.. Como siempre, veamos la ayuda de la función. 
+
+```{r}
+?print
+```
+
+E imprimamos nuestra primera variable 
+
+```{r}
+print(myLine) # Deberá imprimir la línea leída anteriormente. En caso contrario, puedo crear una variable e imprimirla. 
+```
+
+Si quiero imprimir valores numéricos, puedo especificar el número de decimales significativos a imprimir:
+```{r}
+myValue = 6/7
+print(myValue, digits = 2) # 2 decimales impresos
+print(myValue, digits = 4) # 4 decimales impresos
+```
+
+
+
+
+
+

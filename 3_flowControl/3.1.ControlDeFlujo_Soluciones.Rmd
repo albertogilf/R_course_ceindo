@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # 1. Condicionales
-En ocasiones, el procesamiento que necesitamos hacer sobre los datos va a variar dependiendo de ciertas condiciones. Por ejemplo, en el capítulo 1 vimos un código que calculaban las raíces de una ecuación de segundo grado. Pero si el discriminante era negativo, se calculaba la raíz cuadrada de un valor negativo y los resultados no tenían sentido. Sería interesante que el código tuviese en cuenta esta situación y la gestiónase adecuadamente.
+En ocasiones, el procesamiento que necesitamos hacer sobre los datos va a variar dependiendo de ciertas condiciones. Por ejemplo, en el capítulo 1 vimos un código que calculaba las raíces de una ecuación de segundo grado. Pero si el discriminante era negativo, se calculaba la raíz cuadrada de un valor negativo y los resultados no tenían sentido. Sería interesante que el código tuviese en cuenta esta situación y la gestionase adecuadamente.
 
 Los condicionales son una herramienta que nos permite ejecutar unas u otras sentencias dependiendo de una determinada condición. Esa condición es un valor lógico. Por ejemplo:
 
@@ -178,14 +178,14 @@ while(i<10){
 La función `rnorm()` genera números según una distribución normal de media 0 y desviación estándar 1. ¿Cuál es la probabilidad de que esta función genere un número > 3?. Podemos estimarlo numéricamente:
 
 ```{r}
-numeros_generoados = 0
+numeros_generados = 0
 n = 0
 while (n<3){
   n = rnorm(1) #Generamos un único número aleatorio con una distribución normal de media 0 y desviación estándar 1
-  numeros_generoados = numeros_generoados + 1
+  numeros_generados = numeros_generados + 1
 }
 
-print(paste("La probabilidad es ", 1/numeros_generoados))
+print(paste("La probabilidad es ", 1/numeros_generados))
 
 ```
 Ejecuta varias veces el código anterior. Podrás ver que la estimación varía bastante dependiendo de cada vez que se ejecuta. A veces tenemos más "suerte" y a veces tenemos menos suerte a la hora de generar el valor numérico > 3. En uno de los ejercicios te propondré que trates de resolver esto.
