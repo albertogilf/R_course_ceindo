@@ -433,42 +433,328 @@ confint(postHocs)
 
 Los diseño de **ANOVA factoriales (factorial = más de un factor)** permiten el efecto
 individual y conjunto de uno o más factores. Podemos distinguir varios tipos de
-análisis factoriales:
+análisis factoriales...
 
-* Diseños independientes.
-* Diseños con medidas repetidas.
+* ... Diseños independientes, 
+* Diseños con medidas repetidas, 
 * Diseños mixtos.
 
+
+## ANOVA factorial independiente
 ## Ejemplo: Sin interacción entre los factores principales
-Estudiamos el efecto de tres drogas sobre el tiempo de reacción, teniendo en 
-cuenta además el sexo de los pacientes que toman el medicamento. Supongamos que 
+Estudiamos el efecto de tres drogas sobre el tiempo de reacción (una de ellas placebo)
+teniendo en cuenta además el sexo de los pacientes que toman el medicamento. Supongamos que 
 el efecto de las drogas y edad se mide  en términos de reducción del tiempo de 
 reacción a algún estímulo y que se obtienen los resultados del fichero
 "drugs_1.csv". Visualiza el efecto de las drogas y sexo en los tiempos de reacción
-y reflexiona sobre cómo modelarlo.
+y propón un modelo.
 
 #TODO: remove
 ```{r GEN1}
-drugs_df <- data.frame(drug=rep(c("A", "B", "C"), 10), sex=rep(c("Male", "Female"),15))
+drugs_df <- data.frame(drug=rep(c("Placebo", "A", "B"), 10), sex=rep(c("Male", "Female"),15))
 drugs_df$response_time = NA
-drugs_df[drugs_df$drug == "A", "response_time"] = 10 + rnorm(10, sd=1) 
-drugs_df[drugs_df$drug == "B", "response_time"] = 20 + rnorm(10, sd=1) 
-drugs_df[drugs_df$drug == "C", "response_time"] = 30 + rnorm(10, sd=1) 
+drugs_df[drugs_df$drug == "Placebo", "response_time"] = 5 + rnorm(10, sd=1) 
+drugs_df[drugs_df$drug == "A", "response_time"] = 15 + rnorm(10, sd=1) 
+drugs_df[drugs_df$drug == "B", "response_time"] = 25 + rnorm(10, sd=1) 
 drugs_df[drugs_df$sex == "Female", "response_time"] =  drugs_df[drugs_df$sex == "Female", "response_time"] + rnorm(15, 4, sd=0.1)
 write.csv(drugs_df, "data/drugs_1.csv", row.names = FALSE, )
 ```
 
 ```{r drugs_1}
-drugs_df = 
+drugs_df_1 = 
   read.csv("data/drugs_1.csv") %>%
   mutate(drug = factor(drug), sex = factor(sex))
 
 # interaction.plot(drugs_df$sex, drugs_df$drug, response = drugs_df$response_time)
-ggplot(drugs_df, aes(x=drug, y=response_time, col=sex)) + 
+ggplot(drugs_df_1, aes(x=sex, y=response_time, col=drug)) + 
   stat_summary() + 
-  stat_summary(geom='line', aes(group=sex))
+  stat_summary(geom='line', aes(group=drug))
+```
+
+```{r drugs_1_model}
+drugs_model_1 = lm(response_time ~ sex + drug, data = drugs_df_1)
+drugs_df_1$predictions = predict(drugs_model_1)
+
+ggplot(drugs_df_1, aes(x=sex, y=predictions, col=drug)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=drug))
 ```
 
 
+# TODO: remove
+```{r GEN2}
+drugs_df <- data.frame(drug=rep(c("Placebo", "A", "B"), 10), sex=rep(c("Male", "Female"),15))
+drugs_df$response_time = NA
+drugs_df[drugs_df$drug == "Placebo", "response_time"] = 10 + rnorm(10, sd=1) 
+drugs_df[drugs_df$drug == "A", "response_time"] = 20 + rnorm(10, sd=1) 
+drugs_df[drugs_df$drug == "B", "response_time"] = 30 + rnorm(10, sd=1) 
+drugs_df[drugs_df$sex == "Female", "response_time"] =  drugs_df[drugs_df$sex == "Female", "response_time"] + rnorm(15, 4, sd=0.1)
+drugs_df[drugs_df$sex == "Male" & drugs_df$drug == "A", "response_time"] = (
+  drugs_df[drugs_df$sex == "Male" & drugs_df$drug == "A", "response_time"] + rnorm(5, 20, sd=1)
+)
+write.csv(drugs_df, "data/drugs_2.csv", row.names = FALSE, )
+```
 
+
+```{r drugs_2}
+drugs_df_2 = 
+  read.csv("data/drugs_2.csv") %>%
+  mutate(drug = factor(drug), sex = factor(sex))
+
+# interaction.plot(drugs_df$sex, drugs_df$drug, response = drugs_df$response_time)
+ggplot(drugs_df_2, aes(x=sex, y=response_time, col=drug)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=drug))
+```
+
+
+```{r drugs_2_model}
+drugs_model_2 = lm(response_time ~ sex + drug, data = drugs_df_2)
+drugs_df_2$predictions = predict(drugs_model_2)
+
+ggplot(drugs_df_2, aes(x=sex, y=predictions, col=drug)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=drug))
+```
+
+```{r drugs_2_model_interactions}
+drugs_model_2 = lm(response_time ~ sex * drug, data = drugs_df_2) 
+# o de forma equivalente
+#drugs_model_2 = lm(response_time ~ sex + drug + sex:drug, data = drugs_df_2)
+drugs_df_2$predictions = predict(drugs_model_2)
+
+ggplot(drugs_df_2, aes(x=sex, y=predictions, col=drug)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=drug))
+```
+
+1. Enter data: you’ve probably gathered this much by now.
+2. Explore your data: as always, we’ll begin by graphing the data and computing descrip-
+tive statistics. You should check distributional assumptions and use Levene’s test to
+check for homogeneity of variance (see Chapter 5).
+3. Construct or choose contrasts: you need to decide what contrasts to do and to specify
+them appropriately for all of the independent variables in your analysis. If you want
+to use Type III sums of squares, these contrasts must be orthogonal.
+4. Compute the ANOVA: you can then run the main analysis of variance. Depending on
+what you found in the previous step, you might need to run a robust version of the
+test.
+5. Compute contrasts or post hoc tests: having conducted the main ANOVA, you can
+follow it up with post hoc tests or look at the results of your contrasts. Again, the
+exact methods you choose will depend upon what you unearth in step 2.
+
+
+
+# Ejemplo: Contrastes
+```{r}
+contrasts(drugs_df_1$drug)
+contrasts(drugs_df_1$drug)
+
+contrasts(drugs_df_1$drug) = cbind(c(1, 1, -2), c(-1, 1, 0))
+contrasts(drugs_df_1$drug)
+```
+
+# Ejercicio: contrastes
+```{r}
+contrasts(drugs_df_2$drug)
+contrasts(drugs_df_2$drug)
+
+contrasts(drugs_df_2$drug) = cbind(c(1, 1, -2), c(-1, 1, 0))
+contrasts(drugs_df_2$drug)
+```
+
+
+#Ejercicio: interpretación de los coeficientes ANOVA
+Usa ANOVA e interpreta los resultados para los models `drugs_model_1` y `drugs_model_2`.
+
+```{r drugs_interpretation}
+
+drugs_model_1 = lm(response_time ~ sex + drug, data = drugs_df_1)
+drugs_model_2 = lm(response_time ~ sex * drug, data = drugs_df_2)
+
+print(Anova(drugs_model_1, type = 3))
+print(Anova(drugs_model_2, type = 3))
+
+
+# Ver contrastes
+summary.lm(drugs_model_1)
+summary.lm(drugs_model_2)
+```
+sex1
+drug1
+drug2
+sex1:drug1: El efecto drug1 es diferente en hombres y mujeres? El efecto de placebo Vs drogas es comparable en hombres y mujeres?
+sex1:drug2: El efecto drug2 es diferente en hombres y mujeres? El efecto droga A Vs droga B es comparable en hombres y mujeres?
+```{r}
+contraste_1 = drugs_df_2 %>% mutate(drug = fct_recode(drug, 'Drug' = 'A', 'Drug' = 'B'))
+contraste_2 = drugs_df_2 %>% filter(drug != "Placebo") %>% mutate(drug = fct_drop(drug)) 
+
+ggplot(contraste_1, aes(x=sex, y=response_time, col=drug)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=drug))
+
+ggplot(contraste_2, aes(x=sex, y=response_time, col=drug)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=drug))
+```
+
+No se deben interpretar los efectos principales si la interacción es significativa.
+
+
+# Posthoc
+```{r}
+pairwise.t.test(drugs_df_1$response_time, drugs_df_1$drug, p.adjust.method = "bonferroni")
+postHocs<-glht(drugs_model_1, linfct = mcp(drug = "Tukey"))
+summary(postHocs)
+confint(postHocs)
+```
+
+#Exercise: Posthoc in drugs_model_2
+NO INTERPRETES LOS EFECTOS PRINCIPALES SI TIENES INTERACCION.
+
+
+
+## ANOVA factorial con medidas repetidas
+
+F-test in ANOVA depends upon the assumption that scores in
+different conditions are independent (see section 10.3). When repeated measures are used
+this assumption is violated. 
+
+ The relationship between scores in different treatment conditions
+means that an additional assumption has to be made and, put simplistically, we assume
+that the relationship between pairs of experimental conditions is similar (i.e., the level of
+dependence between experimental conditions is roughly equal). This assumption is called
+the assumption of sphericity
+
+Sphericity refers to the
+equality of variances of the differences between treatment levels.
+
+
+Sphericity can be assessed using a test known as Mauchly’s test, which tests the hypothesis
+that the variances of the differences between conditions are equal. 
+
+ What do you do if you violate sphericity?
+  There are three commonly used
+sphericity is violated?
+corrections based upon the estimates of sphericity advocated by Greenhouse
+and Geisser (1959) and Huynh and Feldt (1976)
+
+
+Como-> lme or ezANOVA
+
+
+
+1. Enter data: which turns out not to be as straightforward as you might think.
+2. Explore your data: you know the routine by now – graphs, descriptive statistics and
+maybe even a bit of sphericity checking if you’re not going to use lme().
+Construct or choose contrasts: you need to decide what contrasts to do and to specify
+them appropriately for all of the independent variables in your analysis.
+Compute the ANOVA/multilevel model: you can then run the main analysis. Depending
+on what you found in the previous step, you might need to run a robust test.
+Compute contrasts or post hoc tests: having conducted the main analysis you can fol-
+low it up with post hoc tests or look at the results of your contrasts. Again, the exact
+methods you choose will depend upon what you unearth in step 2.
+
+
+
+## Ejercicio
+There is evidence from advertising research that attitudes towards stimuli can be changed
+using positive imagery (e.g., Stuart, Shimp, & Engle, 1987). As part of an initiative to stop
+binge drinking in teenagers, the government funded some scientists to look at whether neg-
+ative imagery could be used to make teenagers’ attitudes towards alcohol more negative.
+The scientists designed a study to address this issue by comparing the effects of negative
+imagery against positive and neutral imagery for different types of drinks. Table 13.4 illus-
+trates the experimental design and contains the data for this example (each row represents
+a single participant).
+Participants viewed a total of nine mock adverts over three sessions. In one session, they
+saw three adverts: (1) a brand of beer (Brain Death) presented with a negative image (a
+dead body with the slogan ‘drinking Brain Death makes your liver explode’); (2) a brand
+of wine (Dangleberry) presented in the context of a positive image (a sexy naked man or
+woman – depending on the participant’s preference – and the slogan ‘drinking Dangleberry
+wine makes you irresistible’); and (3) a brand of water (Puritan) presented alongside a neu-
+tral image (a person watching television accompanied by the slogan ‘drinking Puritan water
+makes you behave completely normally’). In a second session (a week later), the participants
+saw the same three brands, but this time Brain Death was accompanied by the positive imag-
+ery, Dangleberry by the neutral image and Puritan by the negative. In a third session, the
+participants saw Brain Death accompanied by the neutral image, Dangleberry by the nega-
+tive image and Puritan by the positive. After each advert participants were asked to rate the
+drinks on a scale ranging from −100 (dislike very much) through 0 (neutral) to 100 (like very
+much). The order of adverts was randomized, as was the order in which people participated
+in the three sessions. This design is quite complex. There are two independent variables:
+the type of drink (beer, wine or water) and the type of imagery used (positive, negative or
+neutral). These two variables completely cross over, producing nine experimental conditions.
+
+```{r tidying_data}
+attitude_df = read.delim("data/attitude.dat", header = TRUE)
+
+attitude_df_long = 
+  attitude_df %>% 
+  pivot_longer(beer_pos:water_neu, names_to = 'name', values_to = 'attitude') %>% 
+  separate(name, into=c('drink', 'imagery'), sep = '_') %>% 
+  mutate_if(is.character, as.factor)
+
+write.csv(attitude_df_long, 'data/attitude_long.dat', row.names = FALSE)
+```
+```{r}
+library('ez')
+attitude_df_long = read.csv("data/attitude_long.dat", stringsAsFactors = TRUE) %>% as_tibble
+attitude_df_long
+
+
+ggplot(attitude_df_long, aes(x=drink, y=attitude, fill=imagery)) + 
+  geom_boxplot()
+
+
+#### TODO: creo que ezANOVA pasa de los contrastes
+contrasts(attitude_df_long$drink)
+AlcoholvsWater = c(1, -2, 1)
+BeervsWine = c(-1, 0, 1)
+contrasts(attitude_df_long$imagery)
+NegativevsOther = c(-2, 1, 1)
+PositivevsNeutral = c(0, -1, 1)
+
+
+contrasts(attitude_df_long$drink) = cbind(AlcoholvsWater, BeervsWine)
+contrasts(attitude_df_long$drink)
+
+contrasts(attitude_df_long$imagery) = cbind(NegativevsOther, PositivevsNeutral)
+contrasts(attitude_df_long$imagery)
+
+
+
+
+#using ezAnova
+
+attitudeModel = ezANOVA(
+  data = attitude_df_long, 
+  dv = .(attitude),  # dv: dependent variable
+  wid = .(participant), # 
+  within = .(drink, imagery),  # sin c() !!:
+  type = 3, 
+  detailed = TRUE, 
+  return_aov = TRUE
+)
+options(digits = 3)
+print(attitudeModel)
+print(attitudeModel$ANOVA$ges) # generalized eta-squared
+
+library('emmeans')
+emm <- emmeans(attitudeModel$aov,  ~ drink * imagery)
+
+
+attitude_df_groups = 
+  attitude_df_long %>% 
+  unite(group, all_of(c('drink', 'imagery')))
+
+contrast(
+  emm, 
+  list(c1 = c(1, -1, 0, 0, 0, 0), # reproduces first pairwise comparison
+       # emmean of row 1 - (emmean of row 1 + emmean of row 2) / 2; see EMMs table
+       # 381.5546 - (379.9286 + 381.6363) / 2
+       c2 = c(1, -0.5, -0.5, 0, 0, 0))
+ )
+
+pairwise.t.test(attitude_df_groups$attitude, attitude_df_groups$group, paired = TRUE, p.adjust.method = "bonferroni")
+pairs(emm, adjust = "Holm")
+
+```
 
