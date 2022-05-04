@@ -371,13 +371,15 @@ el tiempo de coagulación?
 
 ```{r coagulation}
 library("car")
-coagulation = read.csv("data/coagulation.csv")
+coagulation = read.csv("data/coagulation.csv", stringsAsFactors = TRUE)
 options(contrasts = c("contr.sum", "contr.poly")) # for type 3 contrast
+
+coagulation$diet
 coagulation_lm = lm(coag ~ diet, data = coagulation)
+summary(coagulation_lm)
 coagulation_aov = Anova(coagulation_lm, type = 3)
 print(coagulation_aov)
 ```
-
 
 ```{r coagulation_plot}
 print(ggplot(coagulation, aes(x = diet, y = coag, fill = diet)) +
@@ -567,17 +569,49 @@ contrasts(drugs_df_2$drug)
 Usa ANOVA e interpreta los resultados para los models `drugs_model_1` y `drugs_model_2`.
 
 ```{r drugs_interpretation}
-
 drugs_model_1 = lm(response_time ~ sex + drug, data = drugs_df_1)
 drugs_model_2 = lm(response_time ~ sex * drug, data = drugs_df_2)
 
 print(Anova(drugs_model_1, type = 3))
 print(Anova(drugs_model_2, type = 3))
+```
 
 
+```{r drugs_interpretation_contrastes}
 # Ver contrastes
-summary.lm(drugs_model_1)
-summary.lm(drugs_model_2)
+summary(drugs_model_1)
+summary(drugs_model_2)
+
+
+library("emmeans")
+
+# a machete
+# contrasts(drugs_df_2$drug) = cbind(c(1, 1, -2), c(-1, 1, 0))
+# em2 = emmeans(drugs_model_2, ~ drug * sex)
+# em2
+# contrast(em2, method = list(
+#   '1Sex' = (c(1, 1, -2, 0, 0, 0) - c(0, 0, 0, 1, 1, -2)) / 12, 
+#   '2Sex' = (c(1, -1, 0, 0, 0, 0) - c(0, 0, 0, 1, -1, 0)) / 4
+# ))
+
+
+#           Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)  25.1937     0.1956 128.771  < 2e-16 ***
+# sex1         -1.3059     0.1956  -6.675 6.64e-07 ***
+# drug1         6.5697     0.1383  47.488  < 2e-16 ***
+# drug2         0.2630     0.2396   1.097    0.283    
+# sex1:drug1   -1.5572     0.1383 -11.256 4.65e-11 ***
+# sex1:drug2    4.4296     0.2396  18.486 1.06e-15 ***
+drug_contrasts = list('DrugsVsPlacebo'=c(1, 1, -2) / 6, 'AvsB' = c(-1, 1, 0))
+emmeans(drugs_model_2, ~ drug) %>% contrast(drug_contrasts)
+emmeans(drugs_model_2, ~ sex) %>% contrast()
+emmeans(drugs_model_2, ~ drug | sex) %>%
+  contrast(interaction = list(drug=drug_contrasts, sex='consec'), by=NULL)
+
+# drugs_df_2 %>% mutate(is_placebo = (drug == "Placebo")) %>% group_by(is_placebo) %>% 
+#   summarise(mean = mean(response_time)) %>% pluck("mean") %>% diff
+
+
 ```
 sex1
 drug1
@@ -728,6 +762,11 @@ attitudeModel = lme(
   method = "ML"
 )
 
+# https://stats.stackexchange.com/questions/13784/repeated-measures-anova-with-lme-lmer-in-r-for-two-within-subject-factors
+# http://www.dwoll.de/rexrepos/posts/anovaMixed.html#two-way-repeated-measures-anova-rbf-pq-design
+# fitF <- lme4::lmer(Y ~ Xw1*Xw2 + (1|id) + (1|Xw1:id) + (1|Xw2:id), data=d2)
+# anova(fitF)
+
 summary(attitudeModel)
 
 postHocs<-glht(attitudeModel, linfct = mcp(drink = "Tukey"))
@@ -746,6 +785,7 @@ confint(postHocs)
 
 # #using ezAnova
 # 
+debugonce(ezANOVA)
 attitudeModel = ezANOVA(
   data = attitude_df_long,
   dv = .(attitude),  # dv: dependent variable
@@ -779,28 +819,39 @@ print(attitudeModel)
 
 ```
 
-
-##
-Enter data: which is about as awkward as it was for repeated-measures designs.
-Explore your data: as with repeated-measures designs, look at graphs, descriptive
-statistics and check sphericity if you’re using ANOVA (boo, hiss) rather than a mul-
-tilevel model (hooray!).
-Construct or choose contrasts: you need to decide what contrasts to do and to specify
-them appropriately for all of the independent variables in your analysis.
-Compute the main model: you can then run the main analysis. Depending on what
-you found in the previous step, you might need to run a robust version of the test.
-Compute contrasts or post hoc tests: having conducted the main analysis, you can
-follow it up with post hoc tests or look
-
-
-# Example: Split-plot 
-Las unidades experimentales se organizaron en seis bloques, cada uno con tres parcelas completas subdivididas en cuatro subparcelas. Las variedades de avena se asignaron aleatoriamente a las parcelas enteras y las concentraciones de nitrógeno a las subparcelas. Se usaron las cuatro concentraciones de nitrógeno en cada parcela completa.
-
-![](https://kwstat.github.io/desplot/reference/figures/yates_oats_design.png?raw=true)
+En Freeman et al encontramos datos referentes a dos tipos de tareas (decisión léxica y 
+nombrado de palabras) y sus tiempos de respuesta para 300 palabras y 300 no-palabras
+de 45 participantes. Aunque existen más variables, nos centramos en los factores 
+`task` (`lexdec` o `naming`), `stimulus` (`word` o `nonword`) y `length` 
+(longitud de las palabras).
 
 ```{r}
-Oats = Oats %>% mutate(nitro = ordered(nitro))
-lme(yield ~ nitro + Variety, random =~ 1 | Block/Variety, data = Oats) %>% 
-  summary
+library("afex")
+library("emmeans")
+data("fhch2010") # load data (comes with afex) 
+fhch = droplevels(fhch2010[fhch2010$correct,]) # remove errors
+fhch = 
+  fhch %>% 
+  dplyr::select(log_rt, task, length, stimulus, id) %>% 
+  as_tibble
+fhch
 ```
+
+```{r}
+contrasts(fhch$length) = cbind('aaaa'= c(2, -1, -1), 'bbb'=c(0,1, -1))
+(rt_1 = aov_car(log_rt ~ task + Error(id/length*stimulus), fhch))
+(rt_2 = aov_ez(id = "id", dv = "log_rt", fhch, between = "task", 
+              within = c("length", "stimulus")))
+(rt_3 = aov_4(log_rt ~ task + (length*stimulus|id), fhch))
+
+rt_4 = lmer(log_rt ~ task * length * stimulus + (1 | id) + (1|length:id) + (1|stimulus:id), fhch)
+anova(rt_4)
+summary(rt_4)
+summary(rt_3)
+rt_3
+
+# For example, assume we are interested in the significant task:stimulus interaction. As a first step we might want to investigate the marginal means of these two factors
+emmeans(rt_1, c("stimulus","task"))
+```
+
 
