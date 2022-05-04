@@ -71,7 +71,7 @@ summary(iris)
 head(iris) #head muestra los seis primeros datos, la "cabeza" del dataset
 ```
 
-Con la función podemos visualizar los datos ordenados por algún criterio. Por ejemplo, podemos ordenarlos acorde a la longitud de el sépalo:
+Con la función `arrange()` podemos visualizar los datos ordenados por algún criterio. Por ejemplo, podemos ordenarlos acorde a la longitud de el sépalo:
 ```{r}
 head(iris)#Los datos originales
 head(arrange(iris, Sepal.Length)) #Ordenados por la longitud del sépalo
@@ -123,14 +123,6 @@ versicolor_o_setosa_grandes = filter(iris,
                               Sepal.Length > 5.0) #No lleva el &
 summary(versicolor_o_setosa_grandes)
 ```
-
-```{r}
-versicolor_o_setosa_grandes = filter(iris, 
-                              (Species == "versicolor" | Species == "setosa")  # Es versicolor o setosa
-                              & Sepal.Length > 5.0) # y además tiene que cumplir esta condición
-summary(versicolor_o_setosa_grandes)
-```
-
 
 Vamos a seleccionar aquellas flores cuya longitud de sépalo sea mayor que el promedio. La longitud promedio la podemos obtener con la función `mean()`
 
