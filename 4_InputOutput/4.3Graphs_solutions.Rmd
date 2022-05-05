@@ -215,6 +215,10 @@ img1_path = "solution_hist.png"
 include_graphics(img1_path)
 ```
 
+```{r}
+hist(x = banco$age, main = "TITLE", 
+     xlab = "Age", ylab = "frequency")
+```
 
 ## 7.3 Line Chart
 
@@ -227,6 +231,11 @@ img1_path = "solution_lineplot.png"
 include_graphics(img1_path)
 ```
 
+```{r}
+plot(x=bank_dataset$balance,type="l")  #Simple Line Plot
+
+
+```
 
 
 ## 7.4 Bar Chart
@@ -244,11 +253,18 @@ education.freq # Esto guardará la aparición de cada uno de los niveles educati
 ```{r}
 # All defaults
 library(knitr)
-img1_path = "solution_barplot.png"
+img1_path = "solution_bar.png"
 include_graphics(img1_path)
 ```
 
+```{r}
 
+education = bank_dataset$education
+education.freq = table(education)
+barplot(education.freq, main = "Gráfica de Educacíón",  xlab = "Academic level", ylab = "Frequency", col = c("royalblue", "seagreen", "purple", "grey"))
+
+
+```
 
 Procedamos ahora a incluir en el gráfico información de una segunda variable para conocer el porcentaje de participantes de cada tipo que adquirió un préstamo. También podremos incluir una leyenda al gráfico para mostrar la proporción de participantes que obtuvieron un préstamo. Recordemos que la función table con dos variables guardará la frecuencia de aparición de los tipos en un formato tabla. 
 
@@ -259,11 +275,22 @@ tab_loan_education
 
 Y procedamos a hacer el diagrama de barras correspondiente con una leyenda. 
 
+```{r}
+barplot(tab_loan_education, main = "Gráfica de Educacíón",  xlab = "Academic level", ylab = "Frequency", col = c("royalblue", "grey"))
+legend(x = "topright", legend = c("No", "Yes"), fill = c("royalblue", "grey"), 
+       title = "Loan")
+```
 
 Y por último pintemos la proporción mediante la función prop.table y el parámetro margin = 2
 
 
+```{r}
+tab_loan_education_scaled = prop.table(tab_loan_education, margin = 2)
 
+barplot(tab_loan_education_scaled, main = "Gráfica de Educacíón",  xlab = "Academic level", ylab = "Frequency", col = c("royalblue", "grey"))
+legend(x = "topright", legend = c("No", "Yes"), fill = c("royalblue", "grey"), 
+       title = "Loan")
+```
 
 
 ## 7.4 Box Plot
@@ -277,7 +304,12 @@ img1_path = ""
 include_graphics(img1_path)
 ```
 
+```{r}
 
+
+boxplot(bank_dataset$age~bank_dataset$education,col=topo.colors(3))
+
+```
 
 ## 7.6 Scatter plot
 
@@ -288,13 +320,31 @@ Por último, veamos el diagrama de dispersión entre la edad y el balance
 library(knitr)
 img1_path = "solution_scatterplot.png"
 include_graphics(img1_path)
+```
+
+```{r}
+
+plot(x = bank_dataset$age, y = bank_dataset$balance)
+
+
+```
+Al tener datos un poco extremos (valores > 15000), podemos aplicar una función ifelse para que al dibujar el diagrama todos los balances por encima de 15,000 los trunque a 15,000
+
+```{r}
+
+balance_new <- ifelse(bank_dataset$balance > 15000, 15000, bank_dataset$balance)
+
+plot(x = bank_dataset$age, y = balance_new)
+
 
 ```
 
-
-Al tener datos un poco extremos (valores > 15000), podemos aplicar una función ifelse para que al dibujar el diagrama todos los balances por encima de 15,000 los trunque a 15,000
-
-
-
 Y podemos utilizar la función col para colorear las muestras que tengan como referencia una tercera variable con el parámetro col = <nombre_variable>. Aunque para ello debemos hacer un cambio de tipo previamente. R ha cambiado los valores de tipo factor a tipo String, por lo que debemos utilizar la función **as.factor(<VARIABLE_A_CAMBIAR_EL_TIPO>)**
 
+```{r}
+
+balance_new <- ifelse(bank_dataset$balance > 15000, 15000, bank_dataset$balance)
+
+plot(x = bank_dataset$age, y = balance_new, col = as.factor(bank_dataset$loan))
+
+```

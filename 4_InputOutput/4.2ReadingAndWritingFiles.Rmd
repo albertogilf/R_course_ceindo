@@ -64,7 +64,7 @@ El directorio de trabajo en el que ejecutamos nuestro programa es clave para lee
 ```{r}
 getwd() # conocer el path de ejecución del programa
 
-setwd("C:\\") # to set the new working Directory to the root in windows. 
+#setwd("C:\\") # to set the new working Directory to the root in windows. 
 ```
 
 ## 2.1 Generic data import
@@ -169,7 +169,7 @@ class(bcancer) #Veamos el tipo de dato importado
 Existen diferentes paquetes de R que permiten leer ficheros con formato xls o xlsx (excel) directamente, sin hacer un cambio de formato a CSV. Uno de los más conocidos es xlsx, así que vamos a proceder a instalarlo y leer el mismo fichero csv en formato xls y xlsx. 
 
 ```{r}
-install.packages("xlsx") # install the package from CRAN
+install.packages("xlsx", repos = "http://cran.us.r-project.org") # install the package from CRAN
 library("xlsx") # Load the package from CRAN
 ```
 
@@ -204,7 +204,7 @@ Y, una vez leído el fichero xls o xlsx, ya tenemos el data frame correspondient
 Para la lectura de datos procedentes de programas de estadística tenemos que recurrir a librerías de R. Una de las más utilizadas es SPSS, y para leer datos procedentes de SPSS se puede utilizar el paquete haven
 
 ```{r}
-install.packages("haven")
+install.packages("haven", repos = "http://cran.us.r-project.org")
 library(haven)
 ```
 
@@ -224,7 +224,7 @@ Y, una vez leído el fichero proveniente de spss (.sav o el viejo formato llamad
 De forma análoga a la lectura de datos en otros formatos, existe un paquete de R que nos permite 
 
 ```{r}
-install.packages("R.matlab")
+install.packages("R.matlab", repos = "http://cran.us.r-project.org")
 library(R.matlab)
 ```
 
