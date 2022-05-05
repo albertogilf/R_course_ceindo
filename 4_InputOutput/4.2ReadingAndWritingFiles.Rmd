@@ -1,0 +1,311 @@
+---
+title: "Input and output data. Keyboard, Monitor, CSV, XLS, XLSX, Matlab and SPSS"
+author: "Alberto Gil"
+output: 
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Introduction
+
+Para conseguir la persistencia del trabajo realizado en programas de R es imprescindible escribir nuestros datos en almacenamiento persistente, habitualmente el disco duro, y habitualmente en forma de fichero, la forma que tienen los sistemas operativos de almacenar la información. De forma análoga, también es imprescindible la lectura de datos de fichero para cargar datos de otros programas o equipos.
+
+La lectura y escritura de datos en ficheros nos permitirá también compartir nuestro trabajo con otros programas o equipos. Para trabajar con datos guardados en ficheros es clave conocer la estructura de los datos para guardarlos y/o cargarlos. 
+
+## 1.1 Using data from built-int R
+
+Esta funcionalidad se introdujo en el tema 1 para descargar o utilizar datos de paquetes:
+
+```{r}
+data(iris)
+```
+
+## 1.2 Downloading data from the network
+
+Vale la pena señalar que podemos descargar archivos de internet usando R con la función **download.file(url, destfile, method, quiet = FALSE, mode = "w", cacheOK = TRUE, extra = getOption("download.file.extra"), headers = NULL, ...)**
+
+Por ejemplo, si queremos utilizar el fichero iris.data del tema 1, podríamos cargarla directamente con esta función como sigue:
+```{r}
+# data(iris) # El conjunto de datos descargado es el mismo que el conjunto iris de ejemplo de R.ç
+
+download.file(
+  url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data", 
+  destfile = "iris.data"
+  )
+
+```
+
+Esto guardaría el conjunto iris.data en el directorio donde lo ejecutemos con el nombre iris.data que le hemos especificado en el parámetro destfile. 
+
+
+# 1.3 Exercises
+
+Descarga el siguiente conjunto de datos en formato CSV: 
+[https://www.stats.govt.nz/assets/Uploads/Injury-statistics/Injury-statistics-work-related-claims-2018/Download-data/injury-statistics-work-related-claims-2018-csv.csv](https://www.stats.govt.nz/assets/Uploads/Injury-statistics/Injury-statistics-work-related-claims-2018/Download-data/injury-statistics-work-related-claims-2018-csv.csv)
+
+```{r}
+download.file(
+  url = "https://www.stats.govt.nz/assets/Uploads/Serious-injury-outcome-indicators/Serious-injury-outcome-indicators-2000-20/Download-data/serious-injury-outcome-indicators-2000-2020-CSV.csv", 
+  destfile = "injury-statistics.csv"
+  )
+```
+
+# 2. Importing data from a file to R
+
+### Reminder: the working directory
+
+El directorio de trabajo en el que ejecutamos nuestro programa es clave para leer o escribir ficheros especificados de forma relativa. 
+
+```{r}
+getwd() # conocer el path de ejecución del programa
+
+setwd("C:\\") # to set the new working Directory to the root in windows. 
+```
+
+## 2.1 Generic data import
+
+R proporciona una función para leer cualquier tipo de archivo que contenga una estructura de tipo tabla: read.table()
+
+El único requisito que tiene esta función es que los datos estén separados por un salto de línea y que en cada línea los datos estén separados por algún caracter o grupo de caracteres concreto que indican las columnas. Estos separadores varían en función del idioma del sistema operativo por defecto en excel. Los más habituales son ",", ";", ":", "\t" también conocido como tabulador, "|".  
+
+Los siguientes datos representan un fichero csv separado por "," que se encuentran en example.csv: 
+
+1, 2, 3, 4
+5, 6, 7, 8
+9, 10, 11, 12
+13, 14, 15, 16
+
+La función genérica **read.table()** acepta un número de argumentos muy alto, pero el único obligatorio es el parámetro file que indica la ruta del fichero. Como siempre, podéis ver los parámetros:
+
+```{r}
+?read.table() 
+```
+
+Podemos descargar el siguiente fichero sobre estadísticas de cáncer de mama de la universidad de Wisconsin: [https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data](https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data)
+
+```{r}
+download.file(
+  url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data", 
+  destfile = "breast-cancer.data"
+  )
+```
+
+Podemos utilizar la función read.table() para leer este fichero y guardarlo en una variable bcancer: 
+
+```{r}
+bcancer <- read.table(file = "breast-cancer.data")
+head(bcancer) #Veamos las primeras 6 líneas
+```
+
+Nuestros datos no están muy bien formateados. No hay datos de encabezados (header), y no hemos especificado el separador de columnas, por lo que ha cargado los datos en una única columna. Repitamos la acción para tener diferentes columnas:
+
+```{r}
+bcancer <- read.table(file = "breast-cancer.data", header = FALSE, sep = ",")
+head(bcancer) #Veamos las primeras 6 líneas
+```
+
+Este nombre de columnas V1, V2, ..., Vn no parece el más descriptivo. Por suerte, tenemos un fichero que nos facilita los nombres de las columnas. 
+
+```{r}
+download.file(
+  url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.names", 
+  destfile = "breast-cancer.names"
+  )
+```
+De donde podemos obtener las abreviaturas de los nombres de cada columna: 
+
+```{r}
+header_names <- c("id", "clump_t", "u_csize", "u_cshape", "m_adh", "spcs", "b_nuc", 
+             "b_chr", "n_nuc", "mit", "class")
+```
+
+Y podemos utilizar el vector para el nombre la columna:
+
+```{r}
+bcancer <- read.table(file = "breast-cancer.data", header = FALSE, sep = ",", col.names = header_names)
+head(bcancer) #Veamos las primeras 6 líneas
+class(bcancer) #Veamos el tipo de dato importado
+```
+La función read.table() siempre devuelve un tipo de dato dataframe. 
+
+Si no sabemos qué tipo de dato tenemos, podemos utilizar la función readLines para obtener las n primeras líneas del fichero:
+
+```{r}
+dont_know_what_is = readLines("breast-cancer.data", n = 6)
+dont_know_what_is # AQUI PODEMOS VER LAS 6 PRIMERAS lÍNEAS COMO STRING Y VER QUE EL SEPARADOR ES UNA ","
+```
+
+## 2.2 CSV data import
+
+Un caso particular de tablas es el formato estándar con extensión **.csv** (comma separated values). Este tipo de ficheros se utiliza muy a menudo, pues permite guardar en formato texto (no binario) datos y ser compartidos por diferentes programas, facilitando la comptabilidad de los datos, y ocupando poco tamaño. Este tipo de archivos también puede ser leído con la función read.table, pero R facilita dos funciones específicas para los ficheros **.csv**: **read.csv() y read.csv2()**. Estas dos funciones son casi iguales, pero tienen un valor por defecto para el parámetro **sep** y **dec** diferente. El parámetro **sep** indica el separador de columnas, mientras que el parámetro **dec** indica el separador de números decimales, que en formato europeo es la "," y en formato anglosajón es el ".". 
+Podemos resumir de forma práctica que se puede utilizar **read.csv()** para leer ficheros csv en formato anglosajón, y **read.csv2()** para leer datos en formato europeo. 
+
+Ambas funciones son una optimización de la función read.table para formatos **.csv()**
+
+```{r}
+header_names <- c("id", "clump_t", "u_csize", "u_cshape", "m_adh", "spcs", "b_nuc", 
+             "b_chr", "n_nuc", "mit", "class")
+bcancer <- read.csv(file = "breast-cancer.data", header = FALSE, sep = ",", col.names = header_names) # CUIDADO, por defecto read.csv tiene la cabecera a TRUE!
+head(bcancer) #Veamos las primeras 6 líneas
+class(bcancer) #Veamos el tipo de dato importado
+```
+
+Esta cabecera ahora puede añadirse al fichero, podéis descargarlo de los archivos de Teams y se llama "breast-cancer_with_header.data"
+
+```{r}
+# Los datos de la cabecera, la primera línea, formarán el conjunto de nombres de las columnas
+bcancer <- read.csv(file = "breast-cancer_with_header.data", sep = ",") # Ya podemos dejar el valor por defecto para la cabecera
+head(bcancer) #Veamos las primeras 6 líneas
+class(bcancer) #Veamos el tipo de dato importado
+```
+
+## 2.3 Excel data import
+
+Existen diferentes paquetes de R que permiten leer ficheros con formato xls o xlsx (excel) directamente, sin hacer un cambio de formato a CSV. Uno de los más conocidos es xlsx, así que vamos a proceder a instalarlo y leer el mismo fichero csv en formato xls y xlsx. 
+
+```{r}
+install.packages("xlsx") # install the package from CRAN
+library("xlsx") # Load the package from CRAN
+```
+
+Este paquete tiene dos funciones principales para cargar archivos de excel: **read.xlsx(file, sheetIndex, header = TRUE)** y **read.xlsx2(file, sheetIndex, header = TRUE)**. La segunda de ellas es más rápida para lectura de ficheros más grandes. Ambas tienen parámetros como la fila de inicio, la fila final, el tipo de datos de cada columna, o la posibilidad de incluir o no cabeceras. Se recomienda revisar la documentación como siempre con ?read.xlsx
+Leamos el mismo fichero con datos de cáncer de mama de la universidad de Wisconsin:
+
+
+
+```{r}
+bcancer = read.xlsx(file="breast-cancer.xlsx", sheetIndex=1, header=FALSE) #SIN CABECERA
+head(bcancer)
+class(bcancer)
+```
+
+Ahora, leamos el mismo fichero con cabecera
+
+```{r}
+bcancer = read.xlsx(file="breast-cancer_with_header.xlsx", sheetIndex=1, header=TRUE) #CON CABECERA
+head(bcancer)
+class(bcancer)
+```
+
+Si intentamos leer las primeras líneas del fichero, vemos que no es un fichero de texto y no tiene forma rectangular.
+```{r}
+readLines("breast-cancer.xlsx", n = 5)
+```
+Y, una vez leído el fichero xls o xlsx, ya tenemos el data frame correspondiente para trabajar con él. 
+
+
+## 2.4 SPSS data import
+
+Para la lectura de datos procedentes de programas de estadística tenemos que recurrir a librerías de R. Una de las más utilizadas es SPSS, y para leer datos procedentes de SPSS se puede utilizar el paquete haven
+
+```{r}
+install.packages("haven")
+library(haven)
+```
+
+Tras esto, ya podemos leer ficheros provenientes de spss con la función **read_sav()** o **read_por()** si se utiliza el formato antiguo de SPSS. Veamos un ejemplo de un dataset de coches. 
+```{r}
+library(haven)
+data_frame_cars = read_sav("mtcars.sav") 
+head(data_frame_cars)
+class(data_frame_cars)
+```
+
+
+Y, una vez leído el fichero proveniente de spss (.sav o el viejo formato llamado .por), ya tenemos el data frame correspondiente para trabajar con él. 
+
+## 2.5 Matlab data import
+
+De forma análoga a la lectura de datos en otros formatos, existe un paquete de R que nos permite 
+
+```{r}
+install.packages("R.matlab")
+library(R.matlab)
+```
+
+Y este contiene una función readMat() para leer ficheros en formato matlab
+
+```{r}
+library(R.matlab)
+data_frame_cars2 = readMat("mtcars.mat") 
+head(data_frame_cars2)
+class(data_frame_cars2)
+```
+
+# 3. Exporting data to a file
+
+Una de las estructuras más comunes para el análisis de datos es la estructura en filas y columnas, comúnmente conocido como tabla. R cuenta con diversas funciones para escribir en este tipo de archivos y, como podéis esperar, vamos a utilizar los mismos paquetes de lectura de cada tipo de dato para realizar la escritura correspondiente. También se pueden escribir tipos de datos diferentes como listas u objetos, tal y como veremos en la última sección. 
+
+En esta sección, vamos a proceder a escribir el mismo dataset de datos en diferentes formatos, que posteriormente procederemos a leer en la sección de ejercicios. El conjunto de datos elegido es iris, con el que ya os habéis familiarizado en los temas anteriores.
+
+
+## 3.1 Generic data export
+
+Si nuestros datos se encuentran en una estructura de datos rectangular, como pueden ser las **matrices o los data frames** podemos utilizar la versión análoga a la función genérica para leer archivos de texto **read.table()**, que se llama **write.table()**
+
+Los parámetros más usados de esta función son: 
+
+- x (obligatorio): nombre de la matriz o data frame a exportar.
+- file: (opcional, default: "" o consola): nombre del fichero donde se van a guardar los datos.
+- sep: caracter de separación de columnas. 
+- row.names: si queremos guardar los nombres de filas. Habitualmente no se guardan y el parámetro toma el valor FALSE
+- row.columns: si queremos guardar los nombres de columnas. Habitualmente se recomienda fijarlo a TRUE para tener esta información. 
+
+
+```{r}
+write.table(x = iris, file = "iris.csv", sep = ",", 
+            row.names = FALSE, col.names = TRUE) # Elijamos como separador la , 
+```
+
+
+## 3.2 CSV Data export
+
+Podemos utilizar la función específica para guardar ficheros .csv. 
+
+
+```{r}
+write.csv(x = iris, file = "iris2.csv", row.names = FALSE) #Por defecto toma el nombre de las columnas y el separador del Sistema Operativo 
+```
+
+
+## 3.3 XLS/XLSX Data export
+
+Y la función análoga para guardar ficheros en formato xls o xlsx. 
+
+```{r}
+library(readxl)
+write.xlsx(x = iris, file = "iris.xlsx", row.names = FALSE) 
+```
+
+
+## 3.4 SPSS Data export
+
+Ahora lo guardamos en formato SPSS
+
+```{r}
+library(haven)
+write_sav(iris, "iris.sav")
+```
+
+## 3.5 MatLab Data export
+
+Y, por último, en formato MatLab:
+
+```{r}
+library(R.matlab)
+writeMat("iris.mat", iris = iris) # el parámetro se debe llamar igual al nombre del objeto para guardar en formato matlab
+```
+
+
+## 3.6 Exercises
+
+Lee en cada uno de los formatos correspondientes los ficheros escritos del dataset Iris. 
+
+Posteriormente, vamos a aplicar un filtro sobre el conjunto de datos iris y escribirlo en los diferentes formatos. El filtro a utilizar será que la especie sea versicolor y que Petal.Width esté entre 1.0 y 1.3 o que la especia sea setosa y la longitud del pétalo (Petal.Width) esté entre 1.5 y 2.0. 
+
+Recuerda cargar el paquete **library(dplyr)** para aplicar filtros. El resultado deben ser 41 filas. 
