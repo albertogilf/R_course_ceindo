@@ -182,7 +182,8 @@ inputarPromedio = function(datos){
 Empleando el operador de encadenamiento, y esta función, podemos hacer:
 ```{r}
 
-iris_inputado = iris %>% #Los datos con missing values
+
+ado = iris %>% #Los datos con missing values
                 select(-Species)  %>%  #La especie no se imputa, la retiramos
                 apply( 2, inputarPromedio) %>% #Inputamos con nuestra función, aplicada con apply
                 cbind.data.frame(iris$Species) #Ponemos devuelta la columna de la especie
