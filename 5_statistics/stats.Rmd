@@ -9,6 +9,13 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Antes de empezar...
+```{r}
+# install.packages("effectsize", "multicomp")
+# install.packages(c("tidyverse", "afex", "emmeans", GGally", "effectsize"))
+```
+
+
 ## Modelado estadístico: las dos culturas
 En el artículo clásico [Statistical modeling: The two cultures]((https://projecteuclid.org/journals/statistical-science/volume-16/issue-3/Statistical-Modeling--The-Two-Cultures-with-comments-and-a/10.1214/ss/1009213726.full)) encontramos 
 
@@ -47,8 +54,15 @@ expected_behaviour = 2 + 3 * x  # a = 2 y b = 3
 epsilon = rnorm(length(x), sd = 1)
 y = expected_behaviour + epsilon
 
-plot(x, y)
-lines(x, expected_behaviour, col = 2)
+df = data.frame('data_x' = x, 'data_y' = y, 
+                'expected' = expected_behaviour)
+ggplot(df, aes(x = data_x)) + 
+  geom_point(aes(x = data_x, y = data_y)) + 
+  geom_line(aes(y = expected), col = 2)
+
+# OR...
+# plot(x, y)
+# lines(x, expected_behaviour, col = 2)
 ```
 
 Podemos pensar que `expected_behaviour` es el comportamiento medio o esperado
@@ -63,19 +77,22 @@ La primera pregunta a la que nos enfrentamos es la siguiente. Dados los datos
 $(x, y)$, ¿podemos estimar `expected behaviour`? 
 
 ![](https://media.giphy.com/media/l0ErOholJjSmFlMFG/giphy.gif)
-## Ejemplo: lm
 
+## Ejemplo: lm
 ```{r lm}
 # 1) crear un modelo lineal
-df = data.frame(xx = x, yy = y)
-naive_model = lm(yy ~ xx, data = df)
+naive_model = lm(data_y ~ data_x, data = df)
 # 2) obtener estimaciones de a y b
 summary(naive_model)
-# 3) visualizar el ajuste
-plot(x, y)
-lines(x, expected_behaviour, col = 2)
-lines(x, predict(naive_model), col = 3)
-legend("topleft", c("Ground truth", "fitted"), col=2:3, lwd=2)
+# 3) Obtener predicciones del modelo lineal
+preds = predict(naive_model, interval = "confidence")
+# 4) visualizar el ajuste
+data_and_preds = df %>% bind_cols(preds)
+ggplot(data_and_preds, aes(x = data_x)) + 
+  geom_point(aes(y = data_y)) + 
+  geom_line(aes(y = expected, col = "Expected")) + 
+  geom_line(aes(y = fit, col = "Predicted")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, fill = "black")
 ```
 
 Dado que las estimaciones incorporan el error de estimación, es posible realizar
@@ -97,7 +114,76 @@ frog_model = lm(heart_rate ~ temperature, data = frog_df)
 summary(frog_model)
 ```
 
-## Ejercicio: predicción de AT abdominal
+
+El diseño experimental y los resultados de la inferencia en el ejemplo de las ranas
+nos invitan a concluirque "el aumento de la temperatura *causa* un incremento de 
+la frecuencia cardíaca". Sin embargo, esto no es correcto. Por muy fuerte que 
+parezca la relación entre las variables $x$ e $y$, **nunca debemos interpretar 
+una variable como la causa de la otra**. Una relación significativa entre $x$ e 
+$y$ puede ocurrir por varios motivos:
+
+1. $x$ causa $y$.
+2. $y$ causa $x$.
+3. Existe un tercer factor (llamado *variable de confusión*) que, bien directa
+o indirectamente, causa $x$ e $y$.
+
+![](https://qph.fs.quoracdn.net/main-qimg-13d22f6fda3811a9108d18b71c46e933-pjlq)
+
+Por otra parte...
+
+> There is some debate among statisticians and researchers about the appropriateness 
+of P values, and that the term "statistical significance" can be misleading. If you 
+have a small P value, it only means that the effect being tested is unlikely to be
+explained by chance variation alone, in the context of the current study and the 
+current statistical model underlying the test. If you have a large P value, it 
+only means that the observed effect could plausibly be due to chance alone: it
+is wrong to conclude that there is no effect (emmeans package authors)
+
+En general, hay consenso en que debe abandonarse la interpretación dicotómica 
+del p-valor (efecto significativo Vs no-significativo, sobre todo teniendo en 
+cuenta que se basan en un threshold arbitrario) y que debe favorecerse 
+los resultados basados en intervalos de confianza y tamaños de los efectos 
+(¡incluso si no son significativos!)
+
+> For example, a study on the effects of two different ambient temperatures on 
+paramecium diameter returning an effect size of 20 µm and a p-value of 0.1, 
+if centred on p-value interpretation would conclude 'no effect' of temperature,
+despite the best supported effect size being 20, not 0. An interpretation based on effect size and confidence intervals could, for example, state: 'Our results suggest that 
+paramecium kept at the lower temperature will be on average 20 µm larger in size, 
+however a difference in size ranging between −4 and 50 µm is also reasonably likely'. 
+(...), the latter approach acknowledges the uncertainty in the estimated effect 
+size while also ensuring that you do not make a false claim either of no effect
+if p > 0.05, or an overly confident claim. (Lewis G. Halsey, ![The reign of p-value is over](https://royalsocietypublishing.org/doi/10.1098/rsbl.2019.0174))
+
+## Ejemplo: intervalos de confianza en lm
+```{r lm_confint}
+summary(frog_model)
+confint(frog_model)
+```
+Los resultados sugieren que el ritmo_cardiaco de las ranas se incrementará
+1.77 bpms por cada grado Celsius, si bien un aumento de la frecuencia 
+cardiaca en el rango (1.37, 2.17) es igualmente verosímil.
+
+### Validación de los modelos
+Evidentemente cualquier interpretación está supeditada a que el modelo sea 
+correcto. Debemos ser muy cuidadosos a la hora de verificar que se cumplan las
+asunciones del modelo de regresión lineal. Podemos usar el acrónimo **LINE** para
+recordar las asunciones más importantes del modelo: 
+**Linear, Independent, Normal, Equal variances**.
+
+### Ejemplo: evaluación del modelo `naive_model`
+```{r}
+plot(naive_model, ask = FALSE)
+```
+
+La gráfica más difícil de interpretar es `Residuals Vs Leverage``:
+![](figures/lev_ll-1.png)
+![](figures/lev_lh-1.png)
+![](figures/lev_hl-1.png)
+![](figures/lev_ll-1.png)
+
+
+### Ejercicio: predicción de AT abdominal
 Després et al. [^1] señalan que el tejido adiposo (AT) se asocia con complicaciones
 metabólicas consideradas como factores de riesgo para la enfermedad 
 cardiovascular. Es importante, afirman, medir la cantidad de AT intraabdominal
@@ -118,7 +204,6 @@ from Simple Anthropometric Measurements in Men'' American Journal of Clinical
 Nutrition, 54 (1991), 471–477.
 
 ```{r}
-
 at_df = read.table("data/at.csv", header=TRUE, sep = ",") 
 names(at_df) = c("subject", "waist", "AT")
 at_model = lm(AT ~ waist, data = at_df)
@@ -129,38 +214,6 @@ plot(AT ~ waist, data = at_df, xlab = "waist circumference (cm)",
 abline(at_model, col = 2, lwd = 2)
 ```
 
-
-El diseño experimental y los resultados de la inferencia en el ejemplo de las ranas
-nos invitan a concluirque "el aumento de la temperatura *causa* un incremento de 
-la frecuencia cardíaca". Sin embargo, esto no es correcto. Por muy fuerte que 
-parezca la relación entre las variables $x$ e $y$, **nunca debemos interpretar 
-una variable como la causa de la otra**. Una relación significativa entre $x$ e 
-$y$ puede ocurrir por varios motivos:
-
-1. $x$ causa $y$.
-2. $y$ causa $x$.
-3. Existe un tercer factor (llamado *variable de confusión*) que, bien directa
-o indirectamente, causa $x$ e $y$.
-
-![](https://qph.fs.quoracdn.net/main-qimg-13d22f6fda3811a9108d18b71c46e933-pjlq)
-
-Evidentemente cualquier interpretación está supeditada a que el modelo sea 
-correcto. Debemos ser muy cuidadosos a la hora de verificar que se cumplan las
-asunciones del modelo de regresión lineal. Podemos usar el acrónimo **LINE** para
-recordar las asunciones más importantes del modelo: 
-**Linear, Independent, Normal, Equal variances**.
-
-### Ejemplo: evaluación del modelo `naive_model`
-```{r}
-plot(naive_model, ask = FALSE)
-```
-
-La gráfica más difícil de interpretar es `Residuals Vs Leverage``:
-![](figures/lev_ll-1.png)
-![](figures/lev_lh-1.png)
-![](figures/lev_hl-1.png)
-![](figures/lev_ll-1.png)
-
 ### Ejercicio: asunciones en el problema de AT abdominal
 ¿Se cumplan las asunciones de la regresión lineal en el problema de AT abdominal?
 ```{r bondad_at}
@@ -170,7 +223,8 @@ lmtest::bptest(at_model) # Heterocedastic!!!!
 ```
 
 ### Regresión múltiple
-Para lidiar con situaciones como la ilustrada en el gráfico anterior 
+Para lidiar con situaciones como la ilustrada en el gráfico de 
+"correlation is not causation" (tiburones Vs helados)
 necesitamos emplear modelos de **regresión múltiple**, dado que estos permiten 
 "controlar" las variables de confusión. Crear un modelo de regresión múltiple
 es análogo al caso unidimensional...
@@ -190,13 +244,23 @@ puntuación de CDA.
 Gerontological Nursing, 29 (2003), 34-43.
 
 ```{r cda}
+library("GGally")
+
 df = read.csv("data/cda.csv")
-cda_model = lm(CDA ~ ., df)
+ggpairs(df)
+cda_model = lm(CDA ~ AGE + EDLEVEL, df)
+# cda_model = lm(CDA ~ ., df)  # equivalente al comando anterior
 df$predictions = predict(cda_model)
 
 summary(cda_model)
 ```
 
+### Ejercicio: asunciones del modelo de CDA
+```{r}
+plot(cda_model, ask=FALSE)
+```
+
+----
 Hasta ahora solo hemos usado datos continuos, pero nada evita usar datos categóricos
 como predictores. ¡Ojo! Los coeficientes asociados a datos categóricos no deben 
 interpretarse como una pendiente.
@@ -211,20 +275,26 @@ antrop = mutate(antrop, male = factor(male))
 antrop_model = lm(weight ~ height + male, data = antrop)
 summary(antrop_model)
 
-male_preds = predict(
-  antrop_model, 
-  antrop %>% mutate(male = 1, male = factor(male, levels = c(0, 1)))
-)
-female_preds = predict(
-  antrop_model, 
-  antrop %>% mutate(male = 0, male = factor(male, levels = c(0, 1)))
-)
-plot(weight ~ height, antrop)
-lines(antrop$height, male_preds, col = 2, type = "l", lwd=2)
-lines(antrop$height, female_preds, col = 3, lwd=2)
+antrop_preds = antrop %>% mutate(fit = predict(antrop_model))
+ggplot(antrop_preds, aes(x = height, col=male)) + 
+  geom_point(aes(y = weight)) + 
+  geom_line(aes(y = fit), lwd = 3)
+
 summary(antrop_model)
 ```
 
+El modelo se puede escribir como
+$$weight = -29 + 0.47 * height + 1.23 * is_male$$ 
+por lo que 1.23 significa que, de media y para una misma altura, los hombres 
+pesan 1.23 Kg más que las mujeres (hemos **ajustado por el efecto de la altura**).
+
+### Ejercicio: Intervalos de confianza
+Usa intervalos de confianza para interpretar los resultados de la regresión.
+```{r}
+confint(antrop_model)
+```
+Aunque es cierto que de media los hombres pesan 1.23 Kg que las mujeres, ¡no 
+podemos descartar que las mujeres pesen más que los hombres! (hasta 0.22 Kg).
 
 ### Ejercicio: Howell
 Los datos contenidos en "howell1.csv" son datos censales parciales del 
@@ -238,18 +308,14 @@ howell = mutate(howell, male = factor(male))
 howell_model = lm(weight ~ height + male, data = howell)
 summary(howell_model)
 
-male_preds = predict(
-  howell_model, 
-  howell %>% mutate(male = 1, male = factor(male, levels = c(0, 1)))
-)
-female_preds = predict(
-  howell_model, 
-  howell %>% mutate(male = 0, male = factor(male, levels = c(0, 1)))
-)
-# plot(weight ~ height, howell)
-plot(howell$height, male_preds, col = 2, type = "l")
-lines(howell$height, female_preds, col = 3)
+howell_preds = howell %>% mutate(fit = predict(howell_model))
+ggplot(howell_preds, aes(x = height, col=male)) + 
+  geom_point(aes(y = weight)) + 
+  geom_line(aes(y = fit), lwd = 3)
 ```
+Sin ni siquiera usar `plot(howell_model)` ya somos capaces de ver que el ajuste
+es malo... cualquier conclusión basada en un modelo erróneo será errónea 
+(**garbage in, garbage out**).
 
 
 ### Ejemplo: dummy variables y contrastes
@@ -261,30 +327,86 @@ de la regresión.
 ```{r iris}
 data(iris)
 iris_model = lm(Sepal.Length ~ Species, iris)
-print(coef(iris_model))
+print(summary(iris_model))
 
-plot(Sepal.Length ~ Species, iris)
-predictions = predict(iris_model)
-points(iris$Species, predictions, col = iris$Species, pch = 15)
-
-plot(iris$Sepal.Length, col = iris$Species,
-xlab = "Observation number", ylab = "Sepal Length")
-points(predictions, col = iris$Species, cex = 0.7, pch = 15)
+iris_preds = iris %>%  mutate(fit = predict(iris_model))
+ggplot(iris_preds, aes(x=Species, fill = Species)) + 
+  geom_boxplot(aes(y=Sepal.Length)) + 
+  geom_point(aes(y = fit), shape=4, size=3)
 ```
 
-Al interpretar los coeficientes de la regresión, quizás hayas observado que 
+Al interpretar los coeficientes de la regresión, observamos que 
 `lm` ha tomado como referencia la especie `setosa`. Esto se puede observar usando
-`contrasts`. De hecho, `contrast` se puede modificar para usar como referencia
-otro nivel del factor:
+`contrasts`.
+```{r}
+contrasts(iris$Species)
+```
 
-### Ejemplo: contrastes
+Es decir el modelo es
+$$sepal = mean_setosa_sepal + 0.93 * is_versicolor + 1.58 * is_virginica.$$
+
+Sin embargo, podríamos reescribir el modelo de otra forma de forma 
+que los coeficientes tengan otro significado. Un ejemplo sencillo sería:
+$$sepal = mean_versicolor_sepal + \alpha_1 * is_setosa + \alpha_2 * is_virginica.$$
+
+En este caso, simplimente estamos variando la especie de referencia. De hecho, 
+`contrast` se puede modificar para usar como referencia otro nivel del factor:
+
+# Ejemplo: contrastes
+```{r}
+contrasts(iris$Species) = cbind("_is_setosa" = c(1, 0, 0), 
+                                "_is_virginica" = c(0, 0, 1))
+iris_model_2 = lm(Sepal.Length ~ Species, iris)
+print(summary(iris_model_2))
+```
+
+Lo interesante es que podemos **ajustar los contrastes de forma que respondan
+a nuestras preguntas científicas**. En general, estos contrastes deben ser
+**ortogonales**.
+
+### Ejemplo: contrastes ortogonales
+Imagínemonos el siguiente universo paralelo. En este universo paralelo solo 
+existe la especie setosa. Una empresa de ingeniería genética te contrata para
+crear nuevas especies con un sépalo más grande. Desarrollas un método conocido
+como "Método V", que tiene dos variantes "V-I" y "V-II". Los experimentos con
+estas variantes dan lugar a dos nuevas especies que llamas versicolor (V-I) y 
+virginica (V-II). Te planteas dos preguntas científicas: 
+
+1. ¿Es el método V capaz de crear especies con el sépalo más grande?
+2. ¿Existe alguna diferencia entre V-I y V-II?
+
 ```{r contrastes}
+levels(iris$Species)
 contrasts(iris$Species)
 # Usamos versicolor como referencia
-contrasts(iris$Species) = contr.treatment(3, 2)
+contrasts(iris$Species) = cbind(
+  "V - setosa" = c(-2, 1, 1),
+  "I - II" = c(0, 1, -1)
+)
 contrasts(iris$Species)
-summary(lm(Sepal.Length ~ Species, iris))
+v_model = lm(Sepal.Length ~ Species, iris)
+summary(v_model)
+confint(v_model)
 ```
+El método V parace producir sépalos más grandes. Por otra parte, V-II es mejor
+que V-I.
+
+----
+LLegados a este punto, ¡ya hemos cubierto el 90% de los contenidos habituales 
+de un curso de estadística habitual! Aunque parezca mentira, ya hemos hecho 
+análisis tan complejos como
+
+* Análisis de la varianza (anova): por ejemplo, en el problema del método V,
+* Análisis de la covarianza (ancova): con el dataset `antrop.csv` o `howell`,
+* ...
+
+Desde una perspectiva moderna, **todos los análisis clásicos (T-test, anova, ancova)
+pueden considerarse como simples modelos de regresión**. Esto demuestra el 
+poder unificador de esta perspectiva. En las siguientes secciones
+revisaremos sin embargo estos modelos clásicos para...
+
+1. ...afianzar la conexión con los modelos de regresión, 
+2. y profundizar en algunas cosas que nos han quedado en el tintero.
 
 
 ## T-tests: comparación de dos grupos
@@ -294,19 +416,22 @@ summary(lm(Sepal.Length ~ Species, iris))
 "howell1.csv".
 
 ```{r kung_sex}
-adult_howell = filter(howell, age >= 18)
-height_model = lm(height ~ male, data = adult_howell)
+adult_howell = 
+  howell %>% filter(age >= 18) %>% 
+  mutate(male = factor(male)) %>% 
+  mutate(sex = fct_recode(male, "male" = "1", "female" = "0"))
+height_model = lm(height ~ sex, data = adult_howell)
 summary(height_model)
 ```
 
-### Ejercicio: histogramas 
+### Ejemplo: histogramas 
 Apoya tus conclusiones dibujando el histograma de las alturas por sexo
 
 ```{r}
-ggplot(adult_howell, aes(x = height, fill=male)) + geom_density(alpha=0.2)
+ggplot(adult_howell, aes(x = height, fill=sex)) + geom_density(alpha=0.2)
 ```
 
-### Ejercicio: evaluación del modelo
+### Ejemplo: evaluación del modelo
 ¿Cumple el modelo las asunciones de la regresión lineal?
 ```{r}
 hist(resid(height_model))
@@ -319,16 +444,41 @@ hora de **comparar la media de dos poblaciones**. Si las poblaciones son normale
 
 ### Ejemplo: T-test para comparación de medias
 ```{r ttest}
-male_heights = filter(adult_howell, male == 1)$height
-female_heights = filter(adult_howell, male == 0)$height
-t.test(male_heights, female_heights)
+t.test(height ~ sex, adult_howell)
 ```
 
+
 ### Ejemplo: T-test de una sola cola 
-¿Podemos concluir que los hombres son más altos que las mujeres?
+El fichero "hc.csv" contiene los datos de un experimento para verificar si 
+una hormana de crecimiento funciona o no. ¿Existen diferencias significativas
+entre el grupo de control y el de tratamiento?
+
+![](https://media.giphy.com/media/3ornka9rAaKRA2Rkac/giphy.gif)
+
+```{r hcrec}
+library("effectsize")
+
+hc = read.csv("data/hc.csv")
+t.test(height_inc_cm ~ group, hc, alternative="less")
+cohens_d(height_inc_cm ~ group, data = hc, alternative = "less")
+```
+
+Siempre debemos considerar el **tamaño del efecto**, bien en base a nuestro 
+conocimiento o bien usando los estadísticos adecuados como *Cohen's D*. Para
+*Cohen's D* la heurística es:
+
+* $|d| < 0.2$: efecto pequeño (despreciable).
+* $|d| \approx 0.5$: efecto medio.
+* $|d| > 0.8$: efecto grande.
+
+
+### Ejercicio: T-test de una sola cola
+En los datos de `adult_howell`, ¿podemos concluir que los hombres son más altos que las mujeres?
+¿Cuál es el tamaño del efecto?
 
 ```{r one_sided_ttest}
-t.test(male_heights, female_heights, alternative="greater")
+t.test(height ~ sex, adult_howell, alternative="less")
+cohens_d(height ~ sex, data = adult_howell, alternative = "less")
 ```
 
 ### Ejercicio: T-test apareado
@@ -338,54 +488,151 @@ midieron la funcionalidad de la vesı́cula biliar calculando la fracción de ey
 de la vesı́cula biliar (GBEF) antes y después de la fundoplicatura. El objetivo de
 la fundoplicatura es aumentar la GBEF, que se mide como un porcentaje. ¿Hay
 evidencia para concluir que la fundoplicatura aumenta el funcionamiento de la
-GBEF? Datos en "gbef_long.csv" (o "gbef.csv", para un reto).
+GBEF? Datos en "gbef_long.txt" (o "gbef.txt", para un reto).
+
+```{r arranging_gbef}
+# Los datos en gbef.txt no están en el formato adecuado para un análisis estadístico...
+# ¡hay que luchar para ordenarlos de forma correcta!
+
+gbef_df = read.table("data/gbef.txt")
+gbef_df[3, ] = c("ID", "", 1:(ncol(gbef_df) - 2))
+gbef_df = t(gbef_df)
+
+gbef_df = as.data.frame(gbef_df[-(1:2), ]) %>% setNames(gbef_df[1, ])
+gbef_df = 
+  gbef_df %>% mutate(
+  Preop = as.numeric(Preop), 
+  Postop = as.numeric(Postop),
+  ID = factor(ID)
+)
+
+gbef_df_long =
+  gbef_df %>%
+  pivot_longer(Preop:Postop, names_to="class",  values_to = "gbef")
+
+write.table(gbef_df_long, "data/gbef_long.txt", row.names = FALSE)
+```
+
 
 ```{r gbef}
-# df = read.table("data/gbef_long.csv", header = TRUE)
-df = read.table("data/gbef.csv")
-df
-df = 
-  df %>% 
-  pivot_longer(-(V1:V2), names_to="junk",  values_to = "gbef") %>% 
-  select(-V2, -junk) %>%
-  rename(class = V1)
-df_sp = split(df, df$class)
-t.test(df_sp$Postop$gbef, df_sp$Preop$gbef, paired = TRUE, alternative = "greater")
+gbef_df_long = read.table("data/gbef_long.txt", header = TRUE)
+gbef_df_long = 
+  gbef_df_long %>% 
+  arrange(ID)
+gbef_df_long
+
+t.test(gbef~ class, data = gbef_df_long, paired = TRUE, alternative = "greater")
+cohens_d(gbef~ class, data = gbef_df_long, paired = TRUE, alternative = "greater")
 ```
 
 ### Ejercicio: evaluación del modelo de datos apareados
 ```{r paired_hist}
-d = df_sp$Postop$gbef - df_sp$Preop$gbef
-hist(d)
+preop = gbef_df_long %>% filter(class == "Preop") %>% pull(gbef)
+postop = gbef_df_long %>% filter(class == "Postop") %>% pull(gbef)
+diff = postop - preop
+hist(diff)
 ```
+
 
 ## ANOVA: comparación de medias para múltiples grupos
 
+ANOVA permite comparar más de dos grupos entre sí (¡como ya hicimos con iris!).
+Asumiendo los peligros de dar recetas generales, en una primera aproximación 
+podemos seguir los siguientes pasos:
 
-### Ejemplo: One-way ANOVA
-Veinticuatro animales fueron asignados aleatoriamente a cuatro dietas diferentes
-y se tomaron muestras de sangre en un orden aleatorio. Se midió el tiempo de 
-coagulación de la sangre. Datos en "coagulation.csv". ¿Influye la dieta en 
-el tiempo de coagulación?
+1. Explorar y visualizar los datos.
+2. Construir y/o elegir contrastes. ¡Ojo! Si quieres usar **sumas de cuadrados
+de tipo III (recomendado), estos contrastes deben ser ortogonales.**
+3. Usar el modelo ANOVA y verificar sus asunciones. 
+4. Calcula contrastes o realiza test post-hoc. 
+
+Fíjate que ya hemos cubierto casi todos los pasos en los ejemplos de regresión. 
+Los pasos novedosos son:
+
+* Antes de usar contrastes, usamos un **test omnibus (ANOVA)**. Siguiendo el 
+ejemplo del "método V", un test omnibus simplemente respondería a "¿Hay diferencias
+entre la longitud del sépalo entre las distintas especies? El problema de los 
+tests omnibus es que, si existen diferencias, no nos dicen entre qué especies
+hay diferencias.
+* Para descubrir qué especies difieren entre sí podemos emplear: 1) contrastes 
+o 2) **tests post-hoc**. En general, usaremos contrastes si tenemos hipótesis
+específicas que deseamos comprobar, mientras que usaremos test post-hoc si 
+no tenemos hipótesis específicas (y queremos descubrir cualquier patrón
+interesante en los datos).
 
 
-```{r coagulation}
-library("car")
-coagulation = read.csv("data/coagulation.csv", stringsAsFactors = TRUE)
-options(contrasts = c("contr.sum", "contr.poly")) # for type 3 contrast
+## Ejemplo: el "método V", otra vez.
+Repitamos el análisis realizado para el método V, incorporando además los 
+nuevos pasos.
 
-coagulation$diet
-coagulation_lm = lm(coag ~ diet, data = coagulation)
-summary(coagulation_lm)
-coagulation_aov = Anova(coagulation_lm, type = 3)
-print(coagulation_aov)
+```{r}
+data("iris")
+
+# 1) Visualizar
+iris
+ggplot(iris, aes(x=Species, y = Sepal.Length, fill=Species)) + geom_boxplot() + 
+  coord_flip()
+
+# 2) Especificar contrastes si tenemos alguna hipótesis específica
+contrasts(iris$Species) = cbind(
+  "V - setosa" = c(-2, 1, 1),
+  "I - II" = c(0, 1, -1)
+)
+contrasts(iris$Species)
+v_model = lm(Sepal.Length ~ Species, iris)
+
+# 3) Correr ANOVA: test omnibus
+anova(v_model)
+```
+Antes de seguir adelante deberíamos comprobar que se cumplan las asunciones de
+ANOVA. Dejémoslo para otro ejemplo y sigamos adelante.
+
+En el código anterior, ANOVA nos indica que alguna(s) de las especies tiene(n)
+un sépalo distinto al de lasotras especies... ¡Sin embargo no nos dice cuáles 
+son estas especies!
+
+Para descubrirlo podemos usar contrastes ...
+
+```{r }
+# 4.a) 
+summary.lm(v_model)
+confint(v_model)
 ```
 
-```{r coagulation_plot}
-print(ggplot(coagulation, aes(x = diet, y = coag, fill = diet)) +
-        geom_boxplot() + coord_flip())
+... o usar tests post-hoc. La idea básica de los tests post-hoc es fácil de entender:
+dado que sé que existe alguna diferencia entre las especies, voy a comparar todas
+las especies entre sí. El problema es que esto dispara el error tipo I muy rápidamente, 
+por lo que tenemos que ser más conservadores a la hora de aceptar una diferencia
+como significativa. Esto lo logramos con distintos métodos de **ajuste de p-valores**.
+Antes de seguir adelante, fíjate que el test omnibus sirve como una primera 
+barrera protectora antes de lanzarnos a hacer **comparaciones múltiples**.
+
+Entre los métodos de ajuste, podemos distinguir entre 
+  1. Métodos centrados en controlar el *family-wise error rate (FWER)*, cuyo credo 
+  es "Si cometo un solo error tipo I todas mis conclusiones se desmoronarán".
+  2. Métodos centrados en controlar el *false discovery rate (FDR)*, que se 
+  corresponde con el credo (considerablemente más optimista) 
+  "vamos a intentar estimar cuántos errores tipo I cometo y a no pasarme de
+  cierto número (pero no pasa nada si hay algún error)".
+  
+Podemos emplear `R` base para realizar los tests post-hoc...
+```{r}
+# Bonferroni es bastante conservador, pero es un ajuste muy conocido
+pairwise.t.test(iris$Sepal.Length, iris$Species, p.adjust.method = "bonferroni")
+# Los métodos fdr son "BH" (aka "fdr") and "BY".
+pairwise.t.test(iris$Sepal.Length, iris$Species, p.adjust.method = "fdr")
 ```
 
+... o bien el paquete `emmeans` (que tiene ciertas ventajas, como veremos):
+
+```{r}
+v_model_emms = emmeans(v_model, "Species")
+pairs(v_model_emms, adjust="bonferroni", infer=c(TRUE, TRUE))
+pairs(v_model_emms, adjust="fdr", infer = c(TRUE, TRUE))
+```
+
+
+### Ejemplo: asunciones de ANOVA
 
 En general, ANOVA asume:
 
@@ -399,39 +646,47 @@ plot(coagulation_lm, which = c(1, 2), ask=FALSE)
 ```
 
 
-```{r}
-pairwise.t.test(coagulation$coag, coagulation$diet, p.adj = "bonf")
-pairwise.t.test(coagulation$coag, coagulation$diet, p.adj = "BH")  # Benjamini–Hochberg
-```
+### Ejemplo: ANCOVA
+El dataset `anxiety` proporciona la puntuación de ansiedad, medida antes 
+y después de aplicar un tratamiento contra la ansiedad, de tres grupos de personas
+que practican ejercicios físicos en diferentes niveles 
+(grp1: basal, grp2: moderado y grp3: alto). Aunque no tenemos ninguna hipótesis
+específica, hagamos un análisis de los datos...
 
 ```{r}
-library("agricolae")
-HSD.test(coagulation_lm, "diet", group=TRUE, console=TRUE)
-```
+anxiety = read.csv("data/anxiety.csv")
+head(anxiety)
 
-<!-- https://digitalcommons.wayne.edu/cgi/viewcontent.cgi?article=2088&context=jmasm -->
-<!-- https://stats.stackexchange.com/questions/2962/omega-squared-for-measure-of-effect-in-r -->
-```{r}
-library("multcomp") #glht
-data("anxiety", package = "datarium")
-anxiety <- anxiety %>%
-  dplyr::select(id, group, t1, t3) %>%
-  rename(pretest = t1, posttest = t3)
-anxiety[14, "posttest"] <- 19
-```
-```{r}
+# 1) Vis...
+ggplot(anxiety, aes(x = pretest, y = posttest, col = group)) +
+  geom_point() + 
+  geom_smooth(method="lm")
+
+# 2) Contrates 
+# No tenemos hipótesis :(
+
+# 3) Anova + asuncioens
 anxiety_lm = lm(posttest ~ pretest + group, anxiety)
 Anova(anxiety_lm, type=3)
-# we want to test differences between the adjusted means, we can use only
-# the glht() function; the pairwise.t.test() function will not test the adjusted means. As such,
-# we are limited to using Tukey or Dunnett’s post hoc tests.
-postHocs<-glht(anxiety_lm, linfct = mcp(group = "Tukey"))
-summary(postHocs)
-confint(postHocs)
+plot(anxiety_lm, which = c(1, 2), ask=FALSE)
+
+
+# 4) Posthoc tests!
+# ...
 ```
 
+¡Ojo, queremos comparar diferencias entre las medias ajustadas! La función
+pairwise.t.test() no usará medias ajustadas, por lo que debemos emplear 
+`emmeans`:
 
-# TODO: ANCOVA
+```{r}
+pairs(
+  emmeans(anxiety_lm, "group", adjust = "Tukey"),
+  infer = c(TRUE, TRUE)
+)
+```
+
+----
 
 Los diseño de **ANOVA factoriales (factorial = más de un factor)** permiten el efecto
 individual y conjunto de uno o más factores. Podemos distinguir varios tipos de
@@ -439,8 +694,11 @@ análisis factoriales...
 
 * ... Diseños independientes, 
 * Diseños con medidas repetidas, 
-* Diseños mixtos.
+* Diseños mixtos, ...
 
+... que, como veremos, plantean ciertas diferencias en los modelos. En cualquier
+caso, en los diseños factoriales lo que primero debemos comprender es el concepto
+de interacción.
 
 ## ANOVA factorial independiente
 ## Ejemplo: Sin interacción entre los factores principales
@@ -450,17 +708,6 @@ el efecto de las drogas y edad se mide  en términos de reducción del tiempo de
 reacción a algún estímulo y que se obtienen los resultados del fichero
 "drugs_1.csv". Visualiza el efecto de las drogas y sexo en los tiempos de reacción
 y propón un modelo.
-
-#TODO: remove
-```{r GEN1}
-drugs_df <- data.frame(drug=rep(c("Placebo", "A", "B"), 10), sex=rep(c("Male", "Female"),15))
-drugs_df$response_time = NA
-drugs_df[drugs_df$drug == "Placebo", "response_time"] = 5 + rnorm(10, sd=1) 
-drugs_df[drugs_df$drug == "A", "response_time"] = 15 + rnorm(10, sd=1) 
-drugs_df[drugs_df$drug == "B", "response_time"] = 25 + rnorm(10, sd=1) 
-drugs_df[drugs_df$sex == "Female", "response_time"] =  drugs_df[drugs_df$sex == "Female", "response_time"] + rnorm(15, 4, sd=0.1)
-write.csv(drugs_df, "data/drugs_1.csv", row.names = FALSE, )
-```
 
 ```{r drugs_1}
 drugs_df_1 = 
@@ -483,20 +730,8 @@ ggplot(drugs_df_1, aes(x=sex, y=predictions, col=drug)) +
 ```
 
 
-# TODO: remove
-```{r GEN2}
-drugs_df <- data.frame(drug=rep(c("Placebo", "A", "B"), 10), sex=rep(c("Male", "Female"),15))
-drugs_df$response_time = NA
-drugs_df[drugs_df$drug == "Placebo", "response_time"] = 10 + rnorm(10, sd=1) 
-drugs_df[drugs_df$drug == "A", "response_time"] = 20 + rnorm(10, sd=1) 
-drugs_df[drugs_df$drug == "B", "response_time"] = 30 + rnorm(10, sd=1) 
-drugs_df[drugs_df$sex == "Female", "response_time"] =  drugs_df[drugs_df$sex == "Female", "response_time"] + rnorm(15, 4, sd=0.1)
-drugs_df[drugs_df$sex == "Male" & drugs_df$drug == "A", "response_time"] = (
-  drugs_df[drugs_df$sex == "Male" & drugs_df$drug == "A", "response_time"] + rnorm(5, 20, sd=1)
-)
-write.csv(drugs_df, "data/drugs_2.csv", row.names = FALSE, )
-```
-
+### Ejemplo: interacciones entre los factores principales
+Repite el ejercicio anterior para los datos experimentales "drugs_2.csv".
 
 ```{r drugs_2}
 drugs_df_2 = 
@@ -509,7 +744,6 @@ ggplot(drugs_df_2, aes(x=sex, y=response_time, col=drug)) +
   stat_summary(geom='line', aes(group=drug))
 ```
 
-
 ```{r drugs_2_model}
 drugs_model_2 = lm(response_time ~ sex + drug, data = drugs_df_2)
 drugs_df_2$predictions = predict(drugs_model_2)
@@ -519,6 +753,11 @@ ggplot(drugs_df_2, aes(x=sex, y=predictions, col=drug)) +
   stat_summary(geom='line', aes(group=drug))
 ```
 
+Uuuuups, las predicciones son malíiiiiiisimas... El modelo no es capaz de 
+capturar **las interacciones** presentes en los datos.
+
+### Ejemplo: modelado de interacciones 
+Para modelar interacciones...
 ```{r drugs_2_model_interactions}
 drugs_model_2 = lm(response_time ~ sex * drug, data = drugs_df_2) 
 # o de forma equivalente
@@ -530,195 +769,114 @@ ggplot(drugs_df_2, aes(x=sex, y=predictions, col=drug)) +
   stat_summary(geom='line', aes(group=drug))
 ```
 
-1. Enter data: you’ve probably gathered this much by now.
-2. Explore your data: as always, we’ll begin by graphing the data and computing descrip-
-tive statistics. You should check distributional assumptions and use Levene’s test to
-check for homogeneity of variance (see Chapter 5).
-3. Construct or choose contrasts: you need to decide what contrasts to do and to specify
-them appropriately for all of the independent variables in your analysis. If you want
-to use Type III sums of squares, these contrasts must be orthogonal.
-4. Compute the ANOVA: you can then run the main analysis of variance. Depending on
-what you found in the previous step, you might need to run a robust version of the
-test.
-5. Compute contrasts or post hoc tests: having conducted the main ANOVA, you can
-follow it up with post hoc tests or look at the results of your contrasts. Again, the
-exact methods you choose will depend upon what you unearth in step 2.
 
-
-
-# Ejemplo: Contrastes
+### Ejemplo: completando el análisis para drugs_model_2
 ```{r}
-contrasts(drugs_df_1$drug)
-contrasts(drugs_df_1$drug)
-
-contrasts(drugs_df_1$drug) = cbind(c(1, 1, -2), c(-1, 1, 0))
-contrasts(drugs_df_1$drug)
-```
-
-# Ejercicio: contrastes
-```{r}
-contrasts(drugs_df_2$drug)
+# 2) Contrastes
 contrasts(drugs_df_2$drug)
 
-contrasts(drugs_df_2$drug) = cbind(c(1, 1, -2), c(-1, 1, 0))
+contrasts(drugs_df_2$drug) = cbind(
+  "_Drugs-Placebo" = c(1, 1, -2), 
+  "_A - B" = c(1, -1, 0)
+  )
 contrasts(drugs_df_2$drug)
-```
 
-
-#Ejercicio: interpretación de los coeficientes ANOVA
-Usa ANOVA e interpreta los resultados para los models `drugs_model_1` y `drugs_model_2`.
-
-```{r drugs_interpretation}
-drugs_model_1 = lm(response_time ~ sex + drug, data = drugs_df_1)
+# 3) ANOVA 
 drugs_model_2 = lm(response_time ~ sex * drug, data = drugs_df_2)
-
-print(Anova(drugs_model_1, type = 3))
 print(Anova(drugs_model_2, type = 3))
-```
+# Omitimos los plot de comprobación por sencillez...(comprueba que son correctos)
+# plot(drugs_model_2, ask=FALSE)
 
-
-```{r drugs_interpretation_contrastes}
-# Ver contrastes
-summary(drugs_model_1)
+# 4) post-hoc
 summary(drugs_model_2)
-
-
-library("emmeans")
-
-# a machete
-# contrasts(drugs_df_2$drug) = cbind(c(1, 1, -2), c(-1, 1, 0))
-# em2 = emmeans(drugs_model_2, ~ drug * sex)
-# em2
-# contrast(em2, method = list(
-#   '1Sex' = (c(1, 1, -2, 0, 0, 0) - c(0, 0, 0, 1, 1, -2)) / 12, 
-#   '2Sex' = (c(1, -1, 0, 0, 0, 0) - c(0, 0, 0, 1, -1, 0)) / 4
-# ))
-
-
-#           Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)  25.1937     0.1956 128.771  < 2e-16 ***
-# sex1         -1.3059     0.1956  -6.675 6.64e-07 ***
-# drug1         6.5697     0.1383  47.488  < 2e-16 ***
-# drug2         0.2630     0.2396   1.097    0.283    
-# sex1:drug1   -1.5572     0.1383 -11.256 4.65e-11 ***
-# sex1:drug2    4.4296     0.2396  18.486 1.06e-15 ***
-drug_contrasts = list('DrugsVsPlacebo'=c(1, 1, -2) / 6, 'AvsB' = c(-1, 1, 0))
-emmeans(drugs_model_2, ~ drug) %>% contrast(drug_contrasts)
-emmeans(drugs_model_2, ~ sex) %>% contrast()
-emmeans(drugs_model_2, ~ drug | sex) %>%
-  contrast(interaction = list(drug=drug_contrasts, sex='consec'), by=NULL)
-
-# drugs_df_2 %>% mutate(is_placebo = (drug == "Placebo")) %>% group_by(is_placebo) %>% 
-#   summarise(mean = mean(response_time)) %>% pluck("mean") %>% diff
-
-
 ```
-sex1
-drug1
-drug2
-sex1:drug1: El efecto drug1 es diferente en hombres y mujeres? El efecto de placebo Vs drogas es comparable en hombres y mujeres?
-sex1:drug2: El efecto drug2 es diferente en hombres y mujeres? El efecto droga A Vs droga B es comparable en hombres y mujeres?
+
+Lo más interesante del código anterior es reflexionar sobre cada uno de los 
+contrastes y su significado. Los contrastes básicos (`sex`, `Drugs-Placebo`, `A - B`)
+deberían ser claros pero, ¿qué significan los contrastes para interacciones?
+
+* `sex1:drug_Drugs-Placebo`: El efecto `Drugs-Placebo` es diferente en hombres y mujeres? 
+Es decir, ¿el efecto de placebo Vs drogas es comparable en hombres y mujeres?
+* `sex1:drug_A - B`: El efecto `drug_A - B` es diferente en hombres y mujeres? Es
+decir, ¿el efecto droga A Vs droga B es comparable en hombres y mujeres?
+
+
+### Ejemplo: visualización de los resultados de un contraste con interacciones
+Veamos cómo visualizar que las interacciones entre contrastes y sexo son
+significativas...
+
 ```{r}
 contraste_1 = drugs_df_2 %>% mutate(drug = fct_recode(drug, 'Drug' = 'A', 'Drug' = 'B'))
 contraste_2 = drugs_df_2 %>% filter(drug != "Placebo") %>% mutate(drug = fct_drop(drug)) 
 
-ggplot(contraste_1, aes(x=sex, y=response_time, col=drug)) + 
+ggplot(contraste_1, aes(x=drug, y=response_time, col=sex)) + 
   stat_summary() + 
-  stat_summary(geom='line', aes(group=drug))
+  stat_summary(geom='line', aes(group=sex))
 
-ggplot(contraste_2, aes(x=sex, y=response_time, col=drug)) + 
+ggplot(contraste_2, aes(x=drug, y=response_time, col=sex)) + 
   stat_summary() + 
-  stat_summary(geom='line', aes(group=drug))
+  stat_summary(geom='line', aes(group=sex))
 ```
 
-No se deben interpretar los efectos principales si la interacción es significativa.
+En ambos casos, las pendientes de los grupos son distintas, lo que apoya que 
+hay interacciones en los datos. 
 
+Fíjate que, si las interacciones son significativas, la interpretación de los 
+efectos principales no tiene sentido. Por ejemplo, en el contraste 2, la
+droga B aumenta el tiempo de respuesta para las mujeres, pero lo disminuye 
+para hombres. Por tanto, responder a ¿disminuye la droga B el tiempo de 
+respuesta (para hombres y mujeres)? da una imagen incompleta del problema.
 
-# Posthoc
+NO INTERPRETES LOS EFECTOS PRINCIPALES SI LA INTERACCIÓN ES SIGNIFICATIVA.
+
+# Ejemplo: análisis Posthoc sobre las interacciones
+
 ```{r}
-pairwise.t.test(drugs_df_1$response_time, drugs_df_1$drug, p.adjust.method = "bonferroni")
-postHocs<-glht(drugs_model_1, linfct = mcp(drug = "Tukey"))
-summary(postHocs)
-confint(postHocs)
+ggplot(drugs_df_2, aes(x=sex, y=response_time, col = drug)) + 
+  stat_summary() + 
+  stat_summary(geom="line", aes(group = drug))
+
+drugs_emms = emmeans(drugs_model_2, ~ drug | sex) 
+contrast(drugs_emms, interaction = list(drug="pairwise", sex='consec'), by=NULL)
 ```
-
-#Exercise: Posthoc in drugs_model_2
-NO INTERPRETES LOS EFECTOS PRINCIPALES SI TIENES INTERACCION.
-
 
 
 ## ANOVA factorial con medidas repetidas
+Considera un experimento en el que a cada paciente se le realizan
+tres mediciones: una al comenzar la prueba, otra medición tras probar el tratamiento
+A, y otra medición tras probar el tratamiento B...
 
-F-test in ANOVA depends upon the assumption that scores in
-different conditions are independent (see section 10.3). When repeated measures are used
-this assumption is violated. 
+Los tests F en ANOVA asumen que las medidas son independientes. Cuando se 
+utilizan **medidas repetidas** como en el ejemplo anterior, se viola esta 
+suposición. Por tanto, cuando tenemos **ANOVA con medidas repetidas** 
+debemos "cambiar" este supuesto por otro válido. Se asume que la relación entre 
+pares de condiciones experimentales es similar. A este supuesto se le conoce como
+**esfericidad**. De forma práctica...
 
- The relationship between scores in different treatment conditions
-means that an additional assumption has to be made and, put simplistically, we assume
-that the relationship between pairs of experimental conditions is similar (i.e., the level of
-dependence between experimental conditions is roughly equal). This assumption is called
-the assumption of sphericity
-
-Sphericity refers to the
-equality of variances of the differences between treatment levels.
-
-
-Sphericity can be assessed using a test known as Mauchly’s test, which tests the hypothesis
-that the variances of the differences between conditions are equal. 
-
- What do you do if you violate sphericity?
-  There are three commonly used
-sphericity is violated?
-corrections based upon the estimates of sphericity advocated by Greenhouse
-and Geisser (1959) and Huynh and Feldt (1976)
+1. La esfericidad se puede evaluar mediante el **test de Mauchly**. 
+2. ¿Qué hacer si se viola la asunción de esfericidad? Existen correcciones 
+para intentar aliviar este problema. Las más conocidas se deben a 
+Greenhouse y Geisser (GG) y Huynh y Feldt (HF).
 
 
-Como-> lme or ezANOVA
-
-
-
-1. Enter data: which turns out not to be as straightforward as you might think.
-2. Explore your data: you know the routine by now – graphs, descriptive statistics and
-maybe even a bit of sphericity checking if you’re not going to use lme().
-Construct or choose contrasts: you need to decide what contrasts to do and to specify
-them appropriately for all of the independent variables in your analysis.
-Compute the ANOVA/multilevel model: you can then run the main analysis. Depending
-on what you found in the previous step, you might need to run a robust test.
-Compute contrasts or post hoc tests: having conducted the main analysis you can fol-
-low it up with post hoc tests or look at the results of your contrasts. Again, the exact
-methods you choose will depend upon what you unearth in step 2.
-
-
-
-## Ejercicio
-There is evidence from advertising research that attitudes towards stimuli can be changed
-using positive imagery (e.g., Stuart, Shimp, & Engle, 1987). As part of an initiative to stop
-binge drinking in teenagers, the government funded some scientists to look at whether neg-
-ative imagery could be used to make teenagers’ attitudes towards alcohol more negative.
-The scientists designed a study to address this issue by comparing the effects of negative
-imagery against positive and neutral imagery for different types of drinks. Table 13.4 illus-
-trates the experimental design and contains the data for this example (each row represents
-a single participant).
-Participants viewed a total of nine mock adverts over three sessions. In one session, they
-saw three adverts: (1) a brand of beer (Brain Death) presented with a negative image (a
-dead body with the slogan ‘drinking Brain Death makes your liver explode’); (2) a brand
-of wine (Dangleberry) presented in the context of a positive image (a sexy naked man or
-woman – depending on the participant’s preference – and the slogan ‘drinking Dangleberry
-wine makes you irresistible’); and (3) a brand of water (Puritan) presented alongside a neu-
-tral image (a person watching television accompanied by the slogan ‘drinking Puritan water
-makes you behave completely normally’). In a second session (a week later), the participants
-saw the same three brands, but this time Brain Death was accompanied by the positive imag-
-ery, Dangleberry by the neutral image and Puritan by the negative. In a third session, the
-participants saw Brain Death accompanied by the neutral image, Dangleberry by the nega-
-tive image and Puritan by the positive. After each advert participants were asked to rate the
-drinks on a scale ranging from −100 (dislike very much) through 0 (neutral) to 100 (like very
-much). The order of adverts was randomized, as was the order in which people participated
-in the three sessions. This design is quite complex. There are two independent variables:
-the type of drink (beer, wine or water) and the type of imagery used (positive, negative or
-neutral). These two variables completely cross over, producing nine experimental conditions.
+## Ejemplo: ANOVA factorial con medidas repetidas
+Existe evidencia de que las actitudes hacia ciertos estímulos se pueden cambiar 
+utilizando imágenes positivas. Como parte de una iniciativa para detener el 
+consumo excesivo de alcohol en los adolescentes, el gobierno financió un estudio
+para determinar si imágenes negativas podrían usarse para hacer que las 
+actitudes de los adolescentes hacia el alcohol sean más negativas. Cada participante
+en cada estudio vio un total de nueve anuncios simulados en tres sesiones. En 
+una sesión, cada partipante ve tres anuncios (de cerveza, vino o agua); cada anuncio
+tiene una actitud asociada (positiva, negativa o neutra). Al cabo de las 3 sesiones,
+las variables se cruzan completamente produciendo 9 condiciones experimentales. 
+Después de cada anuncio, se pidió a los participantes que calificaran las bebidas 
+en una escala que iba desde -100 (me disgusta mucho) pasando por 0 (neutral) 
+hasta 100 (me gusta mucho). El orden de los anuncios fue aleatorio, al igual que el orden en que las personas participaron en las tres sesiones. Datos en "data/attitude_long.dat"
+(o "attitude.dat" para un reto).
 
 ```{r tidying_data}
-attitude_df = read.delim("data/attitude.dat", header = TRUE)
+# Los datos en attitude.dat no son adecuados para anova... hay que arreglarlo!
+attitude_df = read.table("data/attitude.dat", header = TRUE)
 
 attitude_df_long = 
   attitude_df %>% 
@@ -726,96 +884,15 @@ attitude_df_long =
   separate(name, into=c('drink', 'imagery'), sep = '_') %>% 
   mutate_if(is.character, as.factor)
 
-write.csv(attitude_df_long, 'data/attitude_long.dat', row.names = FALSE)
 ```
 ```{r}
-library('ez')
-attitude_df_long = read.csv("data/attitude_long.dat", stringsAsFactors = TRUE) %>% as_tibble
-attitude_df_long
+# 1) plot
+attitude_df_long = read.table("data/attitude_long.dat", header=TRUE)
 
+```
 
-ggplot(attitude_df_long, aes(x=drink, y=attitude, fill=imagery)) + 
-  geom_boxplot()
+```{r}
 
-
-#### TODO: creo que ezANOVA pasa de los contrastes
-contrasts(attitude_df_long$drink)
-AlcoholvsWater = c(1, -2, 1)
-BeervsWine = c(-1, 0, 1)
-contrasts(attitude_df_long$imagery)
-NegativevsOther = c(-2, 1, 1)
-PositivevsNeutral = c(0, -1, 1)
-
-
-contrasts(attitude_df_long$drink) = cbind(AlcoholvsWater, BeervsWine)
-contrasts(attitude_df_long$drink)
-
-contrasts(attitude_df_long$imagery) = cbind(NegativevsOther, PositivevsNeutral)
-contrasts(attitude_df_long$imagery)
-
-library('nlme')
-
-attitudeModel = lme(
-  attitude ~ drink * imagery, 
-  random = ~1|participant,
-  data=attitude_df_long,
-  method = "ML"
-)
-
-# https://stats.stackexchange.com/questions/13784/repeated-measures-anova-with-lme-lmer-in-r-for-two-within-subject-factors
-# http://www.dwoll.de/rexrepos/posts/anovaMixed.html#two-way-repeated-measures-anova-rbf-pq-design
-# fitF <- lme4::lmer(Y ~ Xw1*Xw2 + (1|id) + (1|Xw1:id) + (1|Xw2:id), data=d2)
-# anova(fitF)
-
-summary(attitudeModel)
-
-postHocs<-glht(attitudeModel, linfct = mcp(drink = "Tukey"))
-summary(postHocs)
-confint(postHocs)
-
-# X <- model.matrix(~ drink * imagery, data = attitude_df_long)
-# glht(attitudeModel, linfct = X)
-
-# emms1 <- emmeans(attitudeModel)
-# con1 <- contrast(emms1, interaction = "pairwise")
-# pairs(con1, by = NULL)
-
-
-# If you need more comparisons, you could run post hoc tests (as explained earlier in the chapter)
-
-# #using ezAnova
-# 
-debugonce(ezANOVA)
-attitudeModel = ezANOVA(
-  data = attitude_df_long,
-  dv = .(attitude),  # dv: dependent variable
-  wid = .(participant), #
-  within = .(drink, imagery),  # sin c() !!:
-  type = 3,
-  detailed = TRUE
-)
-# options(digits = 3)
-print(attitudeModel)
-# print(attitudeModel$ANOVA$ges) # generalized eta-squared
-# 
-# library('emmeans')
-# emm <- emmeans(attitudeModel$aov,  ~ drink * imagery)
-# 
-# 
-# attitude_df_groups = 
-#   attitude_df_long %>% 
-#   unite(group, all_of(c('drink', 'imagery')))
-# 
-# contrast(
-#   emm, 
-#   list(c1 = c(1, -1, 0, 0, 0, 0), # reproduces first pairwise comparison
-#        # emmean of row 1 - (emmean of row 1 + emmean of row 2) / 2; see EMMs table
-#        # 381.5546 - (379.9286 + 381.6363) / 2
-#        c2 = c(1, -0.5, -0.5, 0, 0, 0))
-#  )
-# 
-# pairwise.t.test(attitude_df_groups$attitude, attitude_df_groups$group, paired = TRUE, p.adjust.method = "bonferroni")
-# pairs(emm, adjust = "Holm")
 
 ```
 
@@ -838,20 +915,137 @@ fhch
 ```
 
 ```{r}
-contrasts(fhch$length) = cbind('aaaa'= c(2, -1, -1), 'bbb'=c(0,1, -1))
+#contrasts(fhch$length) = cbind('aaaa'= c(2, -1, -1), 'bbb'=c(0,1, -1))
 (rt_1 = aov_car(log_rt ~ task + Error(id/length*stimulus), fhch))
 (rt_2 = aov_ez(id = "id", dv = "log_rt", fhch, between = "task", 
               within = c("length", "stimulus")))
 (rt_3 = aov_4(log_rt ~ task + (length*stimulus|id), fhch))
 
-rt_4 = lmer(log_rt ~ task * length * stimulus + (1 | id) + (1|length:id) + (1|stimulus:id), fhch)
-anova(rt_4)
-summary(rt_4)
-summary(rt_3)
-rt_3
+# rt_4 = lmer(log_rt ~ task * length * stimulus + (1 | id) + (1|length:id) + (1|stimulus:id), fhch)
+# anova(rt_4)
+# summary(rt_4)
+# summary(rt_3)
 
 # For example, assume we are interested in the significant task:stimulus interaction. As a first step we might want to investigate the marginal means of these two factors
 emmeans(rt_1, c("stimulus","task"))
+
+#It also appears that the difference between word and nonword trials is larger in the naming task then in the le
+ls1 <- emmeans(rt_1, c("stimulus"), by="task")
+update(pairs(ls1), by=NULL, adjust = "holm")
+```
+```{r}
+# These results show that the stimulus effects in both task conditions are independently significant. Obviously, the difference between them must also be significant then, or?
+pairs(update(pairs(ls1), by=NULL))
+
+
+# OTro
+https://cran.r-project.org/web/packages/afex/vignettes/afex_anova_example.html
+```
+
+
+
+## Análisis no paramétrico
+Hemos visto que la Normalidad de los datos es una asunción importante de los 
+métodos vistos hasta el momento. ¿Qué hacer si los datos violan claramente la
+normalidad? 
+
+Los **metodos no paramétricos** permiten realizar análisis estadísticos sin 
+asumir ninguna distribución de los datos. A cambio, pierden potencia en los 
+contrastes.
+
+A grandes rasgos tenemos...
+*  Como alternativa a t-test independiente $\rightarrow$ Mann–Whitney test o 
+Wilcoxon’s rank-sum test $\rightarrow$ `wilcox.test`.
+* Como alternativa a t-test apareado $\rightarrow$ Wilcoxon signed-rank test 
+$\rightarrow$ `wilcox.test`.
+* Como alternativa a One-way ANOVA $\rightarrow$  Kruskal–Wallis test $\rightarrow$ `kruskal.test`.
+* Como alternativa a Repeated Measures ANOVA $\rightarrow$  Friedman's ANOVA $\rightarrow$ `friedman.test`.
+
+# 
+El gasto cardı́aco (litros/minuto) se midió por termodilución en una muestra
+aleatoria simple de 15 pacientes operados de corazón. Deseamos saber si
+podemos concluir que la media de la población es diferente de 5.05.
+
+```{r}
+data = c(4.91, 4.10, 6.74, 7.27, 7.42, 7.50, 6.56, 4.64, 5.98, 3.14, 3.23,
+5.80,6.17,5.39, 5.77)
+wilcox.test(data, mu = 5.05)
+##
+## Wilcoxon signed rank exact test
+##
+## data: data
+## V = 86, p-value = 0.1514
+## alternative hypothesis: true location is not equal to 5.05
+```
+
+# Ejercicio
+En un estudio, se midieron los estreses hemodinámicos en sujetos sometidos a
+colecistectomı́a laparoscópica. Una variable de interés es el volumen diastólico
+final ventricular (LVEDV) medido en mililitros. Los datos se encuentra en
+“lvedv.tsv”. El “baseline” se refiere a una medición tomada 5 minutos después
+de la inducción de la anestesia, y el término “5 minutes” se refiere a una
+medición tomada 5 minutos después del “baseline”. ¿Hay cambios en los
+niveles de LVEDV durante la intervención?
+```{r}
+data = read.table("data/lvedv.tsv", header = TRUE)
+
+with(data,
+     wilcox.test(baseline, X5_minutes, paired = TRUE)
+)
+```
+
+# 
+Se ha diseñado un experimento para evaluar los efectos de la inhalación
+prolongada de óxido de cadmio. Quince animales de laboratorio sirvieron como
+sujetos experimentales, mientras que 10 animales similares sirvieron como
+controles. La variable de interés fue el nivel de hemoglobina después del
+experimento. Los resultados se encuentran en “cadmium.csv”. Deseamos saber
+si podemos concluir que la inhalación prolongada de óxido de cadmio reduce el
+nivel de hemoglobina
+
+```{r}
+dat = read.table("data/cadmium.csv", header = TRUE, sep = ",")
+wilcox.test(
+  dat %>% filter(class == "exposed") %>% .$hemoglobin,
+  dat %>% filter(class == "unexposed") %>% .$hemoglobin,
+  alternative = "less"
+)
+```
+
+#
+Results from an experiment to compare yields (as measured by dried weight of plants) obtained under a control and two different treatment conditions.
+```{r}
+data("PlantGrowth")
+PlantGrowth
+kruskal.test(weight ~ group, data = PlantGrowth)
+pairwise.wilcox.test(PlantGrowth$weight, PlantGrowth$group,
+                 p.adjust.method = "BH")
+```
+
+# Ejercicio
+The dataset contains 10 individuals' self-esteem score on three time points during a specific diet to determine whether their self-esteem improved.
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+
+data("selfesteem", package = "datarium")
+head(selfesteem, 3)
+selfesteem = 
+  selfesteem %>% 
+  pivot_longer(cols = t1:t3, names_to = "time", values_to="score") %>% 
+  mutate(id = factor(id))
+
+ggplot(selfesteem, aes(x=time, y=score)) + geom_boxplot()
+
+friedman.test(score ~ time | id, selfesteem)
+
+selfesteem %>% friedman_effsize(score ~ time |id)
+pwc <- selfesteem %>%
+  wilcox_test(score ~ time, paired = TRUE, p.adjust.method = "bonferroni")
+pwc
+
 ```
 
 
