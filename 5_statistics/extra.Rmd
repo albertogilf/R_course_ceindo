@@ -1,0 +1,46 @@
+---
+title: "discarded"
+output: html_document
+date: '2022-05-08'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+`
+# Ejercicio
+El conjunto de datos `teengamb` en el paquete `faraway` tiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona...
+
+```{r}
+# 1) carga los datos
+data('teengamb', package='faraway')
+# ?faraway::phbirths
+teengamb = teengamb %>% mutate( sex = ifelse( sex==1, 'Female', 'Male') )
+
+
+# 2) Dibuja los datos para valorar si incluir interacciones o no
+ggplot(teengamb, aes(x=income, y=gamble, color=sex)) + geom_point() +
+  geom_smooth(method='lm')
+
+m1 <- lm( gamble ~ sex * income, data=teengamb )# 3) Ajusta el modelo adecuado
+teen_gambling_model = lm( gamble ~ sex * income, data=teengamb )
+
+# 4) Crea un gráfico con las predicciones de tu modelo y compáralo con los
+# datos real
+teengamb <- teengamb %>%
+  cbind( predict(teen_gambling_model, interval='conf') )
+print(
+  ggplot(teengamb, aes(x=income, col=sex, fill=sex)) +
+    geom_ribbon(aes(ymin=lwr, ymax=upr),
+                alpha=.3) +
+    geom_point(aes(y=gamble)) +
+    geom_line(aes(y=fit))
+)
+
+# 5) Interpreta la relación entre las variables de interés y la variable "cuánto
+# juega una persona"
+plot(teen_gambling_model, ask=FALSE)
+
+```
