@@ -41,3 +41,17 @@ drugs_df[drugs_df$sex == "Male" & drugs_df$drug == "A", "response_time"] = (
   drugs_df[drugs_df$sex == "Male" & drugs_df$drug == "A", "response_time"] + rnorm(5, 20, sd=1)
 )
 write.csv(drugs_df, "data/drugs_2.csv", row.names = FALSE, )
+
+
+
+# meta ---------------------------------------------------------------------
+
+for (i in 1:20) {
+  write_csv(
+    rbind(
+      data.frame(response = rnorm(sample(20:30, 1), mean=runif(1, 5, 8)), group = "control"),
+      data.frame(response = rnorm(sample(20:30, 1), mean=runif(1, 5.5, 8.4)), group = "treat")
+    ),
+    paste0("data/meta/paper-", i, ".csv")
+  )
+}

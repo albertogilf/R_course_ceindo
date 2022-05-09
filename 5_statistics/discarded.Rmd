@@ -8,6 +8,15 @@ date: '2022-05-08'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Obtener los coeficientes para el contraste de iris
+```{r}
+library("fractional")
+library("codingMatrices")
+solve(matrix(c(1/3, 1/3, 1/3, -1, 1/2, 1/2, 0, 1, -1), byrow = T, 3))
+contrasts(iris$Species) %>% fractional() %>% mean_contrasts()
+
+```
+
 
 ### Ejemplo: One-way ANOVA
 Veinticuatro animales fueron asignados aleatoriamente a cuatro dietas diferentes
@@ -202,7 +211,7 @@ Anova(lme(
 #   unite(group, all_of(c('drink', 'imagery')))
 # 
 # contrast(
-#   emm, 
+#   emm,
 #   list(c1 = c(1, -1, 0, 0, 0, 0), # reproduces first pairwise comparison
 #        # emmean of row 1 - (emmean of row 1 + emmean of row 2) / 2; see EMMs table
 #        # 381.5546 - (379.9286 + 381.6363) / 2
@@ -211,4 +220,62 @@ Anova(lme(
 # 
 # pairwise.t.test(attitude_df_groups$attitude, attitude_df_groups$group, paired = TRUE, p.adjust.method = "bonferroni")
 # pairs(emm, adjust = "Holm")
+
+
+### Ejercicio: ANOVA con 
+En Freeman et al encontramos datos referentes a dos tipos de tareas (decisión léxica y 
+nombrado de palabras) y sus tiempos de respuesta para 300 palabras y 300 no-palabras
+de 45 participantes. Aunque existen más variables, nos centramos en los factores 
+`task` (`lexdec` o `naming`), `stimulus` (`word` o `nonword`) y `length` 
+(longitud de las palabras).
+
+```{r}
+library("afex")
+library("emmeans")
+data("fhch2010") # load data (comes with afex) 
+fhch = droplevels(fhch2010[fhch2010$correct,]) # remove errors
+fhch = 
+  fhch %>% 
+  dplyr::select(log_rt, task, length, stimulus, id) %>% 
+  as_tibble
+fhch
+```
+
+```{r}
+#contrasts(fhch$length) = cbind('aaaa'= c(2, -1, -1), 'bbb'=c(0,1, -1))
+(rt_1 = aov_car(log_rt ~ task + Error(id/length*stimulus), fhch))
+(rt_2 = aov_ez(id = "id", dv = "log_rt", fhch, between = "task", 
+              within = c("length", "stimulus")))
+(rt_3 = aov_4(log_rt ~ task + (length*stimulus|id), fhch))
+
+# rt_4 = lmer(log_rt ~ task * length * stimulus + (1 | id) + (1|length:id) + (1|stimulus:id), fhch)
+# anova(rt_4)
+# summary(rt_4)
+# summary(rt_3)
+
+# For example, assume we are interested in the significant task:stimulus interaction. As a first step we might want to investigate the marginal means of these two factors
+emmeans(rt_1, c("stimulus","task"))
+
+#It also appears that the difference between word and nonword trials is larger in the naming task then in the le
+ls1 <- emmeans(rt_1, c("stimulus"), by="task")
+update(pairs(ls1), by=NULL, adjust = "holm")
+```
+```{r}
+# These results show that the stimulus effects in both task conditions are independently significant. Obviously, the difference between them must also be significant then, or?
+pairs(update(pairs(ls1), by=NULL))
+
+
+```
+
+
+# LMER
+```{r}
+lmer_model =   lmer(
+    attitude ~ drink * imagery  + (1|participant) + (1|participant:drink) + (1|participant:imagery),
+    data = attitude_df_long, #contrasts = list(drink = contrasts(attitude_df_long$drink)) 
+  )
+
+summary(lmer_model)
+do_emms=function(waka) {
+```
 
