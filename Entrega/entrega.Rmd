@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income` y `sex`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+
+```
+
+### Crea el modelo...
+Visualiza los intervalos de confianza para los coeficientes y su significación.
+Obtén los tamaños de los efectos. Interpreta los coeficientes y escribe tus
+conclusiones.
+
+```{r}
+
+```
+
+# 4) Crea un gráfico con las predicciones de tu modelo...
+y compáralas con los datos real. ¿Es bueno el ajuste?
+
+```{r}
+
+```
+
+# 5) Valora si el modelo es correcto...
+... y escribe claramente tus conclusiones.
+
+```{r}
+```

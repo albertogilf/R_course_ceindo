@@ -15,9 +15,9 @@ Instala las librerías necesarias (copia y pega en la terminal; no descomentes
 la línea)...
 
 ```{r}
-# install.packages(
-#  c("tidyverse", "afex", "emmeans", "GGally", "effectsize", "performance", "see", "qqplotr")
-# )
+install.packages(
+ c("tidyverse", "afex", "emmeans", "GGally", "effectsize", "performance", "see", "qqplotr")
+)
 ```
 
 ... y carga las librerías más usadas: 
