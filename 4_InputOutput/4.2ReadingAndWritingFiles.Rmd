@@ -168,7 +168,9 @@ class(bcancer) #Veamos el tipo de dato importado
 Existen diferentes paquetes de R que permiten leer ficheros con formato xls o xlsx (excel) directamente, sin hacer un cambio de formato a CSV. Uno de los más conocidos es xlsx, así que vamos a proceder a instalarlo y leer el mismo fichero csv en formato xls y xlsx. 
 
 ```{r}
-install.packages("xlsx", repos = "http://cran.us.r-project.org") # install the package from CRAN
+# UNCOMMENT AND EXECUTE THIS LINE ONLY IF YOU ARE WORKING ON WINDOWS! 
+# install.packages("rJava", type="win.binary") # install the sources from binary for Windows
+install.packages("xlsx") # install the package from CRAN
 library("xlsx") # Load the package from CRAN
 ```
 

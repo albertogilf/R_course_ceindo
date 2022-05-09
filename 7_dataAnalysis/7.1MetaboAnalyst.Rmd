@@ -1,0 +1,65 @@
+---
+title: "Input and output data. Keyboard, Monitor, CSV, XLS, XLSX, Matlab and SPSS"
+author: "Alberto Gil"
+output: 
+  html_document:
+    toc: TRUE
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Introduction
+
+El lenguaje de programación R 
+
+
+# 2. Installation
+
+## 2.1 Requirements
+
+Es necesario instalar las herramientas de R[https://ohdsi.github.io/Hades/rSetup.html](https://ohdsi.github.io/Hades/rSetup.html)
+
+## 2.2 Dependencies
+
+En este caso, la instalación de Metaboanalyst tiene una serie de dependencias que deben ser instaladas previamente. Esto es habitual en los paquetes de R que se realizan en el mundo de la bioinformática. En concreto, hay un paquete llamado Bioconductor que se introdujo en el tema 1 que sirve para administrar los diferentes paquetes de bioinformática. Procedamos a instalar el paquete de R:
+
+```{r}
+install.packages(
+ c("BiocManager"), repos = "http://cran.us.r-project.org")
+```
+Y a instalar los diferentes paquetes necesarios para la utilización de MetaboAnalyst. 
+
+```{r}
+pckgs_for_metaboanalyst = c("impute", "pcaMethods", "globaltest", "GlobalAncova", "Rgraphviz", "preprocessCore", "genefilter", "SSPA", "sva", "limma", "KEGGgraph", "siggenes","BiocParallel", "MSnbase", "multtest", "RBGL", "edgeR", "fgsea", "devtools", "crmn")
+BiocManager::install(pckgs_for_metaboanalyst)
+```
+
+Desafortunadamente, el paquete de MetaboAnalystR no está disponible como un paquete en Bioconductor. Podemos ver la lista de paquetes disponibles en bioconductor en el enlace [https://www.bioconductor.org/packages/release/BiocViews.html#___Software](https://www.bioconductor.org/packages/release/BiocViews.html#___Software)
+
+
+```{r}
+install.packages("devtools")
+library(devtools)
+# Y procedemos a instalar el paquete MetaboAnalystR desde github
+devtools::install_github("xia-lab/MetaboAnalystR", build = TRUE, build_vignettes = TRUE, build_manual =T)
+
+```
+
+
+Y ya estaremos en disposición de utilizar el paquete MetaboAnalystR
+
+```{r}
+library("MetaboAnalystR")
+```
+
+# 4 Exercises
+
+1. 
+
+
+
+
+
