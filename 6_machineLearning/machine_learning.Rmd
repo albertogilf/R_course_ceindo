@@ -13,7 +13,7 @@ Instala las librerías necesarias (copia y pega en la terminal; no descomentes
 la línea)...
 
 ```{r install}
-#install.packages(c("tidymodels", "vip", "mlbench", "rpart.plot"))
+install.packages(c("tidymodels", "vip", "mlbench", "rpart.plot"))
 ```
 
 ... y carga las librerías más usadas: 
