@@ -9,8 +9,18 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Antes de empezar...
+Instala las librerías necesarias (copia y pega en la terminal; no descomentes
+la línea)...
+
 ```{r install}
 #install.packages(c("tidymodels", "vip", "mlbench", "rpart.plot"))
+```
+
+... y carga las librerías más usadas: 
+
+```{r, echo=FALSE}
+library("tidyverse")
+theme_set(theme_bw())  # cambia el tema de ggplot
 ```
 
 
@@ -38,14 +48,6 @@ de aprendizaje automático. Para darles potencia, podemos emplear predictores
 Usa `lm` para ajustar los datos de "lm_ml.csv".
 
 ```{r}
-# tODO: borrar
-x <- seq(-1, 1, len=20)
-y <- cos(4* x + 4) + rnorm(length(x), sd = 0.4)
-plot(x, y)
-write.csv(data.frame(x=x, y=y), "data/lm_ml.csv", row.names = FALSE)
-```
-```{r}
-
 plot_model = function(model, col = 1) {
   xxx = seq(-1, 1, len=500)
   lines(xxx, predict(model, data.frame(x = xxx)), col = col, lwd=2)
