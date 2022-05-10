@@ -1,7 +1,15 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Evaluación curso R"
+author: TU NOMBRE, AQUÍ
+output: html_document
 ---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 20 de mayo, 23:59**
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**
 
 ## Apuestas de adolescentes en UK
 El conjunto de datos `teengamb.csv` contiene datos sobre las
