@@ -15,9 +15,9 @@ Instala las librerías necesarias (copia y pega en la terminal; no descomentes
 la línea)...
 
 ```{r}
-install.packages(
- c("tidyverse", "afex", "emmeans", "GGally", "effectsize", "performance", "see", "qqplotr")
-)
+# install.packages(
+#  c("tidyverse", "afex", "emmeans", "GGally", "effectsize", "performance", "see", "qqplotr")
+# )
 ```
 
 ... y carga las librerías más usadas: 
@@ -428,6 +428,9 @@ modelos de regresión y profundizar en algunas cosas que nos han quedado en el t
 "howell1.csv".
 
 ```{r}
+howell = read.csv("data/howell1.csv", sep = ";")
+howell = mutate(howell, male = factor(male))
+  
 adult_howell = 
   howell %>% filter(age >= 18) %>% 
   mutate(male = factor(male)) %>% 
