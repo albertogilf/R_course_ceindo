@@ -13,14 +13,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1. Introduction
 
-El lenguaje de programación R 
+El lenguaje de programación R permite la reproducibilidad de los experimentos. Para comprobar la utilidad de esta reproducibilidad vamos a replicar aquí el caso de estudio de Inflammatory bowel diseases [https://ibdmdb.org/](https://ibdmdb.org/). Sin embargo, vamos a reducir el análisis a 5 muestras en lugar de las 600 muestras presentes para reducir el tiempo del análisis. 
+
+# 1.1 Limitations of MetabonAnalystR
+
+Actualmente MetaboAnalystR sólo acepta formato de ficheros ".mzXML", ".mzML" y ".CDF". Los formatos propietarios ".d" de Agilent y de otros vendedores no están soportados. Podemos utilizar el programa ProteoWizard para realizar el cambio de formato entre ficheros. [https://proteowizard.sourceforge.io/](https://proteowizard.sourceforge.io/)
 
 
 # 2. Installation
 
 ## 2.1 Requirements
 
-Es necesario instalar las herramientas de R[https://ohdsi.github.io/Hades/rSetup.html](https://ohdsi.github.io/Hades/rSetup.html)
+Es necesario instalar las herramientas de R[https://cran.r-project.org/](https://cran.r-project.org/) y sigue las instrucciones para instalar R tools. Los pasos necesarios son Download R for Windows -> Rtools -> RTools 4.2 -> Rtools42 installer. 
+
+Ejecuta el instalador con las opciones por defecto y reinicia R Studio. Si no reinicias, R Tools no va a poder ser utilizado porque no se ha cargado la variable de entorno correspondiente. 
+
+
 
 ## 2.2 Dependencies
 
@@ -37,17 +45,22 @@ pckgs_for_metaboanalyst = c("impute", "pcaMethods", "globaltest", "GlobalAncova"
 BiocManager::install(pckgs_for_metaboanalyst)
 ```
 
+Uno de los paquetes llamado **"OptiLCMS"** que utiliza MetaboAnalystR no está disponible para R > 4.0.0, la versión que casi todos vosotros tendréis instalada. Esto hace que tengamos que instalarlo directamente desde la fuente y compilarlo para esta versión. 
+```{r}
+devtools::install_github("xia-lab/OptiLCMS", build = TRUE, build_vignettes = FALSE, build_manual =T)
+```
+
+
 Desafortunadamente, el paquete de MetaboAnalystR no está disponible como un paquete en Bioconductor. Podemos ver la lista de paquetes disponibles en bioconductor en el enlace [https://www.bioconductor.org/packages/release/BiocViews.html#___Software](https://www.bioconductor.org/packages/release/BiocViews.html#___Software)
 
 
 ```{r}
-install.packages("devtools")
+install.packages("devtools", repos = "http://cran.us.r-project.org")
 library(devtools)
 # Y procedemos a instalar el paquete MetaboAnalystR desde github
 devtools::install_github("xia-lab/MetaboAnalystR", build = TRUE, build_vignettes = TRUE, build_manual =T)
 
 ```
-
 
 Y ya estaremos en disposición de utilizar el paquete MetaboAnalystR
 
@@ -55,11 +68,245 @@ Y ya estaremos en disposición de utilizar el paquete MetaboAnalystR
 library("MetaboAnalystR")
 ```
 
-# 4 Exercises
+# 3. Our first data analysis: raw data Processing
 
-1. 
+## 3.1 Data loading
+
+
+Y cargaremos los ficheros de ejemplo
+```{r}
+## Setting the data depositing folder
+
+# Si tenemos los ficheros locales, tendremos que cambiar el parámetor
+
+data_folder_Sample = "./Data_IBD"
+data_folder_QC = "./QC_IBD"  
+
+file_Sample = "Data_IBD.zip"
+file_QC="QC_IBD.zip"
+
+path_Sample = paste(data_folder_Sample,file_Sample, sep="/") 
+path_QC = paste(data_folder_QC,file_QC, sep="/") 
+
+# Setting your own date file folder
+out = unzip(path_QC, exdir = ".")
+# Date files for parameters optimization are deposited below
+out
+
+# Y ahora haremos lo mismo con las muestras 
+
+# Setting your own date file folder
+out = unzip(path_Sample, exdir = ".")
+# Date files for parameters optimization are deposited below
+out
+
+```
+
+## 3.2 Data inspection
+
+En el caso de los paquetes específicos, no es extraño que proporcionen funciones específicas que hacen las llamadas a todo lo que hemos visto previamente en el curso, como puede ser de algoritmia, de entrada/salida de datos, de visualización, o de análisis estadísticos. 
+En el caso de MetaboAnalystR proporciona muchas de ellas, como es la inspección visual de los datos. Veamos como:
+
+```{r}
+# Inspect the MS data via a 3D image. "res" are used to specify the resolution for the MS data.
+PerformDataInspect(data_folder_QC,res = 50)
+```
+
+En caso de tener algún contaminante o algún outlier muy extremo, lo veríamos directamente en esta gráfica. 
+
+
+## 3.3 Region of Interest
+
+La extracción de QC samples en una región de interest se realiza con las funciones PerformROIExtraction o PerformDataTrimming. 
+
+La función, como siempre, tiene varios parámetros que se pueden consultar en la documentación, pero comentaremos el más interesante, los modos de obtener la región de interés. Por defecto es la simulación del método estándar ("ssm_trim"), pero se puede elegir la m/z y el RT estableciendo el modo a “rt_specific” o “mz_specific”. Se puede especificar para añadir valores (en positivo) o excluirlos (en negativo). El fichero con el cromatograma filtrado se puede escribir con el parámetro write = True y se guardará siempre como un fichero mzML. Se puede pintar el nuevo cromatograma con el parámetro plot = T (por defecto lo pinta)
+
+```{r}
+?PerformDataTrimming
+```
+
+was performed with PerformROIExtraction or PerformDataTrimming now. There are 3 modes for data ROI extraction. Default is Standard Simulation Method (“ssm_trim”). Under this mode, the 3D MS will trimmed from m/z demionsion firstly and then from RT deminson. rt.idx could be used to adjust the RT range for RT data reminning. The other 2 modes, which are named as “rt_specific” and “mz_specific” can be used to extract (with positive values) or remove (with negative values) some parts of the spectra. Trimmed MS file can be saved with write = T. The trimmed file will be save as “.mzML”. The chromatogram can be plotted with plot = T.
+
+```{r}
+# QC samples are trimmed with "ssm_trim" strategy. 
+# The percentage of RT dimension retained is set as 20%.
+raw_data = PerformDataTrimming(data_folder_QC, rt.idx = 0.2, rmConts = FALSE) 
+```
+
+## 3.3 Set up
+
+MetaboAnalystR ya ha definido las plataformas más populares con los parámetros adecuados. Estos parámetros incluyen UPLC-Q/E, UPLC-Q/TOF, UPLC-T/TOF, UPLC-Ion_trap, UPLC-Orbitrap, UPLC-G2S, HPLC-Q/TOF, HPLC-Ion_Trap, HPLC-Orbitrap y HPLC-S/Q. si utilizamos una plataforma diferente, podremos aplicar parámetros específicos. El parámetro "Peak_method" puede ser aplicado con los valores Both "centWave" y "matchedFilter". Puedes ver el resto de parámetros en la configuración.
+
+```{r}
+# Initial platform specific parameters
+param_initial = SetPeakParam(platform = "UPLC-Q/E") 
+```
+
+### 3.3.1 Set up avanzado
+
+
+Se puede optimizar el análisis estableciendo el tipo de equipo informático donde se está ejecutando. 
+
+
+```{r}
+
+# Select relative core according to your work platform
+param_optimized = PerformParamsOptimization(raw_data, param = param_initial, ncore = 4) 
+# Following results was generated at Windows 10
+# with 16 GB RAM and Intel Core i7-9700 CPU
+
+```
+
+## 3.4 Peak Profiling
+
+La función ImportRawMSDatalee los datos sin procesar presentes en los ficheros "mzML", "mzXML" o ":CDF" y los guarda en un objeto/variable de tipo OnDiskMSnExp. La salida de esta función pueden ser dos plots, el Total Ion Crhomatogram (TIC) o el Base Peak Chromatogram (BPC), que proporciona un espectro más claro porque sólo toma las señales más abundantes. Two plots can be output with SetPlotParam function set with “Plot = T” - the Total Ion Chromatogram (TIC) which provides an overview of the entire spectra, and the Base Peak Chromatogram (BPC) which is a cleaner profile of the spectra based on the most abundant signals. These plots are useful to inform the setting of parameters downstream. For users who wish to view a peak of interest, an Extracted Ion Chromatogram (EIC) can be generated using the PlotEIC function.
+
+```{r}
+
+# Import raw MS data. The "SetPlotParam" parameters can be used to determine plot or not.
+rawData = ImportRawMSData(NULL, data_folder_Sample, plotSettings = SetPlotParam(Plot=FALSE))
+
+```
+
+La función PerformPeakProfiling is un pipeline que se utiliza para llamar a las funciónes de XCMS que hace una detección de picos, alineamiento y un agrupamiento de forma automática. La función genera dos plots igual que la anterior, e incluye estadísticas sobre la intensidad de los picos en las muestras, un mapa del alineamiento del RT y una PCA mostrando el agrupamiento de muestras general previo al filtrado y análisis de datos. 
+
+```{r}
+
+# Peak Profiling with optimized parameters
+mSet = PerformPeakProfiling(rawData,param_optimized$best_parameters, plotSettings = SetPlotParam(Plot = F))
+```
+
+## 3.5 Peak Annotation
+
+La anotación de los picos puedes realizarse con CAMERA, y metaboAnalystR proporciona una función que hace las llamadas correspondientes para esta anotación. Devuelve un CSV con los picos anotados y los guarda en un objeto/variable de tipo mSet. Posteriormente, la lista de picos se formatea a la estructura de MetaboAnalystR y se filtra de acuerdo a la configuración especificada en FormatPeakList. Esta función permite eliminar todos los aductos excepto la protonación y deprotonación, el filtrado de isótopos, etc.. 
+El objetivo es eliminar las redundancias y tener un tamaño de fichero más pequeño.
+
+La función FormatPeakList guardará los valores en dos ficheros "csv". El fichero "metaboanalyst_input.csv", que se utilizará para entrada como tabla de features, y el fichero  "filtered_peaklist.csv", que contiene una columna llamada "Pklist_inx" y proporciona el número de filas donde encontrar la feature a partir de la m/z en la tabla de features.
+
+```{r}
+annParams = SetAnnotationParam(polarity = "negative", mz_abs_add = 0.005)
+
+annotPeaks = PerformPeakAnnotation(mSet, annParams)
+
+## Format and filter the peak list for MetaboAnalystR
+maPeaks <- FormatPeakList(annotPeaks, annParams, filtIso =F, filtAdducts = FALSE, missPercent = 1)
+```
+
+## 4 Our first data analysis: Data  processing
+
+## 4.1 Data loading
+
+Lo primero que hay que hacer para procesar los datos es cargar los datos en la estructura que MetaboAnalyst utiliza. Para ello, usaremos un fichero con formato de picos, y lo especificamos con el parámetro "pktable" y le especificaremos el tipo de análisis, en este caso estadística "stat". 
+Posteriormente, cargaremos los picos leyendo con la función Read.TextData(mSet, <nombreFichero"). El fichero que utilizaremos será un ejemplo de datos provenientes de un estudio de malaria. Sin embargo, cuando hagáis el análisis con datos propios o los datos de ejemplo generados previamente, podréis utilizar el fichero generado con vuestro data set, que se llamará "metaboanalyst_input.csv". 
+
+```{r}
+# First step is to create the mSet Object, specifying that the data to be uploaded
+# is a peak table ("pktable") and that statistical analysis will be performed ("stat").
+mSet = InitDataObjects("pktable", "stat", FALSE)
+
+# Second step is to read in the filtered peak list, please set the path right first
+mSet =Read.TextData(mSet, "malaria_feature_table.csv", "colu", "disc")
+
+
+```
+
+## 4.2 Data Statistics 
+
+
+## 4.2.1 Filtration and normalization
+
+Posteriormente podemos proceder a hacer un filtrado y normalizado de los datos. Para ello, MetaboAnalystR proporciona la función SanityCheckData() y proceder con otras funciones como el reemplazo de valores mínimos 
+
+```{r}
+# The third step is to perform data processing using MetaboAnalystR (filtering/normalization)
+# Perform data processing - Data checking
+mSet = SanityCheckData(mSet)
+
+# Perform data processing - Minimum Value Replacing
+mSet<-ReplaceMin(mSet)
+
+# Perform data processing - Variable Filtering and Normalization
+mSet<-FilterVariable(mSet, "iqr", "F", 25)
+mSet<-PreparePrenormData(mSet)
+mSet<-Normalization(mSet, "MedianNorm", "LogNorm", "NULL", ratio=FALSE, ratioNum=20)
+
+```
+
+Y podremos visualizar los valores antes y después de la normalización:
+
+```{r}
+mSet <- PlotNormSummary(mSet, "norm_0_", "png", 72, width=NA)
+mSet <- PlotSampleNormSummary(mSet, "snorm_0_", "png", 72, width=NA)
+```
+
+## 4.2.2 Fold Change analysis
+
+Si queremos ver un análisis de fold change para ver cuánto cambia una cantidad entre una muestra y la siguiente, podemos realizarlo con las siguientes funciones. Como habitualmente, se recomienda revisar los parámetros de las funciones. 
+
+```{r}
+mSet <- FC.Anal.unpaired(mSet, 2.0, 0)
+mSet <- PlotFC(mSet, "fc_0_", "png", 72, width=NA)
+```
+
+# 4.2.3 T Test
+
+Podemos realizar algunos test estadísticos como el T Test univariante. 
+
+
+```{r}
+# The fifth step is to perform t-test analysis
+mSet <- Ttests.Anal(mSet, F, 0.05, FALSE, TRUE)
+mSet <- PlotTT(mSet, "tt_0_", "png", 72, width=NA)
+```
+
+## 4.2.4 PCA
+
+u otros multivariantes como una PCA:
+
+```{r}
+mSet <- PCA.Anal(mSet)
+mSet <- PlotPCAPairSummary(mSet, "pca_pair_0_", "png", 72, width=NA, 5)
+mSet <- PlotPCAScree(mSet, "pca_scree_0_", "png", 72, width=NA, 5)
+mSet <- PlotPCA2DScore(mSet, "pca_score2d_0_", "png", 72, width=NA, 1,2,0.95,1,0)
+mSet <- PlotPCALoading(mSet, "pca_loading_0_", "png", 72, width=NA, 1,2);
+mSet <- PlotPCABiplot(mSet, "pca_biplot_0_", "png", 72, width=NA, 1,2)
+mSet <- PlotPCA3DScoreImg(mSet, "pca_score3d_0_", "png", 72, width=NA, 1,2,3, 40)
+```
+
+## 4.2.4 PLS-DA
+
+O el PLS-DA
+
+```{r}
+mSet <- PLSR.Anal(mSet, reg=TRUE)
+mSet <- PlotPLSPairSummary(mSet, "pls_pair_0_", "png", 72, width=NA, 5)
+mSet <- PlotPLS2DScore(mSet, "pls_score2d_0_", "png", 72, width=NA, 1,2,0.95,1,0)
+mSet <- PlotPLS3DScoreImg(mSet, "pls_score3d_0_", "png", 72, width=NA, 1,2,3, 40)
+mSet <- PlotPLSLoading(mSet, "pls_loading_0_", "png", 72, width=NA, 1, 2);
+mSet <- PLSDA.CV(mSet, "L",5, "Q2")
+mSet <- PlotPLS.Classification(mSet, "pls_cv_0_", "png", 72, width=NA)
+mSet <- PlotPLS.Imp(mSet, "pls_imp_0_", "png", 72, width=NA, "vip", "Comp. 1", 15,FALSE)
+```
+
+
+## 4.3 Other functionalities not covered in this course
 
 
 
+Se hace aquí un listado de funcionalidades más avanzadas para realizar con MetaboAnalyst : 
+
+1. Pathway Analysis 
+    1. Mummichog Version 1
+    2. Mummichog Version 2
+2. Utilities:
+    1. Batch Effect Correction
+    2. Compound Name Mapping
+3. Biomarker Analysis
+4. Enrichment Analysis
+5. Meta-Analysis
+7. Integrated Pathway Analysis
+8. Power Analysis Module
+9. Time Series or Two Factor Design
+10. Network Explorer Module
 
 
