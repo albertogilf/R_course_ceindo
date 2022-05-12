@@ -38,3 +38,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 *.html
+5_statistics/data/meta/images/
+5_statistics/p_values.csv
+6_machineLearning/machine_learning_Soluciones_files/
+R_course_ceindo.Rproj
+
+
