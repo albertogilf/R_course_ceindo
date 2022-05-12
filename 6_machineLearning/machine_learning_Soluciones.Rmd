@@ -77,6 +77,7 @@ p +
   ylim(-2, 2)
 
 ```
+
 ```{r wrong_evaluation}
 evaluate_model = function(model) { 
   yardstick::rmse_vec(truth = df$y, estimate = predict(model))
@@ -127,7 +128,7 @@ zoo = Zoo %>% as_tibble %>% mutate_if(is.logical, as.factor)
 ```
 
 
-```{r decision_tree}
+```{r decision_tree, cache = TRUE}
 # 1) Creación de un árbol de decisión
 tree_spec = 
   decision_tree(tree_depth = 3) %>%
@@ -175,7 +176,7 @@ zoo_test = testing(zoo_split)
 Usa los conjuntos de entrenamiento y test para obtener el rendimiento del 
 árbol de decisión. Sigue los pasos indicados en los comentarios:
 
-```{r}
+```{r, cache = TRUE}
 # 1) Repite el entrenamiento, pero esta vez usa el conjunto de entrenamiento
 fitted_tree = fit(tree_spec, type ~ ., data = zoo_train)
 # 2) Usa predict() para obtener predicciones sobre el conjunto de test. Guarda
@@ -195,7 +196,7 @@ varias veces el procedimiento anterior y luego promediando los resultados
 procedimientos para realizar esta repetición, el más sencillo de entender
 quizás sea Monte Carlo Cross-validation (validación cruzada de Monte Carlo):
 
-```{r}
+```{r, cache = TRUE}
 folds = mc_cv(zoo, times = 10, prop = 9 / 10)
 performance = tree_spec %>% fit_resamples(type ~ ., resamples = folds,
                                           metrics=metric_set(accuracy))
@@ -209,7 +210,7 @@ En la construcción del modelo especificamos a mano el **hiperparámetro**
 `tree_depth = 3`. Aunque se puede intentar elegir a mano (¡ojo porque esto
 puede llevar a overfitting!), lo mejor es automatizar el proceso
 
-```{r tuning}
+```{r tuning, cache = TRUE}
 tree_spec = decision_tree(
   tree_depth = tune(),
   cost_complexity = tune()
@@ -326,7 +327,7 @@ uno de los algoritmos más potentes, las redes neuronales necesitan que los dato
 estén en la misma escala para funcionar adecuadamente.
 
 ## Ejemplo: normalización de datos
-```{r}
+```{r }
 # El preprocesado de datos involucra aprender cómo transformar los datos, 
 # por lo que debe aplicarse a los datos de entrenamiento
 diabetes_split = initial_split(diabetes, split = 3/4, strata = Diabetic)
@@ -349,7 +350,7 @@ modelado) en un único **workflow**.
 
 ### Ejemplo: workflows
 
-```{r}
+```{r, cache = TRUE}
 diabetes_model = mlp(hidden_units = 50, epochs=100) %>% set_mode("classification")
   
 diabetes_wflow = 
@@ -388,16 +389,22 @@ diabetes_wflow =
 
 grid = grid_regular(
   hidden_units() %>% range_set(c(10, 50)),
-  epochs() %>% range_set(c(25, 500)), 
-  levels = 3 
+  epochs() %>% range_set(c(25, 200)), 
+  levels = 3
 )
  
 folds = mc_cv(diabetes_train, prop = 3 / 4, times = 5, strata = Diabetic)
 diabetes_tuning = 
   diabetes_wflow %>% 
   tune_grid(resamples = folds, grid = grid, metrics = metric_set(accuracy))
- 
-diabetes_model = finalize_model(diabetes_wflow, select_best(diabetes_tuning))
+```
+
+
+```{r, cache=TRUE}
+show_best(diabetes_tuning)
+
+# Ojo! usamos finalize_workflow en lugar de finalize_model!
+diabetes_wflow = finalize_workflow(diabetes_wflow, select_best(diabetes_tuning))
 diabetes_fit = fit(diabetes_wflow, data = diabetes_train)
 preds = predict(diabetes_fit, diabetes_test)
 
