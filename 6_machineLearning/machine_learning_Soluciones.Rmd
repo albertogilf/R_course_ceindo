@@ -1,0 +1,415 @@
+---
+title: "Aprendizaje automático (Machine Learning)"
+output: html_document
+date: '2022-05-05'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Antes de empezar...
+Instala las librerías necesarias (copia y pega en la terminal; no descomentes
+la línea)...
+
+```{r install}
+#install.packages(c("tidymodels", "vip", "mlbench", "rpart.plot"))
+```
+
+... y carga las librerías más usadas: 
+
+```{r, echo=FALSE}
+library("tidyverse")
+theme_set(theme_bw())  # cambia el tema de ggplot
+```
+
+
+## Aprendizaje automático (Machine Learning)
+El aprendizaje automático (Machine Learning) es una rama de la inteligencia 
+artificial basada en la creación de modelos computacionales capaces de aprender 
+de los datos, identificar patrones y tomar decisiones con una mínima intervención
+humana. Los modelos de aprendizaje automáticos pueden llegar a ser muy complejos, 
+lo que hace que no siempre sean fácilmente interpretables (aunque existen
+excepciones, tal y como veremos).
+
+Aunque los modelos de aprendizaje automático pueden resolver muchos tipos de 
+tareas, nos centraremos en:
+
+* Regresión: Predicción de una magnitud continua. Por ejemplo: ¿qué temperatura hará mañana?
+* Clasificación: Predicción de categorías (clases). Por ejemplo, ¿qué enfermedad
+sufre el paciente: gripe, covid, o ninguna?
+
+
+## Ejemplo: los peligros del aprendizaje automático
+Los modelos lineales construidos con `lm` pueden considerarse modelos (sencillos)
+de aprendizaje automático. Para darles potencia, podemos emplear **predictores 
+(features)** más complejos (al trabajo de crear predictores a veces se le conoce
+como **feature engineering**), como expresiones polinomiales. 
+
+Usa `lm` para ajustar los datos de "lm_ml.csv". Estos datos sintéticios han sido
+generados usando 
+$$ y = cos(4 * x + 4) + \epsilon.$$
+
+```{r}
+plot_model = function(model, col) {
+  xxx = seq(-1, 1, len=500)
+  new_data = data.frame('x' = xxx)
+  new_data$preds = predict(model, new_data)
+  return(
+    geom_line(data = new_data, aes(x = xxx, y = preds, col = col))
+  )
+}
+
+
+df = read.csv("data/lm_ml.csv")
+
+lmf1 = lm(y ~ x, data = df)
+lmf2 = lm(y ~ poly(x, 5), data = df)
+lmf3 = lm(y ~ poly(x, 19), data = df)
+
+
+p <- ggplot(df, aes(x = x, y = y)) + geom_point()
+p + 
+  geom_line(aes(x = x, y = cos(4 * x + 4), col = "Ground truth")) + 
+  plot_model(lmf1, col = "Too simple") + 
+  plot_model(lmf2, col="Just right!") + 
+  plot_model(lmf3, col="Complicated model") +  
+  ylim(-2, 2)
+
+```
+
+```{r wrong_evaluation}
+evaluate_model = function(model) { 
+  yardstick::rmse_vec(truth = df$y, estimate = predict(model))
+}
+
+print(paste("Model 1 has error: ", evaluate_model(lmf1)))
+print(paste("Model 2 has error: ", evaluate_model(lmf2)))
+print(paste("Model 3 has error: ", evaluate_model(lmf3)))
+```
+```{r better_evaluation}
+evaluate_model = function(model) { 
+  eval_points = seq(-1, 1, len=100)
+  yardstick::rmse_vec(
+    truth = cos(4 * eval_points + 4), 
+    estimate = predict(model, data.frame(x=eval_points))
+  )
+}
+
+print(paste("Model 1 has error: ", evaluate_model(lmf1)))
+print(paste("Model 2 has error: ", evaluate_model(lmf2)))
+print(paste("Model 3 has error: ", evaluate_model(lmf3)))
+```
+**Moraleja**: El rendimiento de un modelo requiere de una **métrica** y debe 
+**evaluarse fuera del conjunto de entrenamiento**. Esto nos llevará a hablar 
+de conjuntos de **entrenamiento** y **test**.
+
+En las siguientes secciones, haremos uso de la librería `tidymodels` para 
+crear y evaluar modelos de aprendizaje automático. Existen otras librerías
+fantásticas como `caret` y `mlr3` (o su antecesora `mlr`) que puedes probar.
+
+```{r loading_tidymodels}
+library('tidymodels')
+```
+
+## Árboles de decisión.
+Los Árboles de decisión son una buena elección si deseas construir un modelo 
+de aprendizaje automático interpretable.
+
+### Ejemplo: clasificación de animales
+El dataset `Zoo` contiene 101 casos y 17 variables de observaciones 
+realizadas en varios animales; 16 de estas variables son lógicas, indicando la
+presencia o ausencia de alguna característica, y la variable `type` es un factor 
+que contiene las clases de animales que deseamos predecir.
+
+```{r load_zoo}
+data(Zoo, package = "mlbench")
+zoo = Zoo %>% as_tibble %>% mutate_if(is.logical, as.factor)
+```
+
+
+```{r decision_tree, cache = TRUE}
+# 1) Creación de un árbol de decisión
+tree_spec = 
+  decision_tree(tree_depth = 3) %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+
+# 2) El árbol aprende a partir de los datos
+fitted_tree = fit(tree_spec, type ~ ., data = zoo)
+```
+
+```{r decision_tree_visualization}
+# 3) Podemos visualizar la toma de decisiones del árbol. 
+library("rpart.plot")
+# xtract_fit_engine()
+rpart.plot(fitted_tree$fit, roundint = FALSE,
+           box.palette = "BuBn",
+           type = 5)
+```
+
+```{r}
+# 4) También es posible visualizar qué características son las más relevantes 
+# a la hora de predecir la clase... ¡Esto nos permite aprender del modelo!
+library("vip")
+
+fitted_tree %>%
+  vip(geom = "col", aesthetics = list(fill = "midnightblue", alpha = 0.8)) +
+  scale_y_continuous(expand = c(0, 0))
+```
+
+Aunque las decisiones del árbol parecen razonables es buena práctica evaluar
+el rendimiento del modelo. Para ello seguiremos las lecciones aprendidas
+con el ejemplo de regresión debemos:
+
+* Elegir una métrica: emplearemos `accuracy`, la proporción de predicciones correctas.
+* Dividir el conjunto de datos en entrenamiento y test.
+
+```{r split_for_model_evaluation}
+set.seed(123)
+zoo_split = initial_split(zoo, strata = type, prop = 3 / 4)
+zoo_train = training(zoo_split)
+zoo_test = testing(zoo_split)
+```
+
+## Ejercicio: Rendimiento del sistema
+Usa los conjuntos de entrenamiento y test para obtener el rendimiento del 
+árbol de decisión. Sigue los pasos indicados en los comentarios:
+
+```{r, cache = TRUE}
+# 1) Repite el entrenamiento, pero esta vez usa el conjunto de entrenamiento
+fitted_tree = fit(tree_spec, type ~ ., data = zoo_train)
+# 2) Usa predict() para obtener predicciones sobre el conjunto de test. Guarda
+# las predicciones en la variable preds
+preds = predict(fitted_tree, zoo_test)
+# 3) Calcula el porcentaje de predicciones correctas comparando la clase real 
+# (zoo_test$type) con preds. Puedes usar las funciones accuracy (o accuracy_vec)
+acc = accuracy_vec(truth = zoo_test$type, estimate = preds$.pred_class)
+print(acc)
+```
+
+
+# Ejemplo: Rendimiento del sistema mediante Monte Carlo
+Podemos obtener una mejor estimación del `accuracy` del sistema repitiendo 
+varias veces el procedimiento anterior y luego promediando los resultados 
+(¡y además podemos obtener una estimación del error!). Aunque existen varios
+procedimientos para realizar esta repetición, el más sencillo de entender
+quizás sea Monte Carlo Cross-validation (validación cruzada de Monte Carlo):
+
+```{r, cache = TRUE}
+folds = mc_cv(zoo, times = 10, prop = 9 / 10)
+performance = tree_spec %>% fit_resamples(type ~ ., resamples = folds,
+                                          metrics=metric_set(accuracy))
+
+collect_metrics(performance)
+```
+
+
+# Ejemplo: Elección de hiperparámetros
+En la construcción del modelo especificamos a mano el **hiperparámetro** 
+`tree_depth = 3`. Aunque se puede intentar elegir a mano (¡ojo porque esto
+puede llevar a overfitting!), lo mejor es automatizar el proceso
+
+```{r tuning, cache = TRUE}
+tree_spec = decision_tree(
+  tree_depth = tune(),
+  cost_complexity = tune()
+) %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+
+tree_grid = grid_regular(cost_complexity(),
+                         tree_depth(),
+                         levels = 3)
+tree_grid
+
+
+tree_res =  tree_spec %>% 
+  tune_grid(
+    type ~ .,
+    resamples = folds,
+    grid = tree_grid
+  )
+```
+```{r}
+collect_metrics(tree_res)
+autoplot(tree_res)
+
+show_best(tree_res, "accuracy")
+select_best(tree_res, "accuracy")
+
+final_tree = finalize_model(tree_spec, select_best(tree_res, "accuracy"))
+final_fit = fit(final_tree, type ~ ., zoo)
+```
+
+### Ejercicio: regresión con el dataset Boston
+El conjunto de datos `Boston` contiene varias estadísticas para 506 vecindarios 
+de Boston. Construye un modelo de regresión que prediga el valor medio de las
+viviendas ocupadas por sus propietarios (`medv`). (Nota: el conjunto de datos 
+`Boston` es bastante antiguo y contiene algunas variables realmente desafortunadas.)
+
+```{r, cache=TRUE}
+data("Boston", package = "MASS")
+Boston = as_tibble(Boston)
+
+# En este ejercicio, tunearemos las variables y luego evaluaremos el rendimiento.
+# Creeamos conjuntos de entrenamiento y test
+boston_split = initial_split(Boston, prop = 3 / 4, strata = medv)
+boston_train = training(boston_split)
+boston_test = testing(boston_split)
+
+dt_model = 
+  decision_tree(cost_complexity = tune(), 
+                tree_depth = tune(), 
+                min_n = tune()) %>% 
+  set_mode("regression")
+
+folds = mc_cv(boston_train, prop = 3 / 4, times = 10, strata = medv)
+
+grid = grid_regular(
+  cost_complexity(),
+  # modifica el rango sugerido por tree_depth
+  tree_depth() %>% range_set(c(2, 8)),
+  min_n(),
+  levels = 3
+)
+
+# RMSE: Root Mean Squared Error ==> Distancia (al cuadrado) entre
+# predicciones y datos reales. Cuanto más pequeño, mejor
+tuned = 
+  dt_model %>% 
+  tune_grid(medv ~ . , resamples = folds, grid = grid, metrics = metric_set(rmse))
+
+autoplot(tuned)
+
+dt_model = finalize_model(dt_model, select_best(tuned, "rmse"))
+
+dt_fit = dt_model %>% fit(medv ~ ., boston_train)
+
+test_with_predictions = boston_test %>% bind_cols(predict(dt_fit, boston_test))
+print(rmse(test_with_predictions, truth = medv, estimate = .pred))
+```
+
+
+
+## Preprocesado y otros clasificadores
+A lo largo de los siguientes ejemplos/ejercicios emplearemos el dataset de
+"diabetes.csv" para crear un clasificador capaz de predecir si una persona tiene
+diabetes o no.
+
+```{r}
+diabetes = read.csv(file = "data/diabetes.csv") %>% as_tibble
+```
+
+### Ejemplo: exploración de datos y visualización de predictores (features)
+Aunque no lo hemos hecho en el ejemplo de clasificación de animales, siempre
+debemos empezar el problema con una exploración de los datos.
+
+```{r}
+diabetes %>% glimpse()
+
+diabetes = 
+  diabetes %>% 
+  mutate(Diabetic = as.factor(Diabetic)) %>%
+  mutate(Diabetic = fct_recode(Diabetic, "Diabetes"="1", "Non-diabetes"="0"))
+
+
+ggdiabetes = diabetes %>% pivot_longer(PatientID:Age, names_to="feature", values_to="value")
+
+ggplot(ggdiabetes, aes(x = Diabetic, y=value, fill=feature)) + geom_boxplot() + 
+  facet_wrap(~feature, scale="free")
+```
+Fíjate que cada predictor tiene una escala distinta. Esta diferencia de escalas
+puede perjudicar a algunos clasificadores/regresores por lo que es buena idea
+hacer un **preprocesado de datos** para **normalizarlos**. Para ilustrar como 
+normalizar datos usaremos como clasificador una **red neuronal**. Además de ser
+uno de los algoritmos más potentes, las redes neuronales necesitan que los datos
+estén en la misma escala para funcionar adecuadamente.
+
+## Ejemplo: normalización de datos
+```{r }
+# El preprocesado de datos involucra aprender cómo transformar los datos, 
+# por lo que debe aplicarse a los datos de entrenamiento
+diabetes_split = initial_split(diabetes, split = 3/4, strata = Diabetic)
+diabetes_train = training(diabetes_split)
+diabetes_test = testing(diabetes_split)
+
+# Para preprocesar los datos, creamos una receta de preprocesado 
+diabetes_rec = recipe(Diabetic ~ ., data = diabetes_train)
+diabetes_rec = 
+  diabetes_rec %>% 
+  update_role(PatientID,new_role = "ID" ) %>% 
+  step_log(PlasmaGlucose) %>% 
+  step_normalize(all_numeric_predictors())
+
+print(diabetes_rec) 
+```
+Aunque es posible preprocesar los datos y luego crear un modelo sobre los datos
+transformados, lo cierto es que podemos integrar ambos pasos (preprocesado y 
+modelado) en un único **workflow**.
+
+### Ejemplo: workflows
+
+```{r, cache = TRUE}
+diabetes_model = mlp(hidden_units = 50, epochs=100) %>% set_mode("classification")
+  
+diabetes_wflow = 
+  workflow() %>% 
+  add_recipe(diabetes_rec) %>% 
+  add_model(diabetes_model)
+
+diabetes_fit = fit(diabetes_wflow, data = diabetes_train)
+preds = predict(diabetes_fit, diabetes_test)
+
+print(paste("Accuracy =", accuracy_vec(truth = diabetes_test$Diabetic, preds$.pred_class)))
+```
+### Ejercicio
+Mejora la red neuronal tuneando sus parámetros.
+
+```{r, cache=TRUE}
+diabetes_split = initial_split(diabetes, split = 3/4, strata = Diabetic)
+diabetes_train = training(diabetes_split)
+diabetes_test = testing(diabetes_split)
+
+# Para preprocesar los datos, creamos una receta de preprocesado 
+diabetes_rec = recipe(Diabetic ~ ., data = diabetes_train)
+diabetes_rec = 
+  diabetes_rec %>% 
+  update_role(PatientID,new_role = "ID" ) %>% 
+  step_log(PlasmaGlucose) %>% 
+  step_normalize(all_numeric_predictors())
+
+diabetes_model = mlp(hidden_units = tune(), epochs=tune()) %>% set_mode("classification")
+
+diabetes_wflow = 
+  workflow() %>% 
+  add_recipe(diabetes_rec) %>% 
+  add_model(diabetes_model)
+
+
+grid = grid_regular(
+  hidden_units() %>% range_set(c(10, 50)),
+  epochs() %>% range_set(c(25, 200)), 
+  levels = 3
+)
+ 
+folds = mc_cv(diabetes_train, prop = 3 / 4, times = 5, strata = Diabetic)
+diabetes_tuning = 
+  diabetes_wflow %>% 
+  tune_grid(resamples = folds, grid = grid, metrics = metric_set(accuracy))
+```
+
+
+```{r, cache=TRUE}
+show_best(diabetes_tuning)
+
+# Ojo! usamos finalize_workflow en lugar de finalize_model!
+diabetes_wflow = finalize_workflow(diabetes_wflow, select_best(diabetes_tuning))
+diabetes_fit = fit(diabetes_wflow, data = diabetes_train)
+preds = predict(diabetes_fit, diabetes_test)
+
+print(paste("Accuracy =", accuracy_vec(truth = diabetes_test$Diabetic, preds$.pred_class)))
+```
+
+
+

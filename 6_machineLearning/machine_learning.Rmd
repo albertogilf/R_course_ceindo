@@ -37,42 +37,49 @@ tareas, nos centraremos en:
 
 * Regresión: Predicción de una magnitud continua. Por ejemplo: ¿qué temperatura hará mañana?
 * Clasificación: Predicción de categorías (clases). Por ejemplo, ¿qué enfermedad
-sufre el paciente: gripe, covid, o ninguna?"
+sufre el paciente: gripe, covid, o ninguna?
 
 
 ## Ejemplo: los peligros del aprendizaje automático
 Los modelos lineales construidos con `lm` pueden considerarse modelos (sencillos)
-de aprendizaje automático. Para darles potencia, podemos emplear predictores 
-(features) más complejos, como expresiones polinomiales. 
+de aprendizaje automático. Para darles potencia, podemos emplear **predictores 
+(features)** más complejos (al trabajo de crear predictores a veces se le conoce
+como **feature engineering**), como expresiones polinomiales. 
 
-Usa `lm` para ajustar los datos de "lm_ml.csv".
+Usa `lm` para ajustar los datos de "lm_ml.csv". Estos datos sintéticios han sido
+generados usando 
+$$ y = cos(4 * x + 4) + \epsilon.$$
 
 ```{r}
-plot_model = function(model, col = 1) {
+plot_model = function(model, col) {
   xxx = seq(-1, 1, len=500)
-  lines(xxx, predict(model, data.frame(x = xxx)), col = col, lwd=2)
+  new_data = data.frame('x' = xxx)
+  new_data$preds = predict(model, new_data)
+  return(
+    geom_line(data = new_data, aes(x = xxx, y = preds, col = col))
+  )
 }
 
 
 df = read.csv("data/lm_ml.csv")
+
 lmf1 = lm(y ~ x, data = df)
 lmf2 = lm(y ~ poly(x, 5), data = df)
 lmf3 = lm(y ~ poly(x, 19), data = df)
 
 
-
-plot(x, y, ylim=c(-5, 5))
-plot_model(lmf1)
-plot_model(lmf2, col=2)
-plot_model(lmf3, col=3)
-lines(x, cos(4 * x + 4), col = 4)
-legend("bottomright", c("underfit", "niceee", "overfit", "ground truth"),
-       col=1:4, lwd=2)
+p <- ggplot(df, aes(x = x, y = y)) + geom_point()
+p + 
+  geom_line(aes(x = x, y = cos(4 * x + 4), col = "Ground truth")) + 
+  plot_model(lmf1, col = "Too simple") + 
+  plot_model(lmf2, col="Just right!") + 
+  plot_model(lmf3, col="Complicated model") +  
+  ylim(-2, 2)
 
 ```
 ```{r wrong_evaluation}
 evaluate_model = function(model) { 
-  yardstick::rmse_vec(truth = y, estimate = predict(model))
+  yardstick::rmse_vec(truth = df$y, estimate = predict(model))
 }
 
 print(paste("Model 1 has error: ", evaluate_model(lmf1)))
@@ -92,7 +99,7 @@ print(paste("Model 1 has error: ", evaluate_model(lmf1)))
 print(paste("Model 2 has error: ", evaluate_model(lmf2)))
 print(paste("Model 3 has error: ", evaluate_model(lmf3)))
 ```
-Moraleja: El rendimiento de un modelo requiere de una **métrica** y debe 
+**Moraleja**: El rendimiento de un modelo requiere de una **métrica** y debe 
 **evaluarse fuera del conjunto de entrenamiento**. Esto nos llevará a hablar 
 de conjuntos de **entrenamiento** y **test**.
 
@@ -111,8 +118,8 @@ de aprendizaje automático interpretable.
 ### Ejemplo: clasificación de animales
 El dataset `Zoo` contiene 101 casos y 17 variables de observaciones 
 realizadas en varios animales; 16 de estas variables son lógicas, indicando la
-presencia o ausencia de alguna característica, y la variable `type` es un facto
-r que contiene las clases de animales que deseamos predecir.
+presencia o ausencia de alguna característica, y la variable `type` es un factor 
+que contiene las clases de animales que deseamos predecir.
 
 ```{r load_zoo}
 data(Zoo, package = "mlbench")
@@ -122,7 +129,8 @@ zoo = Zoo %>% as_tibble %>% mutate_if(is.logical, as.factor)
 
 ```{r decision_tree}
 # 1) Creación de un árbol de decisión
-tree_spec <- decision_tree(tree_depth = 3) %>%
+tree_spec = 
+  decision_tree(tree_depth = 3) %>%
   set_engine("rpart") %>%
   set_mode("classification")
 
@@ -158,7 +166,7 @@ con el ejemplo de regresión debemos:
 
 ```{r split_for_model_evaluation}
 set.seed(123)
-zoo_split = initial_split(zoo, strata = type)
+zoo_split = initial_split(zoo, strata = type, prop = 3 / 4)
 zoo_train = training(zoo_split)
 zoo_test = testing(zoo_split)
 ```
@@ -180,7 +188,7 @@ print(acc)
 ```
 
 
-# Ejemplo: Rendimiento del sistema mediante Bootstrap
+# Ejemplo: Rendimiento del sistema mediante Monte Carlo
 Podemos obtener una mejor estimación del `accuracy` del sistema repitiendo 
 varias veces el procedimiento anterior y luego promediando los resultados 
 (¡y además podemos obtener una estimación del error!). Aunque existen varios
@@ -230,7 +238,7 @@ show_best(tree_res, "accuracy")
 select_best(tree_res, "accuracy")
 
 final_tree = finalize_model(tree_spec, select_best(tree_res, "accuracy"))
-final_fit <- fit(final_tree, type ~ ., zoo_train)
+final_fit = fit(final_tree, type ~ ., zoo)
 ```
 
 ### Ejercicio: regresión con el dataset Boston
@@ -239,9 +247,46 @@ de Boston. Construye un modelo de regresión que prediga el valor medio de las
 viviendas ocupadas por sus propietarios (`medv`). (Nota: el conjunto de datos 
 `Boston` es bastante antiguo y contiene algunas variables realmente desafortunadas.)
 
-```{r}
+```{r, cache=TRUE}
 data("Boston", package = "MASS")
 Boston = as_tibble(Boston)
+
+# En este ejercicio, tunearemos las variables y luego evaluaremos el rendimiento.
+# Creeamos conjuntos de entrenamiento y test
+boston_split = initial_split(Boston, prop = 3 / 4, strata = medv)
+boston_train = training(boston_split)
+boston_test = testing(boston_split)
+
+dt_model = 
+  decision_tree(cost_complexity = tune(), 
+                tree_depth = tune(), 
+                min_n = tune()) %>% 
+  set_mode("regression")
+
+folds = mc_cv(boston_train, prop = 3 / 4, times = 10, strata = medv)
+
+grid = grid_regular(
+  cost_complexity(),
+  # modifica el rango sugerido por tree_depth
+  tree_depth() %>% range_set(c(2, 8)),
+  min_n(),
+  levels = 3
+)
+
+# RMSE: Root Mean Squared Error ==> Distancia (al cuadrado) entre
+# predicciones y datos reales. Cuanto más pequeño, mejor
+tuned = 
+  dt_model %>% 
+  tune_grid(medv ~ . , resamples = folds, grid = grid, metrics = metric_set(rmse))
+
+autoplot(tuned)
+
+dt_model = finalize_model(dt_model, select_best(tuned, "rmse"))
+
+dt_fit = dt_model %>% fit(medv ~ ., boston_train)
+
+test_with_predictions = boston_test %>% bind_cols(predict(dt_fit, boston_test))
+print(rmse(test_with_predictions, truth = medv, estimate = .pred))
 ```
 
 
@@ -320,8 +365,43 @@ print(paste("Accuracy =", accuracy_vec(truth = diabetes_test$Diabetic, preds$.pr
 ### Ejercicio
 Mejora la red neuronal tuneando sus parámetros.
 
-```{r}
+```{r, cache=TRUE}
+diabetes_split = initial_split(diabetes, split = 3/4, strata = Diabetic)
+diabetes_train = training(diabetes_split)
+diabetes_test = testing(diabetes_split)
 
+# Para preprocesar los datos, creamos una receta de preprocesado 
+diabetes_rec = recipe(Diabetic ~ ., data = diabetes_train)
+diabetes_rec = 
+  diabetes_rec %>% 
+  update_role(PatientID,new_role = "ID" ) %>% 
+  step_log(PlasmaGlucose) %>% 
+  step_normalize(all_numeric_predictors())
+
+diabetes_model = mlp(hidden_units = tune(), epochs=tune()) %>% set_mode("classification")
+
+diabetes_wflow = 
+  workflow() %>% 
+  add_recipe(diabetes_rec) %>% 
+  add_model(diabetes_model)
+
+
+grid = grid_regular(
+  hidden_units() %>% range_set(c(10, 50)),
+  epochs() %>% range_set(c(25, 500)), 
+  levels = 3 
+)
+ 
+folds = mc_cv(diabetes_train, prop = 3 / 4, times = 5, strata = Diabetic)
+diabetes_tuning = 
+  diabetes_wflow %>% 
+  tune_grid(resamples = folds, grid = grid, metrics = metric_set(accuracy))
+ 
+diabetes_model = finalize_model(diabetes_wflow, select_best(diabetes_tuning))
+diabetes_fit = fit(diabetes_wflow, data = diabetes_train)
+preds = predict(diabetes_fit, diabetes_test)
+
+print(paste("Accuracy =", accuracy_vec(truth = diabetes_test$Diabetic, preds$.pred_class)))
 ```
 
 
