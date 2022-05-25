@@ -1,0 +1,145 @@
+---
+title: "Evaluación curso R"
+author: David Chamoso Sánchez, Laura Mayo Martínez, María Bajo Fernandéz y María Morán Garrido.
+output: html_document
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+Primero cargamos las librerias necesarias:
+
+```{r warning=FALSE, message=FALSE}
+library("tidyverse")
+library("ggplot2")
+library("car")
+options(contrasts = c("contr.sum", "contr.poly"))
+library("effectsize")
+library("emmeans")
+library("performance")
+
+```
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+datos<-read.csv(file="teengamb.csv", header = TRUE)%>%
+  mutate( sex = factor(sex))
+head(datos)
+
+#Nos quedamos solo con aquellas variables que nos interesan
+
+datos_filtrados<-datos[,c(-2,-4)]
+head(datos_filtrados)
+
+#Comprobamos que el sexo sea un factor
+class(datos$sex)
+
+ggplot(datos_filtrados, aes(x = income, y = gamble, col = sex)) +
+  geom_point() + 
+  geom_smooth(method="lm")
+
+ggplot(datos_filtrados, aes(x=sex, y = gamble, fill=sex)) + geom_boxplot() + 
+  coord_flip()
+ggplot(datos_filtrados, aes(x=sex, y = income, fill=sex)) + geom_boxplot() + 
+  coord_flip()
+
+#Parece por los boxplot que los hombres juegan más, pero mujeres y hombres tienen niveles de ingresos parecidos.
+
+datos_filtrados_lm<-lm(gamble~ income*sex, datos_filtrados)
+ 
+plot(datos_filtrados_lm, which=c(1,2),ask=FALSE)
+
+```
+
+**Conclusiones sobre la necesidad de interacción**:
+En el gráfico 1 observamos claramente la necesidad de estudiar las posibles interaciones en nuestro modelo. Esto se debe a que cuando las pendientes del modelo son paralelas no necesitamos estudiar la interacción, sin embargo cuando nuestras pendientes no son paralelas, como es el caso, necesitamos estudiar la posible interacción entre nuestras variables. Cualquier interacción entre nuestras variables invalidaría el resultado obtenido en estas variables por separado.
+Además, hemos comprobado mediante boxplot la posible varianza que hay en cada uno de los datos en función del sexo. Observamos como hay más dispersión en estos datos en el gamble que en el income donde quitando un outlier los resultados entre hombres y mujeres son muy similares.
+
+Además, en el gráfico 4 (qq plot y residual vs fitted plot) podemos observar la normalidad de nuestros datos que serán importante para poder realizar el modelo ANOVA.
+
+
+
+### 2) Crea el modelo...
+... y obtén:
+
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r}
+Modelo_anova<-Anova(datos_filtrados_lm, type=3)
+print(Modelo_anova)
+eta_squared(Modelo_anova)
+effectsize(Modelo_anova) 
+#realizamos el tamaño de efecto mediante las dos fórmulas que hemos estudiado
+
+#Creamos los intervalos de confianza
+Modelo_emms = emmeans(datos_filtrados_lm, ~ income | sex) 
+print(Modelo_emms)
+
+
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+**Conclusiones sobre las variables de interés**:
+Si eres hombre, cuanto más estatus socieconómico (income) más juegas. Mientras que en las mujeres no hay diferencias en el juego en función del estatus socieconómico. Por lo tanto existe una interacción entre el estatus socieconómico y el sexo, por lo que hay que tener en cuenta ambas variables para predecir el juego de una persona. Estas conclusiones se extraen de los resultados del modelo ANOVA (en el cual observamos que la interacción entre sexo y el estatus socieconómico presentan un p-valor significativo), de la representación gráfica y de los intervalos de confianza (aquí observamos como la interacción entre sexo masculino y estatus socieconómico es significativo (el intervalo no pasa por el cero), mientras que en el sexo femenino no es significativo (el intervalo pasa por el cero)).
+
+En cuanto al tamaño de efecto observamos un tamaño de efecto de interación de 0.13 lo que implica según las tablas de eta-squared un tamaño de efecto mediano tirando a grande, debido a que el límite en el cuál el tamaño de efecto es grande es 0.14.
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales. 
+
+```{r}
+datos_filtrados$predictions = predict(datos_filtrados_lm)
+
+ggplot(datos_filtrados, aes(x=income, y=predictions, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+
+```
+
+**¿Es bueno el ajuste?:**
+Si parece un buen ajuste debido a que podemos observar que el gráfico que obtenemos con las predicciones es similar al gráfico de nuestro modelo. Además, igual que en nuestro modelo observamos la presencia de interacciones en el modelo.
+
+
+
+### 5) Valora si las asunciones del modelo se cumplen
+Las observaciones son independientes dentro de los grupos y entre los grupos.
+Los datos dentro de cada grupo son normales.
+La variabilidad dentro de cada grupo es aproximadamente igual a la
+variabilidad en los otros grupos 
+
+```{r}
+plot(datos_filtrados_lm, ask=FALSE)
+#No existe tendencia en ninguno de los gráficos por lo tanto los datos cumplen las asunciones del ANOVa
+plot(check_normality(datos_filtrados_lm), type = "qq", detrend = TRUE)
+#En este gráfico vemos como los residuos cumplen la normalidad
+check_normality(datos_filtrados_lm)
+#Mediante el test de normalidad se acepta la normalidad de los datos 
+is_norm = check_normality(datos_filtrados_lm)
+plot(is_norm)
+plot(is_norm, "qq")
+check_homogeneity(datos_filtrados_lm, method="fligner")
+#El test nos indica que la variabilidad dentro de cada grupo es aproximadamente igual a la variabilidad en los otros grupos
+
+
+```
+
+**¿Es el modelo correcto?:**
+Sí, con todos los gráficos que obtenemos en estas líneas de código observamos como no hay ninguna tendencia en nuestros datos que nos indiquen que no se cumplen las asunciones del modelo ANOVA. Por lo tanto, nuestro modelo es un buen modelo. Además, hemos realizado test de normalidad y de homogeneidad para apoyar con test estadísticos (aunque sean menos fiables que las representaciones gráficas) nuestras representaciones gráficas.
