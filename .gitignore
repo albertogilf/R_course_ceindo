@@ -42,5 +42,7 @@ vignettes/*.pdf
 5_statistics/p_values.csv
 6_machineLearning/machine_learning_Soluciones_files/
 R_course_ceindo.Rproj
-
-
+.mzXML
+*.RDataTMP
+7_dataAnalysis/Data_IBD/
+7_dataAnalysis/QC_IBD/
