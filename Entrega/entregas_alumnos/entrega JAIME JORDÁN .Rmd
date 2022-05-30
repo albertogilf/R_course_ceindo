@@ -1,0 +1,103 @@
+---
+title: "Evaluación curso R"
+author: "JAIME JORDÁN LÓPEZ"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+library(readr)
+teengamb <- read_csv("teengamb.csv")
+head(teengamb)
+summary(teengamb)
+ library(ggplot2)
+ library(tidyverse) 
+
+ggplot(teengamb, aes(x = income, y = gamble, col = sex)) +
+  geom_point() + 
+  geom_smooth(method="lm")
+```
+
+**Conclusiones sobre la necesidad de interacción**:
+
+COMO NO SON PARALELAS LAS LÍNEAS, SÍ QUE HAY INTERACCIÓN
+```
+
+### 2) Crea el modelo...
+... y obtén:
+
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r} 
+# los intervalos de confianza para los coeficientes y su significación
+
+#Tamaños del efecto:
+
+library("effectsize")
+
+teengamb_lm = lm(gamble ~ income + sex, teengamb)
+summary(teengamb_lm)
+teengamb_lm$coefficients
+plot(teengamb_lm, which = c(1, 2), ask=FALSE)
+
+effectsize(teengamb_lm)
+
+
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+**Conclusiones sobre las variables de interés**:
+
+Observando los coeficioentes, podemos concluir que hay un efecto principal en los ingresos y género respecto a la tasa de juego, es decir, sí que hay diferencias estadísticamente significativas entre sexos a la hora de apostar. Además, también hay diferencias estadísticamente significativas entre los ingresos de cada persona a la hora de apostar. Los chicos apuestan más que las chicas, e idependientemente del género, cuanto más dinero tienen, más apuestan. 
+
+Finalmente, fijándonos en el tamaño del efecto de income y sex, el tamaño del efecto en ambas es "large" (superior a .40 en Cohens' f).
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales.
+```{r}
+ggplot(teengamb, aes(x = income, y = gamble, col = sex)) +
+  geom_point() + 
+  geom_smooth(method="lm")
+
+```
+
+**¿Es bueno el ajuste?:**
+
+Sí, es bueno el ajuste
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+library("performance")
+plot(check_normality(teengamb_lm), "qq", detrend = TRUE)
+
+```
+
+**¿Es el modelo correcto?:**
+
+Sí, es el modelo correcto
