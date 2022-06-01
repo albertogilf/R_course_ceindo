@@ -1,0 +1,159 @@
+---
+title: "Evaluación curso R"
+author: ELENA BOCOS CORREDOR
+output: html_document
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+setwd("C:/Users/34636/Desktop")
+datos = read.csv("teengamb.csv", header = T)
+datos$sex = factor(datos$sex)
+head(datos)
+```
+
+**Conclusiones sobre la necesidad de interacción**:
+#Vamos a suponer como hipótesis inicial del modelo la independencia, es decir, no hay interacción entre los diferentes regresores. Es decir, estamos asumiendo que 'income' no depende de 'sex' y viceversa y por tanto no una variable no está condicionada por la otra.
+
+### 2) Crea el modelo...
+... y obtén:
+
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r}
+mod = lm(gamble ~ income + sex, data = datos)
+summary(mod)
+```
+#Tenemos el siguiente modelo: yi = B0 + B1x1 + alfaHzH + ui donde:
+#yi es la variable dependiente, en este caso 'gamble' (cuanto juega una persona)
+#x1 es el primer regresor, en este caso 'income' (cuanto gana una persona)
+#z2 es uno de los dos sexos, en este caso, 'Male', ya que 'Female' se ha tomado como referencia.
+#Cabe mencionar que la variable 'sex' es una variable cualitativa con dos posibilidades, y por tanto se debe tratar de manera
+#diferente a las variables cuantitativas presentes en el modelo. Pasamos a obtener los intervalos de confianza para los coeficientes:
+
+```{r}
+confint(mod, level = 0.95)
+```
+
+#Intervalo de Confianza del Estimador de B0: [-23.666503  2.081342]. Podemos decir, con un 95% de confianza, que el valor del estimador
+# de B0 estará entre -23.666503 y 2.081342.
+
+#Intervalo de Confianza del Estimador de B1: [1.837785  5.579747] . Podemos decir, con un 95% de confianza, que el valor del estimador
+# de B1 estará entre 1.837785 y 5.579747
+
+#Intervalo de confianza del Estimador de alfaH: [11.824182 38.613857] . Podemos decir, con un 95% de confianza, que el valor del estimador
+# de alfaH estará entre 11.824182 y 38.613857. 
+
+
+#A continuación debemos realizar los contrastes individuales para observar si los regresores son significativos:
+#El primer contraste, es el siguiente:
+#H0:B0=0 ; H1:B0 !=0
+#Al realizar todos los contrastes individuales, debemos comparar la distribución t obtenida con una t de student de n-k-1 grados de libertad, siendo n el numero de datos y siendo k el numero de regresores.
+```{r}
+n = nrow(datos)
+n
+```
+```{r}
+k = 2
+alfa = 0.05
+(qt(1-alfa/2, n-k-1))
+(qt(alfa/2, n-k-1))
+
+```
+```{r}
+summary(mod)
+```
+
+
+# Al realizar el primer contraste individual, obtenemos un valor de t: -1.690, con lo que nos encontramos en la región de aceptación de H0
+# y por tanto tenemos que B0= 0; es decir; B0 no es significativo. Esto se puede observar también mediante el p-valor obtenido en la tabla summary (0.098191), que es mayor que alfa (0.05), con lo que llegamos a la misma conclusión.
+
+
+#El segundo contraste a realizar es el siguiente: H0:B1=0 ; H1:B1 !=0
+# Al realizar el segundo contraste individual, obtenemos un valor de t: 3.995, con lo que nos encontramos en la región de rechazo de H0
+# y por tanto tenemos que B1 != 0; es decir; el efecto del regresor B1 es significativo. Esto se puede observar también mediante el p-valor obtenido en la tabla summary (0.000243), que es menor que alfa (0.05), con lo que llegamos a la misma conclusión(Nos encontramos en la región
+# de rechazo y por tanto es significativo).
+
+#El tercer contraste a realizar es el siguiente: H0: alfaH=0 ; H1: alfaH !=0
+# Al realizar el tercer contraste individual, obtenemos un valor de t: 3.794, con lo que nos encontramos en la región de rechazo de H0
+# y por tanto tenemos que alfaH != 0; es decir; el efecto del regresor alfaH es significativo. Esto se puede observar también mediante el p-valor obtenido en la tabla summary (0.000449), que es menor que alfa (0.05), con lo que llegamos a la misma conclusión(Nos encontramos en la región
+# de rechazo y por tanto es significativo).
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+```{r}
+coef(mod)
+```
+#Coeficiente B0: Su valor estimado es de -10.7926, obtenido en el summary. En este caso, no tiene sentido la interpretación de B0, pues hace #referencia al valor 'gamble', cuando 'income'= 0 y cuando sex='0'
+
+#Coeficiente B1: Su valor estimado es de 3.7088. Este valor hace referencia a cuánto aumenta 'gamble' al aumentar en una unidad la variable 'income', en promedio, manteniendo el resto de regresores constantes. Es decir, en promedio, al aumentar los ingresos de una persona en una unidad, el juego aumenta en 3.7088, manteniendo el resto de regresores constante.
+
+#Coeficiente alfaH: Su valor estimado es de 25.2190. En este caso, al tratarse de una variable cualitativa, su interpretación es diferente. En este caso, podemos sacar como conclusión que, en promedio, los hombres apuestan un 25% más que 
+#las mujeres, manteniendo el resto de regresores constantes.
+
+**Conclusiones sobre las variables de interés**: Como conclusión sobre el modelo, podemos decir que el efecto del regresor 'income' es significativo, por lo que influye de manera directa cuánto gana una persona con cuánto apuesta. Por otra parte, hemos visto que alfaH resultaba
+ser significativo, con lo que podemos establecer que hay diferencias entre las cantidades que apuestan los hombres y las mujeres.
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales. 
+
+```{r}
+hist(predict(mod), xlab = "Predicciones del modelo", col="tomato", nclass = 10)
+```
+
+**¿Es bueno el ajuste?:** Para valorar como de bueno es el modelo, al tratarse de un modelo de regresión lineal múltiple, debemos mirar el 
+coeficiente de determinación corregido (Ajusted R-squared). En este modelo, el valor de este coeficiente es de 0.4126. Es decir, la variabilidad explicada por el modelo es del 41.26%. Podemos concluir que el ajuste no es del todo bueno, ya que cuanto mayor sea este coeficiente, mejor
+será el ajuste (siempre teniendo en cuenta que el valor de este coeficiente está entre 0 y 1). Una manera de mejorar el modelo, sería eliminando
+B0, que ya hemos comprobado anteriormente que su efecto no era significativo. En R, esto se realizaría de la siguiente manera:
+```{r}
+modmejor = lm(gamble ~ income + sex + 0, data = datos)
+summary(modmejor)
+```
+Se observa que ahora el modelo ha mejorado (Adjusted R-squared:  0.6152) al suprimir B0.
+También se podría mejorar el modelo aplicando transformaciones matemáticas. Una transformación muy común que permite mejorar
+el modelo en ciertos casos es la transformación logarítmica.
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+par(mfrow=c(2,2))
+plot(mod)
+```
+Las hipótesis del modelo son las siguientes: Linealidad, Homocedasticidad, Normalidad e Independencia. Estas hipótesis se comprueban
+fijándonos en los residuos del modelo.
+
+Las hipótesis de linealidad y homocedasticidad se comprueban en el gráfico superior izquierdo:
+La nube de puntos mantiene un ancho constante, con lo que podemos asumir que el modelo es homocedástico y los puntos siguen aproximadamente
+una línea recta, con lo que podemos asumir que el modelo es lineal.
+
+Para comprobar la normalidad, nos fijamos en el gráfico superior derecho:
+Se observa que todos los puntos están muy próximos a la línea recta, con lo que podemos asumir normalidad.
+
+
+Por último, la hipótesis de independencia no se puede comprobar mediante estos gráficos, por lo que tenemos que asumir que en los datos proporcionados, los regresores son independientes.
+hay independencia entre regresores.
+
+
+**¿Es el modelo correcto?:** El modelo es correcto en el sentido en que cumple todas las hipótesis establecidas. Sin embargo, podríamos mejorar
+el modelo para que expliqiue una mayor variabilidad empleando para ello las transformaciones mencionadas anteriormente.
