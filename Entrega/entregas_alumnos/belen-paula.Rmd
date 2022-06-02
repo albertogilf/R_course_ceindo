@@ -1,0 +1,106 @@
+---
+title: "Evaluación curso R"
+author: BELÉN FERNÁNDEZ REQUENA
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Entrega
+
+-   Recuerda completar tu **nombre en el apartado author**.
+-   Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+-   Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+-   Deadline: **viernes 10 de junio, 23:59**.
+-   Puedes realizar la entrega en el mail: [**constantino.garciama\@ceu.es**](mailto:constantino.garciama@ceu.es){.email}.
+-   La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` (un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+
+El conjunto de datos `teengamb.csv` contiene datos sobre las tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el género y los ingresos con cuánto juega una persona (céntrate solo en las variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un ANCOVA...
+
+### 1) Carga y visualiza los datos...
+
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+teengamb <- read.csv("teengamb.csv") #leer el documento
+head (teengamb)
+teengamb<-teengamb[,c(-2,-4)] # quitar las columnas de las variables que no sirven
+head(teengamb)
+table(teengamb$sex)
+summary(teengamb) #mostrar información de los datos
+
+
+library("tidyverse")
+teengamb = teengamb %>%
+  mutate(sex = factor(sex)) # la variable sex es un character y hay que convertirla en un factor
+
+ggplot(teengamb, aes(x = income, y = gamble, col = sex)) +
+  geom_point() + 
+  geom_smooth(method="lm") #visualización de los datos
+
+```
+
+**Conclusiones sobre la necesidad de interacción**: 
+
+La visualización de los datos permite ver una interacción entre las variables income y sex, de manera que a priori podríamos establecer que existe una relación entre los ingresos de los individuos en función del sexo con cuánto juega una persona. Esto debemos comprobarlo en los siguientes apartados. 
+
+También debemos destacar que el grupo de los hombres muestra una pendiente ascendente mucho mayor que en el caso de las mujeres, de manera que, parece ser que a mayores ingresos, mayor es la frecuencia de juego en este grupo. Esta tendencia no se observa igual en el grupo de las mujeres.
+
+### 2) Crea el modelo...
+
+... y obtén:
+
+-   los intervalos de confianza para los coeficientes y su significación.
+-   Obtén los tamaños de los efectos.
+
+```{r}
+
+teengamb_lm = lm(gamble ~ sex * income, teengamb) #el modelo lineal
+summary(teengamb_lm) #para hacer inferencia
+
+library("emmeans")
+emmeans(teengamb_lm, ~ income | sex) #para ver los intervalos de confianza y comparar diferencias entre las medidas ajustadas
+
+library(car) #para cargar ANOVA
+options(contrasts = c("contr.sum", "contr.poly"))
+teengamb_aov = Anova(teengamb_lm, type=3) #ANOVA
+print(teengamb_aov)
+library(effectsize)
+eta_squared(teengamb_aov) #calcular el tamaño de efecto
+
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+
+**Conclusiones sobre las variables de interés**: los resultados mostrados de nuestro modelo y del test ANOVA demuestran que efectivamente hay una interacción significativa (0.0155) entre las variables income y sex. 
+Al comprobar el intervalo de confianza del grupo de las mujeres, podemos ver que esté pasa por el 0, de manera que este no presenta diferencias significativas en sus datos. Sin embargo, en el grupo de los hombres, el intervalo de confianza no incluye el 0, por lo que los datos de este grupo sí que presentan diferencias significativas. Esto se asemeja a la asumciones que se han establecido en las conclusiones del punto 1.
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+
+...y compáralas con los datos reales.
+
+```{r}
+tg_preds = teengamb %>% mutate(fit = predict(teengamb_lm))# predicciones del modelo
+ggplot(tg_preds, aes(x = income, col=sex)) + 
+  geom_point(aes(y = gamble)) + 
+  geom_line(aes(y = fit), lwd = 3) #representar el ajuste del modelo
+
+summary(teengamb_lm)
+
+```
+
+**¿Es bueno el ajuste?:**
+El ajuste es bueno ya que el modelo se asemeja a las predicciones establecidas al comienzo del ejercicio. 
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+plot(teengamb_lm, ask=FALSE) #evaluación del modelo
+```
+
+**¿Es el modelo correcto?:**
+Si, el modelo es correcto. Para demostrarlo, nos fijamos en las gráficas 1 (Residuals vs. Fitted) y 3 (Scale-Location), y comprobamos que la línea roja central que aparece está en posición horizontal y sin ninguna perturbación muy notable. Como se ve en los gráficos se cumplen las asumciones del ANOVA (normalidad, homocedasticidad y variables independientes); Si esto es así, podemos decir que el modelo es correcto. 
