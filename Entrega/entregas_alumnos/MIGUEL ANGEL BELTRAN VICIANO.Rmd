@@ -1,0 +1,139 @@
+---
+title: "Evaluación curso R"
+author: MIGUEL ANGEL BELTRAN VICIANO
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Entrega
+
+-   Recuerda completar tu **nombre en el apartado author**.
+-   Además del código, no olvides completar las respuestas a las
+    preguntas indicadas en negrita.
+-   Si tienes dudas/dificultades, **puedes contactar con los
+    profesores**.
+-   Deadline: **viernes 10 de junio, 23:59**.
+-   Puedes realizar la entrega en el mail:
+    [**constantino.garciama\@ceu.es**](mailto:constantino.garciama@ceu.es){.email}.
+-   La entrega consistirá en este fichero rellenado y el fichero que se
+    genera al hacer `Knit` (un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+
+El conjunto de datos `teengamb.csv` contiene datos sobre las tasas de
+juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se
+relacionan el género y los ingresos con cuánto juega una persona
+(céntrate solo en las variables `income`, `sex` y `gamble`)... Sigue los
+siguientes pasos para crear un ANCOVA...
+
+### 1) Carga y visualiza los datos...
+
+...para valorar si el modelo debe incluir interacciones. Escribe
+claramente tus conclusiones
+
+```{r}
+library("ggpubr")
+library("effectsize")
+
+datos<- read.csv("C:\\Users\\mabel\\OneDrive\\Escritorio\\curso r\\teengamb.csv")
+Datos<-datos [c("income","sex","gamble")]
+ggscatter(Datos, x="income", y="gamble", color="sex",add="reg.line")
+```
+
+Observamos diferentes pendientes en las rectas de hombre y mujeres,en
+los hombres positiva ( mas ingresos, mas juego) y en mujeres negativa
+(mas ingresos igual o menos juego). Por lo tanto, incorporar interacción
+sería adecuado, pero debemos tener en cuenta que violamos una hipótesis
+del modelo ANCOVA.
+
+**Conclusiones sobre la necesidad de interacción**:
+
+### 2) Crea el modelo...
+
+... y obtén:
+
+-   los intervalos de confianza para los coeficientes y su
+    significación.
+-   Obtén los tamaños de los efectos.
+
+```{r}
+modelo<-lm(gamble~sex+income, data=Datos)
+summary (modelo)
+confint(modelo)
+
+modelo2<-lm(gamble~sex+income+sex:income, data=Datos)
+summary(modelo2)
+confint(modelo2)
+
+Resultadosanova<-anova(modelo)
+print(Resultadosanova)
+eta_squared(Resultadosanova)
+Resultadosanova2<-anova(modelo2)
+print(Resultadosanova2)
+eta_squared(Resultadosanova2)
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+
+**Conclusiones sobre las variables de interés**:
+
+Los coeficientes del modelo sin interacción explican que ser hombre y
+tener mayores ingresos incrementan de forma significativa la cantidad de
+juego realizado por los adolescentes. Ser mujer por el contrario tendría
+efecto negativo en la cantidad jugada. Todos los coeficientes son
+significativos.La bondad de ajuste es de 43,82%.
+
+En el caso del modelo con inteeacción, los coeficientes ser hombre y
+mayores ingresos, no son significativos, siendo significativa la
+interacción entre ambos. Sin embargo, observamos que el ajuste del
+modelo, es superior (51,05% de R2).
+
+En los dos modelos se observa que los dos factores (sexo, ingresos)
+tienen una relación significativa con la cantidad que juegan los
+adolescentes. Observamos que la interacción sex.income es menos
+significativa, pero podría considerarse.
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+
+...y compáralas con los datos reales.
+
+```{r}
+predicciones<-predict(modelo)
+ggplot(Datos, aes(x=income, y=predicciones,col=sex))+stat_summary()+stat_summary(geom="line", aes(group=sex))
+
+predicciones2<-predict(modelo2)
+ggplot(Datos, aes(x=income, y=predicciones2,col=sex))+stat_summary()+stat_summary(geom="line", aes(group=sex))
+
+```
+
+**¿Es bueno el ajuste?:**
+
+Segun el modelo sin interaccion, tenemos dos rectas diferenciadas según
+sexos, mas elevada en hombres mas elevada que en mujeres. Si comparamos
+este gráfico con el diagrama de dispersión de los datos inical,
+comprobaremos que: 1) Existe una gran variabilidad en los datos con
+respecto a las rectas obtenidas. 2) En el modelo de mujeres la pendiente
+es positiva (mas ingresos mas juego) y en la realidad, la pendiente
+seria constante o negativa (a más ingresos igual o menor juego).
+
+Si utilizamos el modelo con la interacción, el modelo se ajustaría más a
+la realidad de los datos. Especialmente en la recta de mujeres. Sin
+embargo, este modelo viola la asunción de que las pendientes de las
+rectas son iguales (homogeneidad de pendientes) que no garantizarian la
+fiabilidad del analisis ANCOVA.
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+par(mfcol=c(2,2))
+plot (modelo)
+
+```
+
+**¿Es el modelo correcto?:**
+
+Los residuos siguen una distribución normal. Los residuos presentan una
+varianza homogenea (homocedasticidad).
