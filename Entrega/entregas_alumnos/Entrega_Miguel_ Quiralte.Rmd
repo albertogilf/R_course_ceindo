@@ -1,0 +1,139 @@
+---
+title: "Evaluación curso R"
+author: QUIRALTE PULIDO, MIGUEL
+output: html_document
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## instalación paquetes
+```{r}
+library(dbplyr)
+library(tidyverse)
+library("emmeans")
+library("performance")
+library("effectsize")
+```
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+teengamb_csv = read.csv("teengamb.csv") #cargar archivo .csv
+teengamb_csv
+head(teengamb_csv)
+```
+```{r} 
+#tipo de variables
+typeof(teengamb_csv$sex) #está en modo character
+typeof(teengamb_csv$income)
+typeof(teengamb_csv$gamble)
+
+#transformar sex en factor
+teengamb_csv = mutate(teengamb_csv, sex = factor(sex))
+typeof(teengamb_csv$sex)
+
+#mostrar los niveles de la categoria "sex"
+levels(teengamb_csv$sex)
+```
+```{r} 
+ggplot(teengamb_csv, aes(x=sex, y=gamble, col=income)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=income))
+```
+##Conclusiones sobre la necesidad de interacción: Sí hay interacciones entre los grupos, porque las líneas se entrecruzan en casi todos los casos. La relación entre el numero de apuestas y los ingresos se ve condicionada por el sexo.
+
+En general, si las líneas se entrecruzan quiere decir que hay interacción. En el ejemplo, sí que hay interacción ya que las líneas de nuestra gráfica se entrecruzan.
+
+Es decir, la apuesta de cada individuo depende de la interacción entre los ingresos y el sexo.
+
+```{r} 
+ggplot(teengamb_csv, aes(x=income, y=gamble, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+```
+Esta gráfica muestra que, en general, los hombres apuestan más que las mujeres cuanto mayores son sus ingresos.
+
+### 2) Crea el modelo...
+... y obtén:
+
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r}
+##Creamos un modelo donde gamble depende de income y sex.
+teen_lm = lm(gamble ~ income * sex, teengamb_csv)
+
+##Representamos el Q-Q plot
+plot(teen_lm, which = c(1, 2), ask = FALSE)
+```
+Nuestros datos se ajustan bien al modelo lineal.
+
+## El modelo sigue una distribución normal.
+
+```{r}
+## Obtenemos un resumen de nuestro modelo, así como los intervalos de confianza y el tamaño del efecto.
+summary(teen_lm) ## --> no da que gamble depende de la interacción entre sex e income, ya que la diferencia es significativa (0.0155)
+confint(teen_lm) 
+effectsize(teen_lm) 
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+       
+Los ingresos y el sexo no tienen un efecto por sí solo sobre la apuesta que se realiza ya que los intervalos de confianza pasan por el 0 [-4.385455,  3.28772] (income) y [-20.733425, 24.418773] (sex). Sin embargo, los intervalos de confianza de la interacción de los ingresos-sexo están por encima de 0, por tanto sí que hay un efecto de esta interacción sobre la apuesta que se realiza [1.082260, 9.727751].
+
+El tamaño del efecto que es de 0.66 [ 0.13,  1.19] también está por encima de 0 por tanto el efecto de la interacción entre sex e income sobre gamble es fuerte.
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales. 
+
+```{r}
+teengamb_csv$predictions = predict(teen_lm) ## --> añadimos una columna con las predicciones al csv.
+head (teengamb_csv)
+```
+
+```{r}
+ggplot(teengamb_csv, aes(x=income, y=predictions, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=income))
+```
+
+**¿Es bueno el ajuste?:**
+
+El modelo predictor expone que los hombres tienden a apostar más cuanto más ingresos tienen por eso la gráfica de arriba muestra que a mayor número de ingresos de lo hombres mayores apuestas realizan; mientras que la línea de las mujeres decae un poco, lo que dice que las mujeres aunque tengan mayores ingresos eso no condiciona que apuesten más. Por tanto al compararlo con la gráfica del ejercicio 1 sí se ve que los hombres apuestan más que las mujeres cuanto mayores son sus ingresos y que las mujeres no suelen apostar más cuantos mayores son sus ingresos pero el modelo no predice del todo bien el comportamiento de las mueres ya que la linea tiene tendencia ascendente.
+
+Por tanto, no se ajusta del todo bien el modelo predictor a los datos reales
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+teen_lm_norm = check_normality(teen_lm)
+
+plot(teen_lm_norm)
+plot(teen_lm_norm, type = "qq")
+plot(teen_lm_norm, type = "qq", detrend=TRUE)
+
+``````
+
+**¿Es el modelo correcto?:**
+
+El modelo es bueno, ya que se ve que hay normalidad, pero la predicción no es muy buena, ya que en los hombres sí se ve bien esa tendencia a apostar más cuanto más ingresos tienen como se ve en nuestros datos, pero no te lo predice del todo bien en las mujeres.

@@ -1,0 +1,140 @@
+---
+title: "Evaluación curso R"
+author: Alba Couto Rodriguez
+output: html_document
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es:
+¿cómo se relacionan el género y los ingresos con cuánto juega una persona?
+(céntrate solo en las variables `income`, `sex` y `gamble`)... 
+Sigue los siguientes pasos para crear un ANOVA...
+
+```{r}
+library("tidyverse")
+library('afex')
+```
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. 
+Escribe claramente tus conclusiones.
+
+```{r}
+team_gamble = 
+  read.csv(file = "teengamb.csv") %>%
+  mutate(sex = factor(sex))
+  
+head(team_gamble)
+class(team_gamble)
+```
+
+```{r}
+interaction.plot(team_gamble$sex, team_gamble$income, response = team_gamble$gamble)
+```
+
+```{r}
+ggplot(team_gamble, aes(x=sex, y=gamble, col=income)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=income))
+```
+**Conclusiones sobre la necesidad de interacción**:
+
+En nuestro caso, podemos observar como varias de las lineas se cruzan entre si, por lo que hay interaccion entre los ingresos y el sexo. 
+Es decir, cuanto juega una persona depende de ambos de los ingresos y de su sexo.
+
+```{r}
+ggplot(team_gamble, aes(x=income, y=gamble, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+```
+Con esta grafica podemos observar como en general, los hombres juegan mas que las mujeres. Incluso, se puede observar una pequeña tendencia en los hombres de... cuanto mas ingresos tienen mas juegan.
+
+### 2) Crea el modelo...
+... y obtén:
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+Nos interesa conocer la relacion que exite entre el sexo y los ingresos de la personas, con respecto a cuanto juegan, lo que indica que queremos evaluar si existe una relacion significativa. Debido a ello, se creará un modelo lineal.
+
+```{r}
+library("performance")
+library(effectsize)
+
+team_gamble_lineal_model_IncSex = lm(gamble ~ income * sex, data = team_gamble)
+
+plot(team_gamble_lineal_model_IncSex, ask = FALSE)
+```
+
+```{r}
+is_norm = check_normality(team_gamble_lineal_model_IncSex)
+plot(is_norm)
+plot(is_norm, type = "qq")
+plot(is_norm, type = "qq", detrend=TRUE)
+```
+Podemos ver que nuestros datos se ajustan bien al modelo lineal, y ademas se observa que siguen un modelo normal.
+
+```{r}
+summary(team_gamble_lineal_model_IncSex)
+confint(team_gamble_lineal_model_IncSex)
+effectsize(team_gamble_lineal_model_IncSex)
+```
+
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+**Conclusiones sobre las variables de interés**:
+
+En los intervalos de confianza podemos observar que los ingresos y el sexo separados no interaccionan por si solos con el cuanto juegan, ya que en su intervalo se encuentra el 0, por lo que no podemos aceptar que sus medias sean diferentes. 
+Sin embargo, cuando se estudian los ingresos y el sexo juntos, observamos que el intervalo de confianza es positivo, es decir, el 0 no se encuentra en este intrvalo, por lo que aceptamos que las medias son diferentes, y por tanto interaccionan significativamente con el cuanto juegan. 
+
+El tamaño de efecto nos dice la fuerza de interaccion. En este caso, para nuestro metodo, el efecto la interaccion entre ingresos y sexo es bueno (0.66). 
+El effect size se corresponde con ges (generalized eta squared)
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales. 
+
+```{r}
+team_gamble$predictions = predict(team_gamble_lineal_model_IncSex)
+head(team_gamble)
+```
+```{r}
+ggplot(team_gamble, aes(x=gamble, y=predictions, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+
+```
+
+**¿Es bueno el ajuste?:**
+
+Las predicciones son malas, el modelo no es capaz de capturar las interacciones presentes en los datos.
+
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+team_gamble_lm_norm = check_normality(team_gamble_lineal_model_IncSex)
+
+plot(team_gamble_lm_norm)
+plot(team_gamble_lm_norm, type = "qq")
+plot(team_gamble_lm_norm, type = "qq", detrend=TRUE)
+```
+
+
+```{r}
+plot(team_gamble_lineal_model_IncSex, which = c(1, 2), ask=FALSE)
+```
+**¿Es el modelo correcto?:**
+
+El modelo es bueno, hay normalidad, pero la prediccion no es muy buena, ya que lo residuos no se ajustan muy bien a la linea roja.
+
