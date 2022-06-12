@@ -1,0 +1,238 @@
+---
+title: "Evaluación curso R"
+author: Javier Arranz Herrero
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Entrega
+
+-   Recuerda completar tu **nombre en el apartado author**.
+-   Además del código, no olvides completar las respuestas a las
+    preguntas indicadas en negrita.
+-   Si tienes dudas/dificultades, **puedes contactar con los
+    profesores**.
+-   Deadline: **viernes 10 de junio, 23:59**.
+-   Puedes realizar la entrega en el mail:
+    [**constantino.garciama\@ceu.es**](mailto:constantino.garciama@ceu.es){.email}.
+-   La entrega consistirá en este fichero rellenado y el fichero que se
+    genera al hacer `Knit` (un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+
+El conjunto de datos `teengamb.csv` contiene datos sobre las tasas de
+juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se
+relacionan el género y los ingresos con cuánto juega una persona
+(céntrate solo en las variables `income`, `sex` y `gamble`)... Sigue los
+siguientes pasos para crear un ANCOVA...
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### PASOS PREVIOS --\> Cargar todas las librerias
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(rlang)
+library("emmeans")
+library("car")  # Anova
+library(effectsize)
+library("performance")
+
+```
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe
+claramente tus conclusiones
+
+Cargar los datos:
+
+```{r}
+    ## Leer el archivo y ver el documento o sus primeras lineas
+teen = read.csv("teengamb.csv", header = TRUE)
+#data_teen
+head(teen)
+
+```
+
+Observación de datos y de sus variables:
+
+```{r}
+#----------------------------------------------------------------------
+
+#typeof(teen$income)
+#typeof(teen$sex)
+#typeof(teen$gamble)
+
+#class(teen$income)
+#class(teen$sex)
+#class(teen$gamble)
+#----------------------------------------------------------------------
+
+```
+
+Correccion de variables:
+
+```{r}
+
+# Obvervamos que todas las variables esten correctamente, siendo sex una       variable categórica y el resto de clase "numeric". Como no es asi,             transformamos Sex a factor
+
+levels(teen$sex)
+teen = mutate(teen, sex = factor(sex))
+
+#Volvemos a comprobar que ha funcionado y que todas las variables estan correctas
+
+levels(teen$sex)
+
+# A continuacion, hacemos un plot de las variables para ver su representacion gráfica. 
+#Vemos la relacion que hay entre gamble y sexos  
+ggplot(teen, aes(x=sex, y=gamble, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+
+# Parece que de forma general, los hombres apuestan mas que las mujeres, pero no sabemos aun el papel del income en esta grafica, por lo que debemos hacer mas analisis
+```
+
+Plots:
+```{r}
+
+#La relacion entre las apuestas y los sexos se ve condicionado por la cantidad de ingresos, como podemos observar en la siguiente grafica
+ggplot(teen, aes(x=sex, y=gamble, col=income)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=income))
+
+
+
+
+#A continuacion, he representado gamble vs income con una linea para cada sexo (hombre o mujer).
+#Aqui se muestran la misma gráfica con los ejes x e y cambiados, con el objetivo de ver cual de los dos es mas simple de interpretar. En mi caso me quedo con el segundo gráfico, teniendo en el eje Y e income y en el x las apuestas
+
+#ggplot(teen, aes(x=gamble, y=income, col=sex)) + 
+#  stat_summary() + 
+#  stat_summary(geom='line', aes(group=sex))
+
+ggplot(teen, aes(x=income, y=gamble, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+
+
+# En el gráfico podemos observar como los hombres que apuestan mas en general, y sobre todo cuando tienen mas ingresos, pero en ingresos bajos los hombres tienden a apostar menos. Sin embargo, las mujeres, aunque no siempre. son mas estables, indicando que en las mujeres la apuesta no depende directamente de los ingresos, pues mas o menos se mantiene al aumentar los ingresos
+
+#Con esto podríamos decir que el modelo debe incluir interacciones, porque las apuestas dependen del sueldo únicamente en uno de los sexos, o dicho de otra forma, dependiendo del sexo, las apuestas pueden variar o no en funcion del sueldo
+
+```
+
+**Conclusiones sobre la necesidad de interacción**: La relacion entre gamble y el income depende del sexo. Sexo e income estan interaccionando.
+
+
+
+
+### 2) Crea el modelo...
+
+... y obtén:
+
+-   los intervalos de confianza para los coeficientes y su
+    significación.
+-   Obtén los tamaños de los efectos.
+
+```{r}
+#Creamos el modelo donde gamble depende de income y sex. Pero la operacion es multiplicar porque hay interacciones
+teen_lm = lm(gamble ~ income * sex, teen)
+
+# Dos formas de representar el mismo plot
+plot(teen_lm, which = c(1, 2), ask=FALSE)
+plot(check_normality(teen_lm), "qq", detrend = TRUE)
+hist(resid(teen_lm))
+
+# Obtenemos un resumen de nuestro modelo, al igual que os intervalos de confianza y el tamaño del efecto
+summary(teen_lm) # --> nos da significativa la interaccion entre income y sexMale
+confint(teen_lm) # --> los intervalos de confianza estan por encima de 0 ambos [1.08, 9.72]
+effectsize(teen_lm) # --> el efecto es de 0.66 [0.13, 1,19] para el metodo refit
+
+# Tambien observamos que el tamaño del efecto "ser hombre" es muy alto, pero de momento lo que sabemos es que hay interaccion entre apuestas e ingresos dependiendo del sexo, pero nada mas, por lo que necesitamos hacer estudios POST-Test
+```
+
+
+```{r}
+#Sabemos que tiene interacciones, por lo que el post test con emmeans no nos sirve si no tenemos en cuenta la interaccion con sex. Sin embargo, y aunque no sea necesario, probamos para que nos lo dira de todas formas con un mensaje, y asi hacer doble check.
+emmeans(teen_lm, "sex", adjust = "sidak") # --> No nos sirve
+# RESULTADO:
+# NOTE: Results may be misleading due to involvement in interactions
+
+
+# Como dijimos anteriormente, es necesario incluir la variable sex. 
+teen_model_emms = emmeans(teen_lm, ~ sex | income ) %>% print
+
+
+
+
+# Lo que observamos ahora es que la media aumenta mas en hombres, teniendo un confidence level de [23.24, 39,3]. Mientras que en las mujeres es mas bajo y con intervalos de confianza que contienen el valor 0 (positivos y negativos)
+
+teen_anova = Anova(teen_lm, type=3)
+print(teen_anova)
+
+eta_squared(teen_anova) 
+
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+
+**Conclusiones sobre las variables de interés**:
+
+Las conclusiones que se pueden obtener a partir del modelo con
+interacciones se pueden observar en el grafico, y se mencionaron
+previamente.
+
+confint(teen_lm) # --> los intervalos de confianza estan por encima de 0 ambos [1.08, 9.72], lo que nos indica que esta interaccion es significativa y que nuestro modelo nosda una dependencia entre la variablegamble y las variables sex/income
+
+effectsize(teen_lm) # --> el efecto es de 0.66 [0.13, 1,19] para el metodo refit, lo que nos indica que fuerza tiene esa dependencia. En este caso no encontre la tabla "REFIT" para indicar si el valor de 0.13 es alto o no.
+
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+
+...y compáralas con los datos reales.
+
+```{r}
+
+teen$predictions = print(predict(teen_lm))
+
+ggplot(teen, aes(x=sex, y=predictions, col=income)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=income))
+
+
+ggplot(teen, aes(x=income, y=predictions, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+
+#ggplot(teen, aes(x=gamble, y=predictions, col=sex)) + 
+#  stat_summary() + 
+#  stat_summary(geom='line', aes(group=sex))
+  
+
+
+```
+
+**¿Es bueno el ajuste?:**
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+# Como se menciono en la linea 83-85, los hombres tienden a apostar mas cuando aumentan los ingresos, por lo que el modelo lineal nos da un incremento de gamble cuando aumentamos income
+
+# Sin embargo, tal y como se observaba en la figura, y tambien fue comentado en la linea 83-85, las mujeres son mas estables a la hora de apostar dependiendo el ingreso. Es por eso que en las predicciones vemos que las mujeres tienen una recta con menos pendiente, incluso llega a ser algo negativa, pero practicamente plana
+plot(teen_lm, which = c(1, 2), ask=FALSE)
+
+
+```
+
+**¿Es el modelo correcto?:**
+
+# Se podria decir que es aproximado, aunque no del todo perfecto
+Los valores del QQ nos indica que estan todos dentro de la normalidad, pero cuando nos fijamos en los valores reales vs los predichos nos damos cuenta que en los hombres puede ajustarse aproximadamente a la realidad pero el de las mujeres es mucho mas imperfecto.
+Sin embargo, cuando vemos el modelo, tiene una grafica parecida a la que esperabamosen un inicio, solo que los valores, aunque normales, tienen mucha variabilidad, y esto se puede ver tambien en los "Residuals vs fitted"
