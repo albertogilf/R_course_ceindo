@@ -1,0 +1,134 @@
+---
+title: "Evaluación curso R"
+author: "Gemma García Lluch"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+
+knitr::opts_chunk$set(echo = TRUE)
+(c("tidyverse", "afex", "emmeans", "GGally", "effectsize", "performance", "see", "qqplotr"))
+
+
+library("tidyverse")
+
+theme_set(theme_bw())
+teengamb <- read.csv("~/Desktop/Curso Programación con R Mayo2022/Material evaluación/MATERIAL EVALUACIÓN/teengamb.csv")
+
+teengamb
+
+summary(teengamb)
+
+library("GGally")
+ggplot(teengamb, aes(x = income, y = gamble, col = sex)) +
+  geom_point() + 
+  geom_smooth(method="lm")
+```
+
+
+**Conclusiones sobre la necesidad de interacción**:
+Vemos que el modelo presenta líneas no paralelas, por lo que presenta interacciones. Del mismo modo, se observa como los hombres de mayores ingreosos tienden a apostar más, produciéndose el efecto contrario en las mujeres (por llo general).
+
+### 2) Crea el modelo...
+... y obtén:
+
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r}
+lm(gamble ~ income * sex, teengamb)
+
+modelo1=lm(gamble ~ income * sex, data=teengamb)
+confint(modelo1)
+library("effectsize")
+
+effectsize(modelo1)
+
+
+```
+
+```
+```{r}
+
+
+library(GGally)
+library("emmeans")
+
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+**Conclusiones sobre las variables de interés**:
+
+Para la variable "gamble", el intervalo de confianza va desde -0.93 a -0,25, para "income" desde -0,54 hasta 0.40, para el sexo (hombre), desde 0,49 a 1.37. Finalmente para la interacción "income:sexMale", va desde 0.13 hasta 1.19. En este caso, vemos como el programa está comparando con el sexo masculino.
+
+Los tamaños de efecto para la variable "income" es despreciable, siendo medio para las variables "gamble" y la interacción "income:sexMale" y grande para la varable sexMale
+
+Del mismo modo, el programa advierte de nuevo de la presencia de interacciones, por lo que las variables no se pueden interepretar por separado.
+
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales. 
+
+```{r}
+
+ggplot(modelo1, aes(x=income, y=gamble, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex)) + 
+  ggtitle("Data")
+
+
+library(emmeans)
+gamble ~ income * sex
+modelo1=lm(gamble ~ income * sex, data=teengamb)
+teengamb$predictions=predict(modelo1)
+ggplot(teengamb, aes(x=income,y=predictions,col=sex))+stat_summary()+stat_summary(geom = 'line',aes(group=sex))
+
+#A partir del modelo preodictivo, y en general, se observa una mayor tendencia de los hombres de mayores ingreos a apostar más, produciéndose el efecto contrario en las mujeres. 
+
+
+```
+
+**¿Es bueno el ajuste?:**
+En general, el ajuste es bueno
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+
+plot(modelo1, which = c(1, 2), ask=FALSE)
+
+```
+
+**¿Es el modelo correcto?:**
+En el gráfico de residuales observamos que los valores reales están algo alejados de la línea teórica, existiendo uan desviación de +-40. Sin embargo, en la gráfica de los residuales estandarizados comprobamos que los valores reales están en la línea teórica, por lo que podemos concluir que el modelo es correcto.
+
+
