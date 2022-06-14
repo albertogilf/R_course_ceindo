@@ -1,0 +1,98 @@
+---
+title: "Evaluación curso R"
+author: Marion TOQUET
+output: html_document
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(readr)
+
+teengamb <- read_csv("teengamb.csv")
+summary(teengamb)
+
+ggplot(teengamb, aes(x = income, y = gamble, col = sex)) +
+  geom_point() + 
+  geom_smooth(method="lm")
+
+
+
+```
+
+**Conclusiones sobre la necesidad de interacción**: 
+Hay interacción dado que las lineas de regresión no son parálelas
+
+### 2) Crea el modelo...
+... y obtén:
+
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r}
+teengamb_inter = lm(gamble ~ income * sex, data=teengamb)
+teengamb_sininter = lm(gamble ~ income + sex, data=teengamb)
+
+anova(teengamb_inter, teengamb_sininter)
+
+plot(teengamb_inter, ask=FALSE)
+
+summary(teengamb_inter)
+confint(teengamb_inter)
+
+library("effectsize")
+effectsize(teengamb_inter)
+eta_squared(teengamb_inter)
+
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+**Conclusiones sobre las variables de interés**:
+El modelo con interacción es mejor que el modelo sin. 
+La tasa de juego por si sola no aumenta con los ingresos. Los hombres apuestan más que las mujeres en general aunque las mujeres pueden tener una tasa de juego más alta (hasta 20.7).
+La tasa de juego aumenta de manera significativa con los ingresos al ser un hombre. 
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales. 
+
+```{r}
+ggplot(teengamb, aes(x = income, y = gamble, col = sex)) +
+  geom_point() + 
+  geom_smooth(method="lm")
+
+```
+
+**¿Es bueno el ajuste?:**
+Sí
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+library("performance")
+plot(check_normality(teengamb_inter), "qq", detrend = TRUE)
+```
+
+**¿Es el modelo correcto?:**
+Sí
