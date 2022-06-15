@@ -1,0 +1,165 @@
+---
+title: "Entrega curso R"
+author: Ignacio Piédrola Pedraza
+output: html_document
+date: '2022-06-15'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Instrucciones de entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+
+El conjunto de datos `teengamb.csv` contiene datos sobre las tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el género y los ingresos con cuánto juega una persona (céntrate solo en las variables `income`, `sex` y `gamble`). Sigue los siguientes pasos para crear un ANCOVA:
+
+### 0) Antes de empezar
+
+Debemos establecer el "working directory" (haciendo uso de "setwd()" en la consola).
+Y posteriormente, cargar las librerías necesarias para llevar a cabo el ejercicio:
+
+```{r warning=FALSE, message=FALSE}
+library("tidyverse")
+library("ggplot2")
+library("car")
+options(contrasts = c("contr.sum", "contr.poly"))
+library("effectsize")
+library("emmeans")
+library("performance")
+library("see")
+library("qqplotr")
+```
+
+### 1) Carga y visualiza los datos
+Para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones.
+
+```{r}
+#A)Cargamos los datos a partir del archivo csv, indicando que tienen encabezados
+teengamb<-read.csv(file="teengamb.csv", header = TRUE)
+head(teengamb)
+summary(teengamb)
+
+#B)La columna "sex" aparece como caracter, se transforma a factor para trabajar con ello
+teengamb_mutated<-teengamb %>% mutate(sex = factor(sex))
+head(teengamb_mutated)
+class(teengamb_mutated$sex)
+
+#C)Nos quedamos con aquellas variables que nos interesan, eliminando las columnas "status" y "verbal"
+teengamb_filtered<-teengamb_mutated[,c(-2,-4)]
+head(teengamb_filtered)
+
+#D)Cargamos y visualizamos los datos
+
+#Gráfico 1 - Dispersión
+ggplot(teengamb_filtered, aes(x = income, y = gamble, col = sex)) + 
+  geom_point() +
+  geom_smooth(method="lm")
+#Gráfico 2 - Boxplot
+ggplot(teengamb_filtered, aes(x=sex, y = gamble, fill=sex)) + geom_boxplot() + 
+  coord_flip()
+#Gráfico 3 - Boxplot
+ggplot(teengamb_filtered, aes(x=sex, y = income, fill=sex)) + geom_boxplot() + 
+  coord_flip()
+#Por los gráficos obtenidos se deduce que los hombres juegan más cuanto más ingresos tienen
+
+```
+
+**Conclusiones sobre la necesidad de interacción**:
+
+El primer gráfico, el cual representa la dispersión de puntos con las líneas de tendencia, nos indica que hay que estudiar la interacción entre las variables escogidas (gamble, income y sex), ya que la pendiente es diferente entre ambas. En el caso de que fuesen paralelas no habría interacciones. Al ser distintas las pendientes, hay interacción entre las variables.
+Este punto es bastante importantes ya que la influencia del modelo de la interacción de las variables no tiene que ver con la suma de las variables por separado.
+
+Por otra parte, y viendo los gráficos de cajas, hay que destacar la varianza de los datos dependiendo del sexo, pues hay mayor dispersión en los datos para «gamble» que para «income».
+
+### 2) Crea el modelo...
+
+... y obtén:
+* Los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r}
+#A)Creamos el modelo lineal con interacción
+teengamb_lm<-lm(gamble ~ income*sex, teengamb_filtered)
+plot(teengamb_lm, which=c(1,2),ask=FALSE)
+#Se observan en los gráficos que nuestros datos cumplen normalidad y las varianzas son iguales, necesario para realizar el modelo ANOVA
+
+#B)Creamos el modelo ANOVA 
+teengamb_anova<-Anova(teengamb_lm, type=3)
+print(teengamb_anova)
+#Donde vemos en la tabla que la interacción income:sex tiene resultado significativo <0.05
+
+#C)Calculamos el tamaño de efecto, de dos maneras diferentes
+eta_squared(teengamb_anova)
+effectsize(teengamb_anova)
+#Donde vemos que el tamaño de efecto es mediano-alto
+
+#E)Calculamos los intervalos de confianza haciendo uso de las medias ajustadas (emmeans)
+teengamb_emmeans = emmeans(teengamb_lm, ~ income | sex)
+print(teengamb_emmeans)
+
+```
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones
+
+**Conclusiones sobre las variables de interés**:
+
+Primero se crea el modelo lineal con interacciones (residuals vs fitted y Normal Q-Q plot). Gracias a ello se ve que las variables siguen normalidad. Esto es necesario para poder hacer un modelo ANOVA. El nivel de significancia que se obtiene es menor de 0.05 entre las variables de estudio «income» y «sex».
+
+Por otra parte, en cuanto al tamaño de efeto, se observa un eta-squared de 0.13 en la interacción income:sex. Según las tablas de interpretación de tamaños de efecto «eta-squared partial» esto implica un efecto de interacción mediano cercano a alto.
+
+Finalmente, al calcular los intervalos de confianza mediante emmeans se puede interpretar lo siguiente: los hombres, cuantos más ingresos tienen, más juegan. En el caso de las mujeres no se puede concluir esto. Esto se puede ver mediante la interacción entre cada uno de los sexos y el estatus socioeconómico (en hombres es significativo). 
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+
+...y compáralas con los datos reales. 
+
+```{r warning=FALSE, message=FALSE}
+#A)Se realiza la predicción con nuestro modelo lineal
+teengamb_filtered$predictions = predict(teengamb_lm)
+
+#B)Se crea un gráfico con nuestros datos para ver las tendencias de las variables
+ggplot(teengamb_filtered, aes(x=income, y=predictions, col=sex)) + 
+  stat_summary() + 
+  stat_summary(geom='line', aes(group=sex))
+
+```
+
+**¿Es bueno el ajuste?:**
+El gráfico que se obtiene con las predicciones es bastante similar al primer gráfico realizado. Las pendientes son muy parecidas en las tendencias e interacción entre variables.
+
+### 5) Valora si las asunciones del modelo se cumplen
+Las observaciones son independientes dentro de los grupos y entre los grupos.
+Los datos dentro de cada grupo son normales.
+La variabilidad dentro de cada grupo es aproximadamente igual a la variabilidad en los otros grupos. 
+
+```{r}
+#A) Se obtienen los gráficos para ver si se cumplen las asunciones
+plot(teengamb_lm, ask=FALSE)
+#Los datos cumplen las asunciones del ANOVA 
+
+#B) Se comprueba la normalidad de los datos
+plot(check_normality(teengamb_lm), type = "qq", detrend = TRUE)
+check_normality(teengamb_lm)
+is_norm = check_normality(teengamb_lm)
+plot(is_norm)
+plot(is_norm, "qq")
+#Se concluye normalidad en los datos
+
+#D) Se chequea la homogeneidad de los datos con el Test Fligner-Killeen
+check_homogeneity(teengamb_lm, method="fligner")
+#Hay homogeneidad en la varianza basándose en la mediana de las variables
+```
+
+**¿Es el modelo correcto?:**
+Para poder aplicar un ANOVA se tienen que dar las condiciones necesarias en cuanto a normalidad, variables independientes y homocedasticidad. Con los ejercicios del apartado número 5 (gráficos y test estadísticos) se puede concluir que el modelo es correcto.
+
