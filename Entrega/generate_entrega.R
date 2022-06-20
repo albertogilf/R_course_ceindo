@@ -1,12 +1,11 @@
 
+set.seed(42112)
 library('tidyverse')
-data("teengamb", package="faraway") 
+data("teengamb", package="faraway")
 teengamb = teengamb %>% mutate(sex = ifelse( sex==1, 'Female', 'Male') )
 
 ggplot(teengamb, aes(x=income, y=gamble, color=sex)) + geom_point() +
   geom_smooth(method='lm')
-
-
 
 m1 <- lm( gamble ~ sex * income, data=teengamb )# 3) Ajusta el modelo adecuado
 teen_gambling_model = lm( gamble ~ sex * income, data=teengamb )
@@ -14,9 +13,11 @@ teen_gambling_model = lm( gamble ~ sex * income, data=teengamb )
 preds = predict(m1, data=teengamb) + rnorm(n = nrow(teengamb), sd=sigma(m1))
 
 teengamb$gamble = preds
-write_csv(teengamb, "Entrega/teengamb.csv")
+write_csv(teengamb, "teengamb.csv")
 
-teengamb = read_csv("Entrega/teengamb.csv")
+# analysis ----------------------------------------------------------------
+
+teengamb = read_csv("teengamb.csv")
 
 m1 <- lm( gamble ~ sex * income, data=teengamb )# 3) Ajusta el modelo adecuado
 teen_gambling_model = lm( gamble ~ sex * income, data=teengamb )
@@ -38,3 +39,4 @@ print(
 plot(teen_gambling_model, ask=FALSE)
 library("performance")
 plot(check_normality(teen_gambling_model), "qq")
+

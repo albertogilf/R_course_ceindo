@@ -1,0 +1,158 @@
+---
+title: "Evaluación curso R"
+author: Marta Sala Climent 
+output: html_document
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 10 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en este fichero rellenado y el fichero que se genera al hacer `Knit` 
+(un fichero `Rmd` y un fichero `html`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+df <- read.csv("teengamb.csv")
+summary(df)
+```
+
+```{r}
+library(psych)
+descriptives <- describe(df)
+print(descriptives)
+```
+
+```{r}
+regresion <- lm(gamble ~ income, data = df)
+summary(regresion)
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(df, aes(x = income, y = gamble)) + geom_point(aes(color = sex))
+      theme_classic()
+```
+
+
+```{r}
+modelo_simple <- lm(data = df,formula = status ~ sex)
+modelo_simple
+summary(modelo_simple)
+```
+_En el summary se observa que el p-value del estadístico F es muy pequeño, indicando que al menos uno de los predictores del modelo está significativamente relacionado con la variable respuesta. Residual standar error : En promedio, cualquier predicción del modelo se aleja 3.511 unidades del verdadero valor._
+
+_R2: El predictor status empleado en el modelo es capaz de explicar el 23.13% de la variabilidad observada en el status._
+
+_Los dos coeficientes de regresión (β0 y β1) estimados por el modelo son significativos y se pueden interpretar como:_
+
+_Intercept(β0): El valor promedio del precio de la vivienda cuando el lstatus es 0 es de 35.263 unidades._
+_Predictor segun sexo (Males): para los hombres hay una estimacion positiva respoecto al estatus de 16.737_
+
+
+```{r}
+modelo_2 <- lm(data = df,formula = income ~ sex)
+modelo_2
+summary(modelo_2)
+```
+_En promedio, cualquier predicción del modelo se aleja 0.8182 unidades del verdadero valor_
+_El predictor income es capaz de explicar el 1.33% de la variablidad observada._
+_Los dos coeficientes de regresión (β0 y β1) estimados por el modelo son significativos y se pueden interpretar como:_
+
+_Intercept(β0): El valor promedio del precio de la vivienda cuando el income es 0 es de 4.13 unidades._
+_Predictor segun sexo (Males): para los hombres hay una estimacion positiva respoecto al estatus de 0.82_
+
+```{r}
+modelo_3 <- lm(data = df,formula = verbal ~ sex)
+modelo_3
+summary(modelo_3)
+```
+_En promedio, cualquier predicción del modelo se aleja 0.42 unidades del verdadero valor_
+_El predictor income es capaz de explicar el 1.14% de la variablidad observada._
+_Los dos coeficientes de regresión (β0 y β1) estimados por el modelo son significativos y se pueden interpretar como:_
+
+_Intercept(β0): El valor promedio del precio de la vivienda cuando el valor verbal es 0 es de 6.42 unidades._
+_Predictor segun sexo (Males): para los hombres hay una estimacion positiva respoecto al estatus de 0.44_
+```{r}
+modelo_4 <- lm(data = df,formula = gamble ~ sex)
+modelo_4
+summary(modelo_4)
+```
+_En promedio, cualquier predicción del modelo se aleja 5.882 unidades del verdadero valor_
+_El predictor income es capaz de explicar el 23.44% de la variablidad observada._
+_Los dos coeficientes de regresión (β0 y β1) estimados por el modelo son significativos y se pueden interpretar como:_
+
+_Intercept(β0): El valor promedio del precio de la vivienda cuando el valor verbal es 0 es de 4.597 unidades._
+_Predictor segun sexo (Males): para los hombres hay una estimacion positiva respoecto al estatus de 28.28_
+
+
+_De esto entendemos que las variables que más están implicadas segun sexo son la variable status y la variable gamble. Además, ambas variables tienen un p-valor estadisticamente significativo_
+
+
+
+**Conclusiones sobre la necesidad de interacción**:
+
+### 2) Crea el modelo...
+... y obtén:
+
+* los intervalos de confianza para los coeficientes y su significación.
+* Obtén los tamaños de los efectos. 
+
+```{r}
+confint(modelo_simple, level = 0.95)
+```
+
+```{r}
+confint(modelo_4, level = 0.95)
+```
+_Como era de esperar dado que el p-value de los predictores ha resultado significativo para un α=0.05, su intervalo de confianza del 95% no contiene el valor 0_ 
+_con esto hemos obtenido los intervalos de confianza, ahora vamos a comprobar mediante el intervalo de predicción, ya que este nos devolvera un valor esperado_
+
+
+
+### 4) Crea un gráfico con las predicciones de tu modelo...
+...y compáralas con los datos reales. 
+
+```{r}
+mod1 <- lm(gamble ~ income, data=df)
+future_y <- predict(object=mod1, interval="prediction", level=0.95)
+nuevos_datos <- cbind(df, future_y)
+```
+```{r}
+library(ggplot2)
+ggplot(nuevos_datos, aes(x=income, y=gamble))+
+    geom_point() +
+    geom_line(aes(y=lwr), color="red", linetype="dashed") +
+    geom_line(aes(y=upr), color="red", linetype="dashed") +
+    geom_smooth(method=lm, formula=y~x, se=TRUE, level=0.95, col='blue', fill='pink2') +
+    theme_light()
+```
+
+
+
+**¿Es bueno el ajuste?:**
+
+### 5) Valora si las asunciones del modelo se cumplen
+
+```{r}
+
+```
+
+**¿Es el modelo correcto?:**
+
+_Creo que los valores no siguen una distribución lineal, se podría seguir un modelo polinomial_  
