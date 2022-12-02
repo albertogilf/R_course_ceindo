@@ -574,6 +574,7 @@ nuevos pasos.
 
 ```{r}
 library("car")  # Anova
+options(contrasts = c("contr.sum", "contr.poly"))
 data("iris")
 
 # 1) Visualizar

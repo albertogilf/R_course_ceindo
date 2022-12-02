@@ -181,7 +181,7 @@ if p > 0.05, or an overly confident claim. (Lewis G. Halsey, [The reign of p-val
 summary(frog_model)
 confint(frog_model)
 ```
-Los resultados sugieren que el ritmo_cardiaco de las ranas se incrementará
+Los resultados sugieren que el ritmo cardiaco de las ranas se incrementará
 1.77 bpms por cada grado Celsius, si bien un aumento de la frecuencia 
 cardiaca en el rango (1.37, 2.17) es igualmente verosímil.
 
