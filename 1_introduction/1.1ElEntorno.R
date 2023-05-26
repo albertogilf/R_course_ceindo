@@ -30,13 +30,9 @@ x
 y = 2*x
 y
 
-#También puede emplearse el operador <- como asignación, aunque en este curso emplearemos =
-
-x <- 6
-
 #Puedes probar a ejecutar las sentencias anteriores desde este archivo pulsando ctrl + enter
 
-#Ojo que se distingue entre mayúsculas y minúsculas;la siguiente sentencia da un error al ejecutarse
+#Ojo que se distingue entre mayúsculas y minúsculas; la siguiente sentencia da un error al ejecutarse
 
 z = 3*X + y
 
