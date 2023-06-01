@@ -13,7 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1. Introduction
 
-La visualización de datos es actualmente una de las exigencias de la mayoría de revisiones científicas. Permiten o, al menos, ayudan, a explicar de forma más intuitiva nuestra investigación. Hay herramientas dedicadas exclusivamente a la visualización de datos, las herramientas de modelado o estadísticas o, en este caso, el lenguaje de programación R, proporcionan funcionalidades para hacer análisis de datos exploratorios o presentación de resultados. Se considera el gráfico de Charles Minard de 1869 como uno de los mejores gráficos de la historia, ya que logra 
+
+La visualización de datos es actualmente una de las exigencias de la mayoría de revisiones científicas. Permiten o, al menos, ayudan, a explicar de forma más intuitiva nuestra investigación. Hay herramientas dedicadas exclusivamente a la visualización de datos, las herramientas de modelado o estadísticas o, en este caso, el lenguaje de programación R, proporcionan funcionalidades para hacer análisis de datos exploratorios o presentación de resultados. Se considera el gráfico de Charles Minard de 1869 como uno de los mejores gráficos de la historia, ya que logra mostrar 6 dimensiones en un único gráfico bidimensional.
 
 ```{r}
 # All defaults
@@ -24,7 +25,7 @@ include_graphics(img1_path)
 
 Este gráfico muestra seis tipos de datos en dos dimensiones: el número de tropas de Napoleon, la distancia entre ellas, la temperatura, la latitud y la longitud, la dirección del viaje y la localización relativa respecto a la fecha. Este tipo de gráficos tan específico es complicado de realizar para conjuntos de datos heterogéneos, pero R proporciona una serie de librerías built-in como **ggplot2, leaflet o lattice** para realizar visualizaciones. En este tema vamos a revisar la visualización con el paquete ggplot2 ya que es el más utilizado de acuerdo al número de descargas (**2,689,000, 135,000 y 100,000 respectivamente**). 
 
-En esta sección revisaremos el histógrama, el diagrama de barras, el diagrama BoxPlot y el gráfico de dispersión o Scatter Plot. Hay otros gráficos más avanzados que se pueden realizar con esta librería, como el HetMap, el Mosaic Map o gráficos en 3D, pero no se van a cubrir en este curso. 
+En esta sección revisaremos el histograma, el diagrama de barras, el diagrama BoxPlot y el gráfico de dispersión o Scatter Plot. Hay otros gráficos más avanzados que se pueden realizar con esta librería, como el HetMap, el Mosaic Map o gráficos en 3D, pero no se van a cubrir en este curso. 
 
 
 ## 1.1 Installation
@@ -81,7 +82,7 @@ hist(VADeaths,col=brewer.pal(8,"Greens"),main="Greens 8 colors", ylab="count", x
 
 # 3. Line Chart
 
-El conjunto de datos AirPassengers muestra el incremento de pasajeros sobre el periodo de tiempo de 1949 a 1960 por meses. Los diagramas de líneas son adecuados cuando queremos analizar una frecuencia sobre un periodo de tiempo o cuando queremos comparar cambios relativos a cantidades con otra variable, que habitualmente es el tiempo. Utilicemos un nuevo conjunto de datos para ilustrarlo. 
+El conjunto de datos AirPassengers muestra el incremento de pasajeros sobre el periodo de tiempo de 1949 a 1960 por meses. Los diagramas de líneas son adecuados cuando queremos analizar una frecuencia sobre un periodo de tiempo o cuando queremos comparar cambios relativos a cantidades con otra variable, que habitualmente es el tiempo. Utilicemos un nuevo conjunto de datos para ilustrarlo. Se puede ver que la tendencia es incremental de manera anual, y dentro de un mismo año, hay un pico en determinados meses que se corresponden con el verano. 
 
 ```{r}
 data(AirPassengers)
@@ -213,6 +214,7 @@ Le podemos poner un título y una etiqueta a cada uno de los ejes mediante los p
 library(knitr)
 img1_path = "solution_hist.png"
 include_graphics(img1_path)
+
 ```
 
 
@@ -225,6 +227,7 @@ Para la realización de un diagrama de líneas este conjunto de datos no es el i
 library(knitr)
 img1_path = "solution_lineplot.png"
 include_graphics(img1_path)
+
 ```
 
 
@@ -246,6 +249,7 @@ education.freq # Esto guardará la aparición de cada uno de los niveles educati
 library(knitr)
 img1_path = "solution_barplot.png"
 include_graphics(img1_path)
+
 ```
 
 
@@ -253,8 +257,9 @@ include_graphics(img1_path)
 Procedamos ahora a incluir en el gráfico información de una segunda variable para conocer el porcentaje de participantes de cada tipo que adquirió un préstamo. También podremos incluir una leyenda al gráfico para mostrar la proporción de participantes que obtuvieron un préstamo. Recordemos que la función table con dos variables guardará la frecuencia de aparición de los tipos en un formato tabla. 
 
 ```{r}
-tab_loan_education = table(banco$loan, banco$education)
-tab_loan_education
+tab_loan_education = table(bank_dataset$loan, bank_dataset$education)
+tab_loan_education 
+
 ```
 
 Y procedamos a hacer el diagrama de barras correspondiente con una leyenda. 
@@ -266,7 +271,7 @@ Y por último pintemos la proporción mediante la función prop.table y el pará
 
 
 
-## 7.4 Box Plot
+## 7.5 Box Plot
 
 Podemos ver los valores de la educación de los participantes en relación a su edad en un dagrama de cajas. Para ello, realicemos un diagrama de cajas en el que en el eje x tendremos la educación y en el eje y la edad. 
 

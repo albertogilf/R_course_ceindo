@@ -53,7 +53,6 @@ Se pueden apreciar todos los parámetros que recibe esta función y sus valores 
 inp = scan() # estoy leyendo datos por pantalla y guardándolos en la variable inp
 inp # imprimo los datos leídos por pantalla. 
 typeof (inp) # ¿De qué tipo son los datos leídos?
-
 ```
 
 ```{r}

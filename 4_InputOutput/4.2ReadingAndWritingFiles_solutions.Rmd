@@ -65,6 +65,7 @@ El directorio de trabajo en el que ejecutamos nuestro programa es clave para lee
 getwd() # conocer el path de ejecución del programa
 
 setwd("C:\\") # to set the new working Directory to the root in windows. 
+setwd("/home/alberto") # to set the new working Directory to the root in windows. 
 ```
 
 ## 2.1 Generic data import

@@ -307,6 +307,18 @@ writeMat("iris.mat", iris = iris) # el parámetro se debe llamar igual al nombre
 
 Lee en cada uno de los formatos correspondientes los ficheros escritos del dataset Iris. 
 
-Posteriormente, vamos a aplicar un filtro sobre el conjunto de datos iris y escribirlo en los diferentes formatos. El filtro a utilizar será que la especie sea versicolor y que Petal.Width esté entre 1.0 y 1.3 o que la especia sea setosa y la longitud del pétalo (Petal.Length) esté entre 1.5 y 2.0. 
+Posteriormente, vamos a aplicar un filtro sobre el conjunto de datos iris y escribirlo en los diferentes formatos. El filtro a utilizar será que la especie sea versicolor y que Petal.Width esté entre 1.0 y 1.3 (inclusivo) o que la especie sea setosa y la longitud del pétalo (Petal.Length) esté entre 1.5 y 2.0 (exclusivo). 
+
+```{r}
+iris_csv = read.csv(file = "iris.csv", header = TRUE, sep = ",")
+
+# LOAD XLSX (SOLO SI INSTALÉ LA LIBRERIA!!)
+# Load Matlab
+# Load SAV (SPSS)
+library(dplyr)
+
+iris_filtrado_csv = filter(iris, (Species == "versicolor" & Petal.Width >= 1.0 & Petal.Width <= 1.3) | (Species == "setosa" & Petal.Length > 1.5 & Petal.Length < 2.0))
+
+```
 
 Recuerda cargar el paquete **library(dplyr)** para aplicar filtros. El resultado deben ser 41 filas. 

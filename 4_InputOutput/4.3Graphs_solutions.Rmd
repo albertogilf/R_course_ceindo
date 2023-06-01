@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1. Introduction
 
-La visualización de datos es actualmente una de las exigencias de la mayoría de revisiones científicas. Permiten o, al menos, ayudan, a explicar de forma más intuitiva nuestra investigación. Hay herramientas dedicadas exclusivamente a la visualización de datos, las herramientas de modelado o estadísticas o, en este caso, el lenguaje de programación R, proporcionan funcionalidades para hacer análisis de datos exploratorios o presentación de resultados. Se considera el gráfico de Charles Minard de 1869 como uno de los mejores gráficos de la historia, ya que logra 
+La visualización de datos es actualmente una de las exigencias de la mayoría de revisiones científicas. Permiten o, al menos, ayudan, a explicar de forma más intuitiva nuestra investigación. Hay herramientas dedicadas exclusivamente a la visualización de datos, las herramientas de modelado o estadísticas o, en este caso, el lenguaje de programación R, proporcionan funcionalidades para hacer análisis de datos exploratorios o presentación de resultados. Se considera el gráfico de Charles Minard de 1869 como uno de los mejores gráficos de la historia, ya que logra mostrar 6 dimensiones en un único gráfico bidimensional.
 
 ```{r}
 # All defaults
@@ -81,7 +81,7 @@ hist(VADeaths,col=brewer.pal(8,"Greens"),main="Greens 8 colors", ylab="count", x
 
 # 3. Line Chart
 
-El conjunto de datos AirPassengers muestra el incremento de pasajeros sobre el periodo de tiempo de 1949 a 1960 por meses. Los diagramas de líneas son adecuados cuando queremos analizar una frecuencia sobre un periodo de tiempo o cuando queremos comparar cambios relativos a cantidades con otra variable, que habitualmente es el tiempo. Utilicemos un nuevo conjunto de datos para ilustrarlo. 
+El conjunto de datos AirPassengers muestra el incremento de pasajeros sobre el periodo de tiempo de 1949 a 1960 por meses. Los diagramas de líneas son adecuados cuando queremos analizar una frecuencia sobre un periodo de tiempo o cuando queremos comparar cambios relativos a cantidades con otra variable, que habitualmente es el tiempo. Utilicemos un nuevo conjunto de datos para ilustrarlo. Se puede ver que la tendencia es incremental de manera anual, y dentro de un mismo año, hay un pico en determinados meses que se corresponden con el verano. 
 
 ```{r}
 data(AirPassengers)
