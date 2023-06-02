@@ -16,7 +16,7 @@ la línea)...
 
 ```{r}
 # install.packages(
-#  c("tidyverse", "afex", "emmeans", "GGally", "effectsize", "performance", "see", "qqplotr")
+#  c("tidyverse", "afex", "emmeans", "GGally", "easystats", "qqplotr")
 # )
 ```
 
@@ -266,7 +266,7 @@ necesitamos emplear modelos de **regresión múltiple**, dado que estos permiten
 es análogo al caso unidimensional...
 
 ### Ejemplo: regresión múltiple
-Jansen y Keller[^2] utilizaron la edad y el nivel de educación para predecir la
+Jansen y Keller [^2] utilizaron la edad y el nivel de educación para predecir la
 capacidad de dirigir la atención (CDA) en sujetos ancianos. CDA se refiere a
 los mecanismos neuronales que enfocan la mente en lo que es significativo al
 tiempo que bloquea las distracciones. El estudio recopiló información sobre 71
@@ -276,7 +276,7 @@ mediciones en CDA, edad en años y el nivel de educación (años de escolaridad)
 están recogidos en “cda.csv”. Crea un modelo de regresión múltiple para predecir la
 puntuación de CDA.
 
-[^2] D. Jansen, M. Keller, Çognitive Function in Community-Dwelling Elderly Women”, Journal of
+[^2]: D. Jansen, M. Keller, Çognitive Function in Community-Dwelling Elderly Women”, Journal of
 Gerontological Nursing, 29 (2003), 34-43.
 
 ```{r}
@@ -322,7 +322,7 @@ summary(antrop_model)
 ```
 
 El modelo se puede escribir como
-$$weight = -29 + 0.47 * height + 1.23 * is-male$$ 
+$$weight = -29 + 0.47 * height + 1.23 * is\_male$$ 
 por lo que 1.23 significa que, de media y para una misma altura, los hombres 
 pesan 1.23 Kg más que las mujeres (hemos **ajustado por el efecto de la altura**).
 
@@ -385,19 +385,19 @@ contrasts(iris$Species)
 ```
 
 Es decir el modelo es
-$$sepal = mean-setosa-sepal + 0.93 * is-versicolor + 1.58 * is-virginica.$$
+$$sepal = mean\_setosa\_sepal + 0.93 * is\_versicolor + 1.58 * is\_virginica.$$
 
 Sin embargo, podríamos reescribir el modelo de otra forma de forma 
 que los coeficientes tengan otro significado. Un ejemplo sencillo sería:
-$$sepal = mean-versicolor-sepal + \alpha_1 * is-setosa + \alpha_2 * is-virginica.$$
+$$sepal = mean\_versicolor\_sepal + \alpha_1 * is\_setosa + \alpha_2 * is\_virginica.$$
 
 En este caso, simplimente estamos variando la especie de referencia. De hecho, 
 `contrast` se puede modificar para usar como referencia otro nivel del factor:
 
 ### Ejemplo: contrastes
 ```{r}
-contrasts(iris$Species) = cbind("_is_setosa" = c(1, 0, 0), 
-                                "_is_virginica" = c(0, 0, 1))
+iris$Species = relevel(iris$Species, "versicolor")
+contrasts(iris$Species)
 iris_model_2 = lm(Sepal.Length ~ Species, iris)
 print(summary(iris_model_2))
 ```
@@ -418,14 +418,19 @@ virginica (V-II). Te planteas dos preguntas científicas:
 2. ¿Existe alguna diferencia entre V-I y V-II?
 
 ```{r}
+source("utils.R")   # cargamos get_contrasts_coding
+# Cambiamos otra vez la especie referencia (no es necesario, pero para tener 
+# a las vs juntas)
+iris$Species = relevel(iris$Species, "setosa")
 levels(iris$Species)
 contrasts(iris$Species)
-# Usamos versicolor como referencia y lo comparemos con las especie V
-# (no te preocupes por los denominadores y céntrate en los numeradores)
-contrasts(iris$Species) = cbind(
-  "V - setosa" = c(-2, 1, 1) / 3, 
-  "I - II" = c(0, 1, -1) / 2
+
+my_contrasts = rbind(
+  "V - setosa" = c(-1, 0.5, 0.5),
+  "I - II" = c(0, 1, -1)
 )
+my_coding = get_contrasts_coding(my_contrasts)
+contrasts(iris$Species) = my_coding
 contrasts(iris$Species)
 v_model = lm(Sepal.Length ~ Species, iris)
 summary(v_model)
@@ -495,6 +500,12 @@ hora de **comparar la media de dos poblaciones**. Si las poblaciones son normale
 
 ```{r}
 t.test(height ~ sex, adult_howell)
+
+# ... o bien (recomendado)
+t.test(
+  adult_howell %>% filter(sex == "male") %>% pull(height),
+  adult_howell %>% filter(sex == "female") %>% pull(height)
+) 
 ```
 
 
@@ -518,7 +529,14 @@ height_test = t.test(
   hc %>% filter(group == "treatment") %>% pull(height_inc_cm),
   alternative = "less"
 ) 
-cohens_d(height_test) 
+print(height_test)
+
+# Resultados significativos peeeeeeeeeeeeeeeeeeeeero....
+ggplot(hc, aes(x=height_inc_cm, fill=group)) + geom_density(alpha=0.4)
+
+# ¡Existen diferencias, pero son poco relevantes en la práctica! Esto se 
+# puede cuantificar con el tamaño del efecto:
+cohens_d(height_test)
 # ¡o bien podemos dejar que la librería elija el tamaño del efecto adecuado!
 effectsize(height_test)
 ```
@@ -531,17 +549,22 @@ conocimiento o bien usando los estadísticos adecuados como *Cohen's D*. Para
 * $|d| \approx 0.5$: efecto medio.
 * $|d| \approx 0.8$: efecto grande.
 
+
+
 ### Ejercicio: T-test de una sola cola
 En los datos de `adult_howell`, ¿podemos concluir que los hombres son más altos que las mujeres?
 ¿Cuál es el tamaño del efecto?
 
 ```{r}
-t.test(height ~ sex, adult_howell, alternative="less")
-cohens_d(height ~ sex, data = adult_howell, alternative = "less")
+howell_test = t.test(
+  adult_howell %>% filter(sex == "male") %>% pull(height),
+  adult_howell %>% filter(sex == "female") %>% pull(height)
+) 
+cohens_d(howell_test)
 ```
 
-### Ejercicio: T-test apareado
-John M. Morton et al. [^3] examinaron la función de la vesı́cula biliar antes y
+### Ejemplo: T-test apareado
+John M. Morton et al. examinaron la función de la vesı́cula biliar antes y
 después de la fundoplicatura, una cirugı́a para detener el reflujo. Los autores
 midieron la funcionalidad de la vesı́cula biliar calculando la fracción de eyección
 de la vesı́cula biliar (GBEF) antes y después de la fundoplicatura. El objetivo de
@@ -550,6 +573,8 @@ evidencia para concluir que la fundoplicatura aumenta el funcionamiento de la
 GBEF? Datos en "gbef_long.txt" (o "gbef.txt", para un reto).
 
 ```{r}
+# Esta es la solución del reto. Salta al siguiente fragmento de código si no te 
+# interesa
 # Los datos en gbef.txt no están en el formato adecuado para un análisis estadístico...
 # ¡hay que luchar para ordenarlos de forma correcta!
 
@@ -627,7 +652,6 @@ nuevos pasos.
 
 ```{r}
 library("car")  # Anova
-options(contrasts = c("contr.sum", "contr.poly"))
 data("iris")
 
 # 1) Visualizar
@@ -636,12 +660,12 @@ ggplot(iris, aes(x=Species, y = Sepal.Length, fill=Species)) + geom_boxplot() +
   coord_flip()
 
 # 2) Especificar contrastes si tenemos alguna hipótesis específica 
-# (no te preocupes de los denominadores)
-contrasts(iris$Species) =  cbind(
-  "V - setosa" = c(-2, 1, 1) / 3,
-  "I - II" = c(0, 1, -1) / 2
+my_contrasts = rbind(
+  "V - setosa" = c(-1, 0.5, 0.5),
+  "I - II" = c(0, 1, -1)
 )
-
+my_coding = get_contrasts_coding(my_contrasts)
+contrasts(iris$Species) = my_coding
 contrasts(iris$Species)
 v_model = lm(Sepal.Length ~ Species, iris)
 
@@ -711,8 +735,8 @@ pairwise.t.test(iris$Sepal.Length, iris$Species, p.adjust.method = "fdr")
 ```{r}
 library("emmeans")
 v_model_emms = emmeans(v_model, "Species")
-pairs(v_model_emms, adjust="bonferroni", infer=c(TRUE, TRUE))
-pairs(v_model_emms, adjust="fdr", infer = c(TRUE, TRUE))
+pairs(v_model_emms, adjust = "bonferroni", infer = c(TRUE, TRUE))
+pairs(v_model_emms, adjust = "fdr", infer = c(TRUE, TRUE))
 
 # una de las ventajas de emmeans es que podemos calcular tamaños de efecto 
 # para las medias aunque, tal y como se menciona en la documentación: 
@@ -723,9 +747,8 @@ eff_size(v_model_emms, sigma=sigma(v_model), edf = 147)
 ```
 
 ### Ejemplo: Contrastes con emmeans
-Una desventaja de codificar los contrastes con `contrasts` es que hay que prestar
-atención a los detalles (y el diablo esta en los detalles). Por ejemplo, ¿de dónde
-sale el `3` del contraste `"V - setosa" = c(-2, 1, 1) / 3`? Además, cuando los
+Aunque hemos aprendido a codificar los contrastes con `contrasts` en algunos 
+casos sencillos, cuando los
 análisis de ANOVA se compliquen las cosas se pondrán realmente feas. 
 
 Sirva el ejemplo de `contrasts` para resaltar que los coeficientes de regresión
@@ -757,7 +780,7 @@ En general, ANOVA asume:
 variabilidad en los otros grupos. 
 
 ```{r}
-plot(v_model, which = c(1, 2), ask=FALSE)
+plot(v_model, which = c(1, 2), ask = FALSE)
 # o bien
 plot(check_normality(v_model), type = "qq", detrend = TRUE)
 check_homogeneity(v_model) # oooooohhhhhhh nooooooooooooo :(
@@ -1113,6 +1136,7 @@ plot(rats_model,ask = FALSE, which = 3)
 ```
 
 
+
 # Análisis no paramétrico
 Hemos visto que la Normalidad de los datos es una asunción importante de los 
 métodos vistos hasta el momento. ¿Qué hacer si los datos violan claramente la
@@ -1123,6 +1147,7 @@ asumir ninguna distribución de los datos. A cambio, pierden potencia en los
 contrastes.
 
 A grandes rasgos tenemos...
+
 *  Como alternativa a t-test independiente $\rightarrow$ Mann–Whitney test o 
 Wilcoxon’s rank-sum test $\rightarrow$ `wilcox.test`.
 * Como alternativa a t-test apareado $\rightarrow$ Wilcoxon signed-rank test 
@@ -1170,8 +1195,8 @@ nivel de hemoglobina
 ```{r}
 dat = read.table("data/cadmium.csv", header = TRUE, sep = ",")
 w_test = wilcox.test(
-  dat %>% filter(class == "exposed") %>% .$hemoglobin,
-  dat %>% filter(class == "unexposed") %>% .$hemoglobin,
+  dat %>% filter(class == "exposed") %>% pull(hemoglobin),
+  dat %>% filter(class == "unexposed") %>% pull(hemoglobin),
   alternative = "less"
 )
 print(w_test)

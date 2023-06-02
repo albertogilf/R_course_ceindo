@@ -13,7 +13,7 @@ Instala las librerías necesarias (copia y pega en la terminal; no descomentes
 la línea)...
 
 ```{r install}
-#install.packages(c("tidymodels", "vip", "mlbench", "rpart.plot"))
+# install.packages(c("tidymodels", "vip", "mlbench", "rpart.plot"))
 ```
 
 ... y carga las librerías más usadas: 
@@ -77,6 +77,7 @@ p +
   ylim(-2, 2)
 
 ```
+
 ```{r wrong_evaluation}
 evaluate_model = function(model) { 
   yardstick::rmse_vec(truth = df$y, estimate = predict(model))
@@ -177,14 +178,13 @@ Usa los conjuntos de entrenamiento y test para obtener el rendimiento del
 
 ```{r}
 # 1) Repite el entrenamiento, pero esta vez usa el conjunto de entrenamiento
-fitted_tree = fit(tree_spec, type ~ ., data = zoo_train)
+
 # 2) Usa predict() para obtener predicciones sobre el conjunto de test. Guarda
 # las predicciones en la variable preds
-preds = predict(fitted_tree, zoo_test)
+
 # 3) Calcula el porcentaje de predicciones correctas comparando la clase real 
 # (zoo_test$type) con preds. Puedes usar las funciones accuracy (o accuracy_vec)
-acc = accuracy_vec(truth = zoo_test$type, estimate = preds$.pred_class)
-print(acc)
+
 ```
 
 
@@ -253,40 +253,7 @@ Boston = as_tibble(Boston)
 
 # En este ejercicio, tunearemos las variables y luego evaluaremos el rendimiento.
 # Creeamos conjuntos de entrenamiento y test
-boston_split = initial_split(Boston, prop = 3 / 4, strata = medv)
-boston_train = training(boston_split)
-boston_test = testing(boston_split)
 
-dt_model = 
-  decision_tree(cost_complexity = tune(), 
-                tree_depth = tune(), 
-                min_n = tune()) %>% 
-  set_mode("regression")
-
-folds = mc_cv(boston_train, prop = 3 / 4, times = 10, strata = medv)
-
-grid = grid_regular(
-  cost_complexity(),
-  # modifica el rango sugerido por tree_depth
-  tree_depth() %>% range_set(c(2, 8)),
-  min_n(),
-  levels = 3
-)
-
-# RMSE: Root Mean Squared Error ==> Distancia (al cuadrado) entre
-# predicciones y datos reales. Cuanto más pequeño, mejor
-tuned = 
-  dt_model %>% 
-  tune_grid(medv ~ . , resamples = folds, grid = grid, metrics = metric_set(rmse))
-
-autoplot(tuned)
-
-dt_model = finalize_model(dt_model, select_best(tuned, "rmse"))
-
-dt_fit = dt_model %>% fit(medv ~ ., boston_train)
-
-test_with_predictions = boston_test %>% bind_cols(predict(dt_fit, boston_test))
-print(rmse(test_with_predictions, truth = medv, estimate = .pred))
 ```
 
 
@@ -366,42 +333,7 @@ print(paste("Accuracy =", accuracy_vec(truth = diabetes_test$Diabetic, preds$.pr
 Mejora la red neuronal tuneando sus parámetros.
 
 ```{r, cache=TRUE}
-diabetes_split = initial_split(diabetes, split = 3/4, strata = Diabetic)
-diabetes_train = training(diabetes_split)
-diabetes_test = testing(diabetes_split)
 
-# Para preprocesar los datos, creamos una receta de preprocesado 
-diabetes_rec = recipe(Diabetic ~ ., data = diabetes_train)
-diabetes_rec = 
-  diabetes_rec %>% 
-  update_role(PatientID,new_role = "ID" ) %>% 
-  step_log(PlasmaGlucose) %>% 
-  step_normalize(all_numeric_predictors())
-
-diabetes_model = mlp(hidden_units = tune(), epochs=tune()) %>% set_mode("classification")
-
-diabetes_wflow = 
-  workflow() %>% 
-  add_recipe(diabetes_rec) %>% 
-  add_model(diabetes_model)
-
-
-grid = grid_regular(
-  hidden_units() %>% range_set(c(10, 50)),
-  epochs() %>% range_set(c(25, 500)), 
-  levels = 3 
-)
- 
-folds = mc_cv(diabetes_train, prop = 3 / 4, times = 5, strata = Diabetic)
-diabetes_tuning = 
-  diabetes_wflow %>% 
-  tune_grid(resamples = folds, grid = grid, metrics = metric_set(accuracy))
- 
-diabetes_model = finalize_model(diabetes_wflow, select_best(diabetes_tuning))
-diabetes_fit = fit(diabetes_wflow, data = diabetes_train)
-preds = predict(diabetes_fit, diabetes_test)
-
-print(paste("Accuracy =", accuracy_vec(truth = diabetes_test$Diabetic, preds$.pred_class)))
 ```
 
 
