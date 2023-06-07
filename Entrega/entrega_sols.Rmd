@@ -1,7 +1,9 @@
 ---
 title: "Evaluación curso R"
 author: TU NOMBRE, AQUÍ
-output: html_document
+output: 
+  html_document:
+    self_contained: false
 ---
 
 ## Entrega
@@ -26,7 +28,7 @@ ANCOVA...
 ### 1a) Carga los datos...
 ```{r}
 # Carga los datos
-teengamb = ???????
+teengamb <- read.csv("teengamb.csv")
 ```
 
 
@@ -40,8 +42,8 @@ código que genera una gráfica similar a la siguiente:
 library("tidyverse")  # carga ggplot
 
 # completa el siguiente código
-ggplot(teengamb, aes(x = ????, col = ????, y=gamble)) + 
-  ???????? + # añade la geometría adecuada para los puntos
+ggplot(teengamb, aes(x = income, col=sex, y=gamble)) + 
+  geom_point() + # añade la geometría adecuada para los puntos
   geom_smooth(method = "lm", se = FALSE)  # añade las rectas de regresión
 ```
 
@@ -54,11 +56,11 @@ La gráfica anterior apoya que hay interacciones entre las variables `sex` e
 
 ```{r}
 # Crea un modelo con interacciones en base a tu conclusión del apartado anterior
-gamb_model <- lm(gamble ~ sex + income + ???????, ??????)
+gamb_model <- lm(gamble ~ sex * income, data = teengamb)
 
-# Obtén p-valores e intervalos de confianza. Usa summary y confint
-???????
-???????
+# Obtén p-valores e intervalos de confianza
+summary(gamb_model)
+confint(gamb_model)
 ```
 
 
