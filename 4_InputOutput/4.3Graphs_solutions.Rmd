@@ -77,6 +77,13 @@ hist(VADeaths,breaks=7, col=brewer.pal(3,"Set1"),main="Set1 3 colors")
 hist(VADeaths,,breaks= 2, col=brewer.pal(8,"Set3"),main="Set3 8 colors")
 hist(VADeaths,col=brewer.pal(8,"Greys"),main="Greys 8 colors")
 hist(VADeaths,col=brewer.pal(8,"Greens"),main="Greens 8 colors", ylab="count", xlab="death rate")
+
+# Convertimos la tabla en un dataframe para poder hacer un histograma con ggplot
+VADeathRate <- as.data.frame.table(VADeaths)
+
+# Y podemos dibujar el mismo histograma especificando cuantos contenedores queremos. En este caso, 11
+
+ggplot(data=VADeathRate, aes(x = Freq)) + geom_histogram(bins=4)
 ```
 
 # 3. Line Chart
@@ -87,6 +94,12 @@ El conjunto de datos AirPassengers muestra el incremento de pasajeros sobre el p
 data(AirPassengers)
 AirPassengers
 plot(AirPassengers,type="l")  #Simple Line Plot
+
+# Convert time series into a dataframe
+dfAirPassengers <- data.frame(AirPassengers, year = trunc(time(AirPassengers)), 
+month = month.abb[cycle(AirPassengers)])
+
+ggplot(dfAirPassengers, aes(x = year))  + geom_line(aes(y = AirPassengers))
 ```
 
 

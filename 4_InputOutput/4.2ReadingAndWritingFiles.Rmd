@@ -22,6 +22,7 @@ La lectura y escritura de datos en ficheros nos permitirá también compartir nu
 Esta funcionalidad se introdujo en el tema 1 para descargar o utilizar datos de paquetes:
 
 ```{r}
+library(dplyr)
 data(iris)
 ```
 
@@ -68,6 +69,12 @@ getwd() # conocer el path de ejecución del programa
 ```
 
 ## 2.1 Generic data import
+
+### Graphical import
+
+R Studio proporciona una interfaz gráfica para importar conjuntos de datos. Veámos esta interfaz con varios ejemplos. 
+
+### Command line import
 
 R proporciona una función para leer cualquier tipo de archivo que contenga una estructura de tipo tabla: read.table()
 

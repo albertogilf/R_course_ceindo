@@ -125,6 +125,7 @@ Para ello, manipula la temperatura en incrementos de 2ºC que van desde
 intervalo. Los datos están disponibles en "hr.csv".
 
 ```{r}
+
 # 1) leer los datos
 frog_df = read.table("data/hr.csv", header = TRUE)
 # 2) Crear un modelo lineal

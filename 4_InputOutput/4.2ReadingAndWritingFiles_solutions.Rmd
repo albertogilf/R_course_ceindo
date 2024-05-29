@@ -1,9 +1,12 @@
 ---
 title: "Input and output data. Keyboard, Monitor, CSV, XLS, XLSX, Matlab and SPSS"
 author: "Alberto Gil"
-output: 
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
   html_document:
-    toc: TRUE
+    toc: yes
     toc_depth: 2
 ---
 
@@ -22,6 +25,7 @@ La lectura y escritura de datos en ficheros nos permitirá también compartir nu
 Esta funcionalidad se introdujo en el tema 1 para descargar o utilizar datos de paquetes:
 
 ```{r}
+library(dplyr)
 data(iris)
 ```
 
@@ -62,13 +66,20 @@ download.file(
 El directorio de trabajo en el que ejecutamos nuestro programa es clave para leer o escribir ficheros especificados de forma relativa. 
 
 ```{r}
+
 getwd() # conocer el path de ejecución del programa
 
-setwd("C:\\") # to set the new working Directory to the root in windows. 
-setwd("/home/alberto") # to set the new working Directory to the root in windows. 
+#setwd("C:\\") # to set the new working Directory to the root in windows. 
+#setwd("/home/alberto") # to set the new working Directory to the root in windows. 
 ```
 
 ## 2.1 Generic data import
+
+### Graphical import
+
+R Studio proporciona una interfaz gráfica para importar conjuntos de datos. Veámos esta interfaz con varios ejemplos. 
+
+### Command line import
 
 R proporciona una función para leer cualquier tipo de archivo que contenga una estructura de tipo tabla: read.table()
 
@@ -179,8 +190,6 @@ library("xlsx") # Load the package from CRAN
 Este paquete tiene dos funciones principales para cargar archivos de excel: **read.xlsx(file, sheetIndex, header = TRUE)** y **read.xlsx2(file, sheetIndex, header = TRUE)**. La segunda de ellas es más rápida para lectura de ficheros más grandes. Ambas tienen parámetros como la fila de inicio, la fila final, el tipo de datos de cada columna, o la posibilidad de incluir o no cabeceras. Se recomienda revisar la documentación como siempre con ?read.xlsx
 Leamos el mismo fichero con datos de cáncer de mama de la universidad de Wisconsin:
 
-
-
 ```{r}
 bcancer = read.xlsx(file="breast-cancer.xlsx", sheetIndex=1, header=FALSE) #SIN CABECERA
 head(bcancer)
@@ -196,11 +205,12 @@ class(bcancer)
 ```
 
 Si intentamos leer las primeras líneas del fichero, vemos que no es un fichero de texto y no tiene forma rectangular.
-```{r}
-readLines("breast-cancer.xlsx", n = 5)
-```
-Y, una vez leído el fichero xls o xlsx, ya tenemos el data frame correspondiente para trabajar con él. 
 
+```{r}
+#readLines(con = "breast-cancer.xlsx", n = 5)
+```
+
+Y, una vez leído el fichero xls o xlsx, ya tenemos el data frame correspondiente para trabajar con el. 
 
 ## 2.4 SPSS data import
 
@@ -338,7 +348,7 @@ head(iris_mat) #Veamos las primeras 6 líneas
 
 ### data subset generation
 ```{r}
-iris_filtered = filter(iris, (Species == "versicolor" & Petal.Width >= 1.0 & Petal.Width <= 1.3) | (Species == "setosa" & Petal.Length > 1.5 & Petal.Length < 2.0))
+iris_filtered = filter(iris_csv, (Species == "versicolor" & Petal.Width >= 1.0 & Petal.Width <= 1.3) | (Species == "setosa" & Petal.Length > 1.5 & Petal.Length < 2.0))
 #  & Petal.Width >= 1.0 & Petal.Width <= 1.3) | (Species == "setosa" & Petal.Length > 1.5 & Petal.Length < 2.0)
 
 ```
