@@ -1,0 +1,102 @@
+---
+title: "Evaluación curso R"
+author: "Claudia Bautista Erler"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Entrega
+
+* Recuerda completar tu **nombre en el apartado author**.
+* Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
+* Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+* Deadline: **viernes 19 de junio, 23:59**.
+* Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
+* La entrega consistirá en el fichero que se genera al hacer `Knit` 
+(un fichero `html` o `pdf`).
+
+## Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es **si los ingresos 
+del adolescente y su sexo influyen en la cantidad de dinero apostado (céntrate solo en las
+variables `income`, `sex` y `gamble`)** ... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### 1a) Carga los datos...
+```{r}
+# Carga los datos
+library(readr)
+teengamb <- read_csv("teengamb.csv")
+View(teengamb)
+```
+
+
+### 1b) Visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Para ello, escribe el
+código que genera una gráfica similar a la siguiente:
+
+![](expected-plot.png)
+
+```{r, dev='png'}
+library("tidyverse")  # carga ggplot
+
+# completa el siguiente código
+ggplot(teengamb, aes(x = income, col = sex, y=gamble))+ 
+  geom_point() + # añade la geometría adecuada para los puntos
+  geom_smooth(method = "lm", se = FALSE)  # añade las rectas de regresión
+```
+
+La gráfica anterior apoya que hay interacciones entre las variables `sex` e 
+`income`. **Explica los motivos brevemente** (Pista: ¿son las rectas paralelas?)
+
+Debido a que las rectas que se dibujan en la gráfica no son paralelas, necesitaríamos utilizar un modelo con interacciones. 
+
+### 2) Crea el modelo...
+... y obtén los intervalos de confianza para los coeficientes y su significación.
+
+
+```{r}
+# Crea un modelo con interacciones en base a tu conclusión del apartado anterior
+gamb_model <- lm(gamble ~ sex * income, teengamb)
+
+# Obtén p-valores e intervalos de confianza. Usa summary y confint
+summary(gamb_model)
+confint(gamb_model)
+```
+
+
+### 3) Valora si las asunciones del modelo se cumplen
+
+```{r}
+# Interpretar las 4 gráficas siguientes para decidir si las asunciones del modelo
+# se cumplen
+plot(gamb_model, ask = FALSE)
+```
+
+**¿Es el modelo correcto?:**
+
+El modelo es correcto ya que al interpretar los resultados de las gráficas podemos concluir: 
+  En la gráfica 1: la línea de regresión (línea roja) dibuja una línea prácticamente horizontal en torno a un valor de cero.  
+  En la gráfica 2: en la gráfica los datos deben de seguir una distribución normal, dibujándose alrededor de la línea que aparece dibujada, como en este gráfico. 
+  En la gráfica 3: se dibuja una línea de regresión (línea roja) prácticamente horizontal que indica que la varianza de datos no depende del eje x. 
+  En la gráfica 4: los datos reflejados no describen una imagen en forma de herradura. 
+  
+### 4) Interpreta los coeficientes y escribe tus conclusiones.
+De la tabla de p-valores, podemos concluir que para las mujeres:
+$$gambling = 6.87 - 0.5489 * income$$
+Mientras que para hombres:
+$$gambling =  8.72  + 4.8561 * income.$$ 
+Fíjate que el coeficiente -0.5489 no es significativo, mientras que el salto en 
+las pendientes entre mujeres y hombres es de 5.4050 y sí es significativo. 
+
+**¿Cuáles de las siguientes conclusiones son correctas? (puede haber varias)**
+
+a) Los hombres y mujeres adolescentes apuestan de la misma forma.
+b) No evidencia suficiente de que las mujeres apuesten de forma diferente según sus ingresos.
+c) Para los hombres: a mayor nivel de ingresos, mayor cantidad apostada.
+d) La diferencia entre las pendientes de hombres y mujeres no es significativa.
+
+Las opciones correctas son B y C. 
