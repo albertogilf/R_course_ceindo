@@ -365,7 +365,7 @@ descomentes la línea)…</p>
 <pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
 ## ✔ dplyr     1.1.2     ✔ readr     2.1.4
 ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
-## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
+## ✔ ggplot2   3.4.4     ✔ tibble    3.2.1
 ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
 ## ✔ purrr     1.0.1     
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -435,7 +435,7 @@ print(paste(&quot;Model 1 has error: &quot;, evaluate_model(lmf1)))</code></pre>
 <pre class="r"><code>print(paste(&quot;Model 2 has error: &quot;, evaluate_model(lmf2)))</code></pre>
 <pre><code>## [1] &quot;Model 2 has error:  0.374104368880922&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;Model 3 has error: &quot;, evaluate_model(lmf3)))</code></pre>
-<pre><code>## [1] &quot;Model 3 has error:  2.49824573898517e-16&quot;</code></pre>
+<pre><code>## [1] &quot;Model 3 has error:  2.54757889331609e-16&quot;</code></pre>
 <pre class="r"><code>evaluate_model = function(model) { 
   eval_points = seq(-1, 1, len=100)
   yardstick::rmse_vec(
@@ -447,9 +447,9 @@ print(paste(&quot;Model 1 has error: &quot;, evaluate_model(lmf1)))</code></pre>
 print(paste(&quot;Model 1 has error: &quot;, evaluate_model(lmf1)))</code></pre>
 <pre><code>## [1] &quot;Model 1 has error:  0.684026690892578&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;Model 2 has error: &quot;, evaluate_model(lmf2)))</code></pre>
-<pre><code>## [1] &quot;Model 2 has error:  0.233099770786972&quot;</code></pre>
+<pre><code>## [1] &quot;Model 2 has error:  0.233099770786973&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;Model 3 has error: &quot;, evaluate_model(lmf3)))</code></pre>
-<pre><code>## [1] &quot;Model 3 has error:  102.368547848092&quot;</code></pre>
+<pre><code>## [1] &quot;Model 3 has error:  102.368547622009&quot;</code></pre>
 <p><strong>Moraleja</strong>: El rendimiento de un modelo requiere de
 una <strong>métrica</strong> y debe <strong>evaluarse fuera del conjunto
 de entrenamiento</strong>. Esto nos llevará a hablar de conjuntos de
@@ -461,7 +461,7 @@ y <code>mlr3</code> (o su antecesora <code>mlr</code>) que puedes
 probar.</p>
 <pre class="r"><code>library(&#39;tidymodels&#39;)</code></pre>
 <pre><code>## ── Attaching packages ────────────────────────────────────── tidymodels 1.1.0 ──</code></pre>
-<pre><code>## ✔ broom        1.0.4     ✔ rsample      1.1.1
+<pre><code>## ✔ broom        1.0.5     ✔ rsample      1.1.1
 ## ✔ dials        1.2.0     ✔ tune         1.1.1
 ## ✔ infer        1.0.4     ✔ workflows    1.1.3
 ## ✔ modeldata    1.1.0     ✔ workflowsets 1.0.1

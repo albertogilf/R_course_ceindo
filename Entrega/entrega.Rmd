@@ -1,7 +1,9 @@
 ---
 title: "Evaluación curso R"
-author: TU NOMBRE, AQUÍ
-output: html_document
+author: "TU NOMBRE, AQUÍ"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ## Entrega
@@ -9,7 +11,7 @@ output: html_document
 * Recuerda completar tu **nombre en el apartado author**.
 * Además del código, no olvides completar las respuestas a las preguntas indicadas en negrita.
 * Si tienes dudas/dificultades, **puedes contactar con los profesores**.
-* Deadline: **viernes 16 de junio, 23:59**.
+* Deadline:         
 * Puedes realizar la entrega en el mail: **constantino.garciama@ceu.es**.
 * La entrega consistirá en el fichero que se genera al hacer `Knit` 
 (un fichero `html` o `pdf`).
@@ -27,6 +29,7 @@ ANCOVA...
 ```{r}
 # Carga los datos
 teengamb = ???????
+
 ```
 
 
@@ -54,7 +57,7 @@ La gráfica anterior apoya que hay interacciones entre las variables `sex` e
 
 ```{r}
 # Crea un modelo con interacciones en base a tu conclusión del apartado anterior
-gamb_model <- lm(gamble ~ sex + income + ???????, ??????)
+gamb_model <- lm(gamble ~ teengamb + ???????, ??????)
 
 # Obtén p-valores e intervalos de confianza. Usa summary y confint
 ???????
@@ -86,3 +89,4 @@ a) Los hombres y mujeres adolescentes apuestan de la misma forma.
 b) No evidencia suficiente de que las mujeres apuesten de forma diferente según sus ingresos.
 c) Para los hombres: a mayor nivel de ingresos, mayor cantidad apostada.
 d) La diferencia entre las pendientes de hombres y mujeres no es significativa.
+

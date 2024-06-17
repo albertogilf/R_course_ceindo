@@ -125,10 +125,19 @@ Para ello, manipula la temperatura en incrementos de 2ºC que van desde
 intervalo. Los datos están disponibles en "hr.csv".
 
 ```{r}
-# 1) leer los datos
+# 1) leer los datos Y VISUALIZAR
 frog_df = read.table("data/hr.csv", header = TRUE)
+
+library("ggplot2")
+ggplot(frog_df, aes(x=temperature, y=heart_rate)) + 
+  geom_point() + 
+  geom_smooth(method="lm")
+
+
+
 # 2) Crear un modelo lineal
-frog_model = lm(heart_rate ~ temperature, data = frog_df)
+frog_model = lm(heart_rate ~ temperature, 
+                data = frog_df)
 # 3) Inferencia
 summary(frog_model)
 ```
@@ -219,7 +228,7 @@ individuo. Després y sus colegas realizaron un estudio para predecir la
 cantidad de AT abdominal a partir de simples mediciones antropométricas. 
 
 Entre las medidas tomadas en cada sujeto, se incluyó la AT abdominal obtenida por
-TC y la circunferencia de la cintura (datos en Wat.csv''). Una pregunta de 
+TC y la circunferencia de la cintura (datos en ``at.csv''). Una pregunta de 
 interés es cómo de bien se puede predecir y estimar la AT abdominal a partir del 
 conocimiento de la circunferencia de la cintura. Construye un modelo lineal y
 plotea sus predicciones. ¿Existe alguna relación entre AT y la circunferencia
@@ -239,6 +248,11 @@ Nutrition, 54 (1991), 471–477.
 ¿Se cumplan las asunciones de la regresión lineal en el problema de AT abdominal?
 
 ```{r}
+plot(at_model)
+# Modelo NO correcto (heterocedasticidad, gráf. 3)
+
+is_normal = check_normality(at_model)
+plot(is_normal)
 ```
 
 ## Regresión múltiple
@@ -292,6 +306,7 @@ de los datos contenidos en "antrop.csv". Interpreta los coeficientes de la regre
 ```{r}
 antrop = read.csv("data/antrop.csv")
 antrop = mutate(antrop, male = factor(male))
+
 antrop_model = lm(weight ~ height + male, data = antrop)
 summary(antrop_model)
 
@@ -302,6 +317,14 @@ ggplot(antrop_preds, aes(x = height, col=male)) +
 
 summary(antrop_model)
 ```
+
+weight = -29.4 + 0.5 * height + 1.23 * male
+ 
+Escribir la ecuación para un "male"
+weight = -29.4 + 0.5 * height + 1.23 * 1 = (-29.4 + 1.23) + 0.5 * height
+
+Escribir la ecuación para una "female"
+weight = -                                  29.4 + 0.5 * height
 
 El modelo se puede escribir como
 $$weight = -29 + 0.47 * height + 1.23 * is\_male$$ 
@@ -322,6 +345,21 @@ de 1960. Crea un modelo para predecir el peso de los individuos a partir
 de la altura y el sexo. Evalúa la bondad del modelo.
 
 ```{r}
+# 1) cargar los datos y visualizar
+howell <- read_delim("data/howell1.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+howell = mutate(howell, male = factor(male))
+
+ggplot(howell, aes(x=height, y=weight, col=male)) +
+  geom_point()
+
+# 2) modelo
+howell_model = lm(weight ~ height + male, data = howell)
+
+# 3) Comprobar si modelo válido
+
+# 4) inferencia (solo si modelo válido)
+summary(howell_model)
 ```
 
 Sin ni siquiera usar `plot(howell_model)` ya somos capaces de ver que el ajuste
@@ -335,15 +373,26 @@ y pétalo de varias especies de iris. Construye un modelo lineal para predecir
 la longitud del sépalo únicamente en función de la especie. Interpreta los coeficientes
 de la regresión.
 
+Sepal.Length = 5 + 0.93 * versicolor + 1.58 * virginica
+
+# Setosa
+Sepal.Length = 5
+
+# Versicolor
+Sepal.Length = 5 + 0.93 
+
+# Virginica
+Sepal.Length = 5 + 1.58 
+
+
 ```{r}
 data(iris)
 iris_model = lm(Sepal.Length ~ Species, iris)
 print(summary(iris_model))
 
-iris_preds = iris %>%  mutate(fit = predict(iris_model))
-ggplot(iris_preds, aes(x=Species, fill = Species)) + 
-  geom_boxplot(aes(y=Sepal.Length)) + 
-  geom_point(aes(y = fit), shape=4, size=3)
+ggplot(iris, aes(x=Species, y=Sepal.Length, 
+                 fill = Species)) + 
+  geom_boxplot()
 ```
 
 Al interpretar los coeficientes de la regresión, observamos que 
@@ -395,6 +444,12 @@ iris$Species = relevel(iris$Species, "setosa")
 levels(iris$Species)
 contrasts(iris$Species)
 
+# Pregunta 1: especies mutantes tiene sepalo más 
+# grande que la especie original 
+1/2 * mu_virginica + 1/2 * mu_versicolor -mu_setosa != 0
+# Pregunta 2:
+mu_versicolor - mu_virginica != 0
+
 my_contrasts = rbind(
   "V - setosa" = c(-1, 0.5, 0.5),
   "I - II" = c(0, 1, -1)
@@ -436,7 +491,8 @@ modelos de regresión y profundizar en algunas cosas que nos han quedado en el t
 ```{r}
 howell = read.csv("data/howell1.csv", sep = ";")
 howell = mutate(howell, male = factor(male))
-  
+
+# librería: dplyr
 adult_howell = 
   howell %>% filter(age >= 18) %>% 
   mutate(male = factor(male)) %>% 
@@ -451,7 +507,8 @@ summary(height_model)
 Apoya tus conclusiones dibujando el histograma de las alturas por sexo
 
 ```{r}
-ggplot(adult_howell, aes(x = height, fill=sex)) + geom_density(alpha=0.2)
+ggplot(adult_howell, aes(x=height, fill=sex)) + 
+  geom_density(alpha=0.2)
 ```
 
 ### Ejemplo: evaluación del modelo
@@ -484,13 +541,22 @@ El fichero "hc.csv" contiene los datos de un experimento para verificar si
 una hormana de crecimiento funciona o no. ¿Existen diferencias significativas
 entre el grupo de control y el de tratamiento?
 
+Ha: mu_tratamiento > mu_control
+mu_control - mu_tratamiento < 0
+
 ![](https://media.giphy.com/media/3ornka9rAaKRA2Rkac/giphy.gif)
 
 ```{r}
 library("effectsize")
 
 hc = read.csv("data/hc.csv")
+
+ggplot(hc, aes(x=height_inc_cm, fill=group)) + 
+  geom_density(alpha=0.2)
+
+
 t.test(height_inc_cm ~ group, hc, alternative="less")
+
 cohens_d(height_inc_cm ~ group, data = hc, alternative = "less")
 
 # o bien...
@@ -508,6 +574,12 @@ ggplot(hc, aes(x=height_inc_cm, fill=group)) + geom_density(alpha=0.4)
 # puede cuantificar con el tamaño del efecto:
 cohens_d(height_test)
 # ¡o bien podemos dejar que la librería elija el tamaño del efecto adecuado!
+
+library("effectsize")
+
+
+height_test = t.test(height_inc_cm ~ group, hc, alternative="less")
+height_test
 effectsize(height_test)
 ```
 
@@ -552,7 +624,10 @@ head(gbef_df_long)
 preop = gbef_df_long %>% filter(class == "Preop") %>% pull(gbef)
 postop = gbef_df_long %>% filter(class == "Postop") %>% pull(gbef)
 
-gbef_test = t.test(postop, preop, paired = TRUE, alternative = "greater")
+# Ha: mu_postop > mu_preop
+gbef_test = t.test(postop, preop,
+                   paired = TRUE,
+                   alternative = "greater")
 print(gbef_test)
 cohens_d(gbef_test)
 ```
@@ -594,13 +669,12 @@ Repitamos el análisis realizado para el método V, incorporando además los
 nuevos pasos.
 
 ```{r}
-library("car")  # Anova
+library("car")  # Anova()
 data("iris")
 
 # 1) Visualizar
 head(iris)
-ggplot(iris, aes(x=Species, y = Sepal.Length, fill=Species)) + geom_boxplot() + 
-  coord_flip()
+ggplot(iris, aes(x=Species, y = Sepal.Length, fill=Species)) + geom_boxplot() + coord_flip()
 
 # 2) Especificar contrastes si tenemos alguna hipótesis específica 
 my_contrasts = rbind(
@@ -631,6 +705,8 @@ consultar las heurísticas.
 ```{r}
 eta_squared(v_model_aov)  # o effectsize(v_model_aov)
 omega_squared(v_model_aov) # omega-squared se supone que está menos sesgado que eta_squared
+
+effectsize(v_model_aov)
 ```
 
 Antes de seguir adelante deberíamos comprobar que se cumplan las asunciones de
@@ -668,7 +744,10 @@ Podemos emplear `R` base para realizar los tests post-hoc...
 
 ```{r}
 # Bonferroni es bastante conservador, pero es un ajuste muy conocido
+pairwise.t.test(iris$Sepal.Length, iris$Species, p.adjust.method = "none")
+
 pairwise.t.test(iris$Sepal.Length, iris$Species, p.adjust.method = "bonferroni")
+
 # Los métodos fdr son "BH" (aka "fdr") and "BY".
 pairwise.t.test(iris$Sepal.Length, iris$Species, p.adjust.method = "fdr")
 ```
@@ -678,10 +757,12 @@ pairwise.t.test(iris$Sepal.Length, iris$Species, p.adjust.method = "fdr")
 ```{r}
 library("emmeans")
 v_model_emms = emmeans(v_model, "Species")
-pairs(v_model_emms, adjust = "bonferroni", infer = c(TRUE, TRUE))
+pairs(v_model_emms, adjust = "bonferroni", 
+      infer = c(TRUE, TRUE))
+
 pairs(v_model_emms, adjust = "fdr", infer = c(TRUE, TRUE))
 
-# una de las ventajas de emmeans es que podemos calcular tamaños de efecto 
+# una de las ventajas vde emmeans es que podemos calcular tamaños de efecto 
 # para las medias aunque, tal y como se menciona en la documentación: 
 # "there is substantial disagreement among practitioners on what is the appropriate 
 # sigma to use in computing effect sizes; or, indeed, whether any effect-size 
@@ -690,25 +771,20 @@ eff_size(v_model_emms, sigma=sigma(v_model), edf = 147)
 ```
 
 ### Ejemplo: Contrastes con emmeans
-Aunque hemos aprendido a codificar los contrastes con `contrasts` en algunos 
-casos sencillos, cuando los
-análisis de ANOVA se compliquen las cosas se pondrán realmente feas. 
-
-Sirva el ejemplo de `contrasts` para resaltar que los coeficientes de regresión
-nos permiten hacer **contrastes planeados**. Sin embargo, a partir de ahora 
-calcularemos dichos contrastes con `emmeans`: 
+Hemos aprendido a codificar los contrastes con `contrasts` en algunos 
+casos sencillos. Sin embargo, también es posible hacerlo con `emmeans`. De hecho, está librería es mucho más versátil, por lo que le daremos preferencia en los próximos ejercicios.
 
 ```{r}
 emmeans(v_model, "Species") %>% 
   # ¡Fíjate que los denominadores ahora sí son comprensibles!
-  contrast(method = list('V-Setosa' = c(-1, 0.5, 0.5), 'I - II' = c(0, 1, -1)), 
+  contrast(method = list('V-Setosa' = c(-1, 0.5, 0.5), 
+                         'I - II' = c(0, 1, -1)), 
            infer = c(TRUE, TRUE)) 
 
 # fíjate también en que los resultados con emmeans coinciden con los coeficientes
 # de summary (gracias a haber usado la función contrastS)
 summary(v_model)
 
-# En el futuro, evitaremos el uso de contrastS y usaremos emmeans
 ```
 
 
@@ -723,6 +799,7 @@ En general, ANOVA asume:
 variabilidad en los otros grupos. 
 
 ```{r}
+library("performance")
 plot(v_model, which = c(1, 2), ask = FALSE)
 # o bien
 plot(check_normality(v_model), type = "qq", detrend = TRUE)
@@ -749,7 +826,7 @@ ggplot(anxiety, aes(x = pretest, y = posttest, col = group)) +
 # 2) Contrates 
 # No tenemos hipótesis :(
 
-# 3) Anova + asunciones
+# 3) AnCova + asunciones
 anxiety_lm = lm(posttest ~ pretest + group, anxiety)
 plot(anxiety_lm, which = c(1, 2), ask=FALSE)
 
@@ -767,8 +844,9 @@ pairwise.t.test() no usará medias ajustadas, por lo que debemos emplear
 `emmeans`:
 
 ```{r}
+exercise_means = emmeans(anxiety_lm, "group", adjust = "Tukey")
 pairs(
-  emmeans(anxiety_lm, "group", adjust = "Tukey"),
+  exercise_means,
   infer = c(TRUE, TRUE)
 )
 ```
@@ -796,11 +874,17 @@ reacción a algún estímulo y que se obtienen los resultados del fichero
 y propón un modelo.
 
 ```{r}
+library("tidyverse")
+library("easystats")
+library("car")
+
+
 drugs_df_1 = 
   read.csv("data/drugs_1.csv") %>%
   mutate(drug = factor(drug), sex = factor(sex))
 
 # interaction.plot(drugs_df$sex, drugs_df$drug, response = drugs_df$response_time)
+
 ggplot(drugs_df_1, aes(x=sex, y=response_time, col=drug)) + 
   stat_summary() + 
   stat_summary(geom='line', aes(group=drug)) + 
@@ -809,7 +893,8 @@ ggplot(drugs_df_1, aes(x=sex, y=response_time, col=drug)) +
 ```
 
 ```{r}
-drugs_model_1 = lm(response_time ~ sex + drug, data = drugs_df_1)
+drugs_model_1 = lm(response_time ~ sex + drug, 
+                   data = drugs_df_1)
 drugs_df_1$predictions = predict(drugs_model_1)
 
 ggplot(drugs_df_1, aes(x=sex, y=predictions, col=drug)) + 
@@ -835,7 +920,8 @@ ggplot(drugs_df_2, aes(x=sex, y=response_time, col=drug)) +
 ```
 
 ```{r}
-drugs_model_2 = lm(response_time ~ sex + drug, data = drugs_df_2)
+drugs_model_2 = lm(response_time ~ sex + drug, 
+                   data = drugs_df_2)
 drugs_df_2$predictions = predict(drugs_model_2)
 
 ggplot(drugs_df_2, aes(x=sex, y=predictions, col=drug)) + 
@@ -861,15 +947,28 @@ ggplot(drugs_df_2, aes(x=sex, y=predictions, col=drug)) +
   stat_summary(geom='line', aes(group=drug))
 ```
 
+```{r}
+sin_interacciones = lm(response_time ~ sex + drug, data=drugs_df_2)
+
+con_interacciones = lm(response_time ~ sex * drug, data=drugs_df_2)
+
+summary(con_interacciones)
+
+```
+
+rt = 23 + 15 * male +11 * B -9 * Plac + male:B * (-20) + 
+male:placebo * (-19)
+
+
 
 ### Ejemplo: completando el análisis para drugs_model_2
 Una vez aclarado el concepto de interacción podemos completar el análisis 
 para `drugs_df_2`. 
 
 ```{r}
-# 2) Contrastes: aunque hemos dejado contrasts de lado, es recomendable 
+# 2) Contrastes: es recomendable 
 # planear los contrastes antes de correr ANOVA. 
-# ¡Ojo! ahora creamos listas de contrastes
+# ¡Ojo! ahora creamos listas de contrastes para usar emmeans
 
 drugs_contrasts = list(
   "_Drugs-Placebo" = c(0.5, 0.5, -1), 
