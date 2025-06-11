@@ -13,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1. Introduction
 
-
 La visualización de datos es actualmente una de las exigencias de la mayoría de revisiones científicas. Permiten o, al menos, ayudan, a explicar de forma más intuitiva nuestra investigación. Hay herramientas dedicadas exclusivamente a la visualización de datos, las herramientas de modelado o estadísticas o, en este caso, el lenguaje de programación R, proporcionan funcionalidades para hacer análisis de datos exploratorios o presentación de resultados. Se considera el gráfico de Charles Minard de 1869 como uno de los mejores gráficos de la historia, ya que logra mostrar 6 dimensiones en un único gráfico bidimensional.
 
 ```{r}
@@ -129,14 +128,14 @@ legend(x = "topright", legend = c("Virginica", "Versicolor", "Setosa"), fill = c
 También podemos hacer una tabla de proporción en base a la longitud del sépalo mediante la función prop.table y su parámetro margin con valor 2 (proporción por columna)
 
 ```{r}
-table_3 = prop.table( table_2, margin = 2)
+table_3 = prop.table(table_2, margin = 2)
 table_3
 ```
 
 Y procedamos a dibujar esta gráfica. 
 
 ```{r}
-barplot(table_3,col  = brewer.pal(3,"Set1"), ylab="count", xlab="Sepal.length") #Stacked Plot Virginica = green, versicolor = blue, setosa = red
+barplot(table_3,col  = brewer.pal(3,"Set1"), ylab="% of specie", xlab="Sepal.length") #Stacked Plot Virginica = green, versicolor = blue, setosa = red
 legend(x = "topright", legend = c("Virginica", "Versicolor", "Setosa"), fill = c("green", "blue", "red"), 
        title = "Species")
 ```
@@ -147,6 +146,7 @@ El diagrama de cajas muestra 5 valores estadísticamente significativos. El mín
 
 ```{r}
 boxplot(iris$Petal.Length~iris$Species) #Creating Box Plot between two variable
+
 ```
 
 También se pueden utilizar colores para las cajas:
@@ -166,7 +166,8 @@ El último tipo de gráfico que vamos a cubrir en este tema es el diagrama de di
 
 ```{r}
 plot(x=iris$Petal.Length) #Simple Scatter Plot
-plot(x=iris$Petal.Length,y=iris$Species) #Multivariate Scatter Plot
+plot(x=iris$Petal.Length,y=iris$Species, xlab = "petal Length", ylab = "Species") #Multivariate Scatter Plot
+plot(x=iris$Species,y=iris$Petal.Length)
 ```
 
 la función **plot()** también permite realizar la combinación líneal de las variables que forman parte del conjunto de datos. 

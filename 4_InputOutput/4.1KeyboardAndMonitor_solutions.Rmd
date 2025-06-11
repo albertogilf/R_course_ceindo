@@ -69,15 +69,15 @@ typeof (inp) # ¿De qué tipo son los datos leídos?
 
 Esta función nos va a permitir a través de sus parámetros especificar diferentes opciones, siendo las más relevantes las siguientes:
 
-1. **file**: el nombre del fichero sobre el que se van a leer los datos. Este parámetro es opcional y, en caso de tomar el valor por defecto '""', esperará la introducción de datos por la entrada estándar del programa, que habitualmente es el teclado. En este caso, la entrada de datos terminará cuando se introduzca un retorno de carro. Si se indica un fichero, se puede indicar el path relativo al lugar de ejecución de R (ejecutar función 'getwd()' para conocer el path), o el path relativo si es un path absoluto. 
+1. **file**: el nombre del fichero sobre el que se van a leer los datos. Este parámetro es opcional y, en caso de tomar el valor por defecto '""', esperará la introducción de datos por la entrada estándar del programa, que habitualmente es el teclado. En este caso, la entrada de datos terminará cuando se introduzca un retorno de carro. Si se indica un fichero, se puede indicar el path relativo al lugar de ejecución de R (ejecutar función 'getwd()' para conocer el path), o el path absoluto. 
 
-**Recordatorio**: un path es un directorio del equipo donde se ejecuta el programa. Puede ser absoluto empieza por '/...' en sistemas operativos unix-like o por el nombre de la unidad ('C:/...') en sistemas operativos windows-like, o relativo si comienza por cualquier otro directorio. 
+**Recordatorio**: un path es un directorio del equipo donde se ejecuta el programa. Puede ser absoluto empieza por '/...' en sistemas operativos unix-like (MAC, Ubuntu, etc..) o por el nombre de la unidad ('C:/...') en sistemas operativos Windows o relativo si comienza por cualquier otro directorio. 
 
 2. **what**: tipo de dato que va a ser leído. Los tipos soportados son **'logical', 'integer', 'numeric', 'complex', 'character', 'raw' and 'list'**.
 
-3. **nmax**: máximo número de datos a ser leído. Muy útil para leer las n primeras líneas de un fichero. Por defecto, ilimitado.
+3. **nmax**: máximo número de datos a ser leído. Muy útil para leer las n primeras líneas de un fichero. Por defecto, ilimitado (-1).
 
-4. **n**: número de datos a ser leído. Muy útil para leer las n primeras líneas de un fichero. Por defecto, ilimitado.
+4. **n**: número de datos a ser leído. Muy útil para leer las n primeras líneas de un fichero. Por defecto, ilimitado (-1).
 
 5. **skip**: número de líneas a saltar antes de leer datos. 
 
@@ -85,7 +85,7 @@ Esta función nos va a permitir a través de sus parámetros especificar diferen
 
 7. **fill**: logical. Si toma el valor 'TRUE', automáticamente rellenará con campos vacíos todas las líneas con menos campos que los especificados en el parámetro 'what'. 
 
-8. **fileEncoding**: cadena de caracteres especificando el tipo de codificación del fichero. Si no lo sabemos, R no puede detectarlo automáticamente, y se puede recurrir a programas específicos que lo hacen. Esto es importante porque ficheros que contienen datos numéricos pueden estar separados por ',' o por '.', o puede que se utilicen caracteres específicos como la 'ñ'. Si tenemos problemas al leer un ficheor y no lee los datos como se desea, prestad atención a el fileEncoding.
+8. **fileEncoding**: cadena de caracteres especificando el tipo de codificación del fichero. Si no lo sabemos, R no puede detectarlo automáticamente, y se puede recurrir a programas específicos que lo hacen. Esto es importante porque ficheros que contienen datos numéricos pueden estar separados por ',' o por '.', o puede que se utilicen caracteres específicos como la 'ñ'. Si tenemos problemas al leer un fichero y no lee los datos como se desea, prestad atención a el fileEncoding.
 
 9. **encoding**: Set de caracteres para las cadenas de texto. 
 

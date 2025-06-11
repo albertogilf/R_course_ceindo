@@ -17,11 +17,12 @@ Para conseguir la persistencia del trabajo realizado en programas de R es impres
 
 La lectura y escritura de datos en ficheros nos permitirá también compartir nuestro trabajo con otros programas o equipos. Para trabajar con datos guardados en ficheros es clave conocer la estructura de los datos para guardarlos y/o cargarlos. 
 
-## 1.1 Using data from built-int R
+## 1.1 Using data from built-in R
 
 Esta funcionalidad se introdujo en el tema 1 para descargar o utilizar datos de paquetes:
 
 ```{r}
+#install.packages("dplyr") Only if the package dplyr is not installed from previous sessions!
 library(dplyr)
 data(iris)
 ```
@@ -32,7 +33,7 @@ Vale la pena señalar que podemos descargar archivos de internet usando R con la
 
 Por ejemplo, si queremos utilizar el fichero iris.data del tema 1, podríamos cargarla directamente con esta función como sigue:
 ```{r}
-# data(iris) # El conjunto de datos descargado es el mismo que el conjunto iris de ejemplo de R.ç
+# data(iris) # El conjunto de datos descargado es el mismo que el conjunto iris de ejemplo de R.
 
 download.file(
   url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data", 
@@ -41,7 +42,7 @@ download.file(
 
 ```
 
-Esto guardaría el conjunto iris.data en el directorio donde lo ejecutemos con el nombre iris.data que le hemos especificado en el parámetro destfile. 
+Esta llamada a la función guardaría el conjunto iris.data en el directorio donde lo ejecutemos con el nombre iris.data que le hemos especificado en el parámetro destfile. 
 
 
 # 1.3 Exercises
@@ -65,22 +66,30 @@ El directorio de trabajo en el que ejecutamos nuestro programa es clave para lee
 ```{r}
 getwd() # conocer el path de ejecución del programa
 
+# REMINDER: DO NOT EXECUTE THESE 2 LINES
 #setwd("C:\\") # to set the new working Directory to the root in windows. 
+#setwd("/") # to set the new working Directory to the root in Linux. Try to work in user directories instead of root and OS reserved directories.
 ```
 
 ## 2.1 Generic data import
 
 ### Graphical import
 
-R Studio proporciona una interfaz gráfica para importar conjuntos de datos. Veámos esta interfaz con varios ejemplos. 
+R Studio proporciona una interfaz gráfica para importar conjuntos de datos. Veámos esta interfaz con varios ejemplos. Prestad especial atención a las cabeceras. 
+
+Ejemplo 1: Read data from text (base).
+
+Ejemplo 2: Read data from text (readr).
+
+Ejemplo 3: Read data from Excel.
 
 ### Command line import
 
 R proporciona una función para leer cualquier tipo de archivo que contenga una estructura de tipo tabla: read.table()
 
-El único requisito que tiene esta función es que los datos estén separados por un salto de línea y que en cada línea los datos estén separados por algún caracter o grupo de caracteres concreto que indican las columnas. Estos separadores varían en función del idioma del sistema operativo por defecto en excel. Los más habituales son ",", ";", ":", "\t" también conocido como tabulador, "|".  
+El único requisito que tiene esta función es que los datos estén separados por un salto de línea y que en cada línea los datos estén separados por algún caracter o grupo de caracteres concreto que indican las columnas. Estos separadores varían en función del idioma del sistema operativo por defecto en excel. Los más habituales son ",", ";", ":", "\t" también conocido como tabulador y "|".  
 
-Los siguientes datos representan un fichero csv separado por "," que se encuentran en example.csv: 
+Los siguientes datos representan un fichero csv separado por "," que se encuentran en example.csv. Prestad atención a los espacios a la hora de importar. Los ficheros CSV no suelen utilizar espacios para la separación de campos. 
 
 1, 2, 3, 4
 5, 6, 7, 8
@@ -172,11 +181,12 @@ class(bcancer) #Veamos el tipo de dato importado
 
 ## 2.3 Excel data import
 
-Existen diferentes paquetes de R que permiten leer ficheros con formato xls o xlsx (excel) directamente, sin hacer un cambio de formato a CSV. Uno de los más conocidos es xlsx, así que vamos a proceder a instalarlo y leer el mismo fichero csv en formato xls y xlsx. 
+<!-- Existen diferentes paquetes de R que permiten leer ficheros con formato xls o xlsx (excel) directamente, sin hacer un cambio de formato a CSV. Uno de los más conocidos es xlsx, así que vamos a proceder a instalarlo y leer el mismo fichero csv en formato xls y xlsx.  -->
 
 ```{r}
 # UNCOMMENT AND EXECUTE THIS LINE ONLY IF YOU ARE WORKING ON WINDOWS! 
 # install.packages("rJava", type="win.binary") # install the sources from binary for Windows
+install.packages("rJava") # install the package from CRAN
 install.packages("xlsx") # install the package from CRAN
 library("xlsx") # Load the package from CRAN
 ```
@@ -188,6 +198,8 @@ Leamos el mismo fichero con datos de cáncer de mama de la universidad de Wiscon
 
 ```{r}
 bcancer = read.xlsx(file="breast-cancer.xlsx", sheetIndex=1, header=FALSE) #SIN CABECERA
+# If that does not work, let's use a different library
+bcancer <- read_excel("breast-cancer_with_header.xlsx")
 head(bcancer)
 class(bcancer)
 ```
@@ -196,6 +208,8 @@ Ahora, leamos el mismo fichero con cabecera
 
 ```{r}
 bcancer = read.xlsx(file="breast-cancer_with_header.xlsx", sheetIndex=1, header=TRUE) #CON CABECERA
+# If that does not work, let's use a different library
+bcancer <- read_excel("breast-cancer_with_header.xlsx")
 head(bcancer)
 class(bcancer)
 ```
@@ -266,7 +280,7 @@ Los parámetros más usados de esta función son:
 
 
 ```{r}
-write.table(x = iris, file = "iris.csv", sep = ",", 
+write.table(x = iris, file = "iris_copy.csv", sep = ",", 
             row.names = FALSE, col.names = TRUE) # Elijamos como separador la , 
 ```
 

@@ -44,6 +44,7 @@ Para solicitar la entrada de datos de teclado del usuario podemos utilizar tres 
 Función utilizada para leer datos en un vector de entrada o en una lista de entrada desde la consola o un fichero. Como habitualmente, accedamos a la ayuda de la función para ver su documentación o [a la ayuda en línea de R](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/scan).
 
 ```{r}
+number_iterations = scan()
 ?scan
 ```
 
@@ -98,11 +99,23 @@ other_input = scan(text = "1 2 3") # se puede especificar el texto en el paráme
 typeof (other_input) # ¿De qué tipo son los datos?
 other_input = scan(text = "1 2 3", what=integer()) # y se puede cambiar el tipo a entero
 typeof (other_input) # ¿De qué tipo son los datos ahora?
-other_input = scan(text = "1 2 2223", what=character()) 
+other_input = scan(text = "1 2 3", what=character()) 
 typeof (other_input) # ¿De qué tipo son los datos ahora?
-other_input = scan(text = "1 2 2223 5 7 8 9 10 11", what=list(integer(),""))  # Ahora podemos leer los datos como una serie de listas. En este caso, son dos listas, la primera de enteros y la segunda de caracteres. 
+other_input = scan(text = "1 2 2223 5 7 8 9 10 11", what=list(integer()))  # Ahora podemos leer los datos como una serie de listas. En este caso, son dos listas, la primera de enteros y la segunda de caracteres. 
 typeof (other_input) # ¿De qué tipo son los datos ahora?
 # other_input = scan(text = "asd") # ¿Qué ocurre si intento leer una cadena de carácteres?
+other_variable = scan(what="integer")
+```
+
+```{r}
+
+print("How many goats got one embryo?")
+embryos_number = scan(what=integer(),n=1)
+print("What is the percentage of embryos that were actually born?")
+success_embryos_percentage = scan(what=double())
+newborn_goats = embryos_number * success_embryos_percentage
+print(newborn_goats)
+
 ```
 
 

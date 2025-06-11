@@ -229,7 +229,7 @@ include_graphics(img1_path)
 ```
 
 ```{r}
-hist(x = banco$age, main = "TITLE", 
+hist(x = bank_dataset$age, main = "TITLE", 
      xlab = "Age", ylab = "frequency")
 ```
 
@@ -246,7 +246,6 @@ include_graphics(img1_path)
 
 ```{r}
 plot(x=bank_dataset$balance,type="l")  #Simple Line Plot
-
 
 ```
 
