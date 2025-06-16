@@ -77,6 +77,21 @@ hist(VADeaths,breaks=7, col=brewer.pal(3,"Set1"),main="Set1 3 colors")
 hist(VADeaths,,breaks= 2, col=brewer.pal(8,"Set3"),main="Set3 8 colors")
 hist(VADeaths,col=brewer.pal(8,"Greys"),main="Greys 8 colors")
 hist(VADeaths,col=brewer.pal(8,"Greens"),main="Greens 8 colors", ylab="count", xlab="death rate")
+
+```
+
+Se puede modificar el número de bins del histograma y los colores cambiando los parámetros de la fuunción geom_histogram. En concreto los parámetros "bin" y "fill" respectivamente. 
+
+```{r}
+
+ggplot(iris, aes(x = iris$Sepal.Length)) +
+  geom_histogram(bins = 10, fill = "steelblue", color = "black") +
+  labs(title = "Histogram with 5 Bins", x = "Value", y = "Count") +
+  theme_minimal()
+
+ggplot(iris, aes(x = Sepal.Length)) +
+  geom_histogram(bins = 7, fill = brewer.pal(3, "Set2")[2], color = "white") +
+  labs(title = "Histogram with Set2 Color")
 ```
 
 # 3. Line Chart
@@ -89,9 +104,32 @@ AirPassengers
 plot(AirPassengers,type="l")  #Simple Line Plot
 ```
 
+Para utilizar el diagrama de líneas con ggplot2 es necesario hacer un cambio de tipado de datos. Los datos de AirPassengers son una serie temporal, y ggplot2 espera que utilicemos objetos de tipo dataframe. 
+
+En este caso, necesitamos una librería externa llamada zoo para convertir una serie temporal de tipo año/mes a dataframe, y posteriormente la llamada a ggplot2 se realizaría con la función geom_line 
+
+
+```{r}
+install.packages("zoo")
+library(zoo) 
+
+df_airpassengers <- data.frame(
+  passengers = as.numeric(AirPassengers),
+  date = as.Date(as.yearmon(time(AirPassengers)))
+)
+
+ggplot(df_airpassengers, aes(x = date, y = passengers)) +
+  geom_line(color = "black") +
+  labs(title = "AirPassengers over Time", x = "Date", y = "Passengers") +
+  theme_minimal()
+
+ggplot(iris, aes(x = iris$Petal.Length, y = iris$Petal.Width)) +
+  geom_line(color = "black") +
+  labs(title = "AirPassengers over Time", x = "Date", y = "Passengers") +
+  theme_minimal()
+```
 
 # 4. Bar Chart
-
 
 Los diagramas de barras encajan en las ocasiones que queremos comparar valores acumulados totales entre diferentes grupos. Utilicemos ahora el conjunto de datos de Iris y dibujemos un diagrama de barras que va a representar la longitud de los pétalos de diferentes ejemplos de especies de plantas.
 
@@ -120,7 +158,7 @@ table_2
 Y agrupemos las frecuencias de la longitud del sépalo distinguiendo entre la especie de cada muestra. Apliquemos la leyenda de colores para este gráfico. 
 
 ```{r}
-barplot(table_2,col  = brewer.pal(3,"Set1"), ylab="count", xlab="Sepal.length") #Stacked Plot Virginica = green, versicolor = blue, setosa = red
+barplot(table_2,col  = brewer.pal(3,"Set1"), ylab="count", xlab="Pepal.length") #Stacked Plot Virginica = green, versicolor = blue, setosa = red
 legend(x = "topright", legend = c("Virginica", "Versicolor", "Setosa"), fill = c("green", "blue", "red"), 
        title = "Species")
 ```
@@ -140,6 +178,27 @@ legend(x = "topright", legend = c("Virginica", "Versicolor", "Setosa"), fill = c
        title = "Species")
 ```
 
+Para realizar este gráfico con ggplot2 la función a ejecutar sería geom_bar(). Se puede hacer un conteo de especies, o un conteo del sepalo en función de las especies.
+Nos fijamos en los parámetros de ggplot para ver qué queremos representar.
+
+aes(x = Sepal.Length, fill = Species) para contar cuántas veces ocurre cada combinación.
+
+geom_bar() es la función para que dibuje el diagrama de barras. El parámetro position = "stack" se utiliza para apilar las barras por especie. 
+
+scale_fill_manual() para utilizar los colores iguales al código de colorbrewer con el set1.
+
+```{r}
+ggplot(iris, aes(x = Species)) +
+  geom_bar(fill = "skyblue") +
+  labs(title = "Count of Iris Species")
+
+ggplot(iris, aes(x = Sepal.Length, fill = Species)) +
+  geom_bar(position = "stack") +
+  scale_fill_manual(values = brewer.pal(3, "Set1")) +
+  labs(title = "Frecuencia de Sepal.Length por Especie",
+       x = "Sepal Length", y = "Count", fill = "Species") +
+  theme_minimal()
+```
 # 5. Box Plot
 
 El diagrama de cajas muestra 5 valores estadísticamente significativos. El mínimo, el percentil 25, la mediana, el percentil 75 y el máximo. Es útil para ver la dispersión de los datos y derivar inferencias de acuerdo a la dispersión. Vamos a crear un diagrama de cajas en base a dos variables, la longitud del pétalo y las especies. Se puede ver que hay tres grupos/categorías (especies) y se puede ver como se dispersa el valor de la longitud del pétalo para cada categoría. 
@@ -160,6 +219,17 @@ boxplot(iris$Sepal.Length~iris$Species,col=heat.colors(3))
 boxplot(iris$Sepal.Length~iris$Species,col=topo.colors(3))
 ```
 
+Para realizar este gráfico gon ggplot2 se utilizan los valores de X por la especie y 
+los valores de y de la longitud de pétalo. 
+La función aes(x = Species, y = Petal.Length) mapea especies al eje X y longitudes al eje Y. La función geom_boxplot() genera el boxplot. fill y color especifican los colores de las cajas y sus bordes.
+
+```{r}
+ggplot(iris, aes(x = Species, y = Petal.Length)) +
+  geom_boxplot(fill = "tomato", color = "black") +
+  labs(title = "Distribución de Petal.Length por Especie",
+       x = "Especie", y = "Longitud del Pétalo") +
+  theme_minimal()
+```
 # 6. Scatter Plot
 
 El último tipo de gráfico que vamos a cubrir en este tema es el diagrama de dispersión o scatter plot. En este caso, ayuda a ver de una forma visual las muestras del conjunto de datos. Veámoslo con la longitud del pétalo de iris, y posteriormente añadiendo en el otro eje la especie en lugar del número de muestra.
@@ -167,12 +237,51 @@ El último tipo de gráfico que vamos a cubrir en este tema es el diagrama de di
 ```{r}
 plot(x=iris$Petal.Length) #Simple Scatter Plot
 plot(x=iris$Petal.Length,y=iris$Species, xlab = "petal Length", ylab = "Species") #Multivariate Scatter Plot
+plot(x=iris$Petal.Length,y=iris$Petal.Width, xlab = "petal Length", ylab = "Pedal Width")
 plot(x=iris$Species,y=iris$Petal.Length)
 ```
 
 la función **plot()** también permite realizar la combinación líneal de las variables que forman parte del conjunto de datos. 
 ```{r}
 plot(iris,col=brewer.pal(3,"Set1"))
+```
+
+Por úlitmo, para generar un diagrama de puntos conocido como "scatter plot" con ggplot2 se puede utilizar la función gem_point() especificando los valores de x e y correspondientes. En este caso se utilizan diferentes parámetros para los ejes x e y. La función geom_point superpone puntos, por lo que se usa geom_jitter() para evitar superposición de puntos (como hace R automáticamente).
+
+```{r}
+ggplot(iris, aes(x = seq_along(Petal.Length), y = Petal.Length)) +
+  geom_point(color = "steelblue") +
+  labs(title = "Petal Length vs Index",
+       x = "Índice de muestra", y = "Longitud del Pétalo") +
+  theme_minimal()
+
+ggplot(iris, aes(x = Petal.Length, y = Species)) +
+  geom_jitter(height = 0.1, color = "darkgreen") +
+  labs(title = "Petal Length por Especie (Dispersión)",
+       x = "Longitud del Pétalo", y = "Especie") +
+  theme_minimal()
+
+ggplot(iris, aes(x = Petal.Length, y = Petal.Width)) +
+  geom_jitter(height = 0.1, color = "darkgreen") +
+  labs(title = "Petal Length por Especie (Dispersión)",
+       x = "Longitud del Pétalo", y = "Especie") +
+  theme_minimal()
+
+ggplot(iris, aes(x = Species, y = Petal.Length)) +
+  geom_jitter(width = 0.1, color = "purple") +
+  labs(title = "Petal Length por Especie (Dispersión)",
+       x = "Especie", y = "Longitud del Pétalo") +
+  theme_minimal()
+```
+
+Extra (Bonus): Con color por especie. Si quieres que los puntos estén coloreados según la especie (útil para visualización):
+
+```{r}
+ggplot(iris, aes(x = Species, y = Petal.Length, color = Species)) +
+  geom_jitter(width = 0.1, size = 2) +
+  labs(title = "Petal Length por Especie (coloreado)",
+       x = "Especie", y = "Longitud del Pétalo") +
+  theme_minimal()
 ```
 # 7. Exercises
 
