@@ -27,6 +27,7 @@ Primero, carguemos los paquetes necesarios y leemos nuestro conjunto de datos si
 ```{r packages}
 # Load required packages
 library(tidyverse) # Data manipulation and visualization
+theme_set(theme_minimal())
 library(psych) # Psychological research tools (includes alpha)
 library(corrplot) # Correlation plots
 library(survey) # Survey analysis with weights
@@ -54,7 +55,7 @@ colSums(is.na(survey_data))
 # 1. Limpieza y Preparación de Datos
 
 ```{r data-cleaning-factors}
-# 1. Forzamos factores
+# Forzamos factores
 survey_clean <- survey_data %>%
     mutate(
         # Convertir variables categóricas a factores con orden apropiado
@@ -191,7 +192,6 @@ ggplot(survey_clean, aes(x = stratum, y = job_satisfaction_score, fill = stratum
         x = "Estrato",
         y = "Puntuación Promedio de Satisfacción Laboral (1-5)"
     ) +
-    theme_minimal() +
     theme(legend.position = "none")
 
 # Gráfico de barras apiladas para intención de permanencia
@@ -366,7 +366,7 @@ print(ttest_survey)
 
 Fíjate que hemos usado `svychisq()` y `svyttest()` en lugar de `chisq.test()` y `t.test()` para gestionar nuestro diseño muestral complejo. Los métodos estándar pueden dar resultados incorrectos al ignorar pesos y estratificación.
 
-# 6. Análisis Ponderado de Satisfacción
+# 6  . Análisis Ponderado de Satisfacción
 
 Queremos entender qué factores predicen la satisfacción laboral promedio. Usamos una regresión ponderada con `svyglm()`, que incorpora el diseño muestral.
 
