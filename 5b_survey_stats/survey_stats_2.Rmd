@@ -1,0 +1,377 @@
+---
+title: "Análisis de Encuestas con R: Taller Práctico"
+output: 
+  html_document:
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width = 8, fig.height = 5)
+```
+
+# Antes de empezar...
+
+Instala las siguientes librerías:
+
+```{r install}
+# install.packages(c("psych", "survey"))
+```
+
+# Introducción
+
+Este taller cubre técnicas esenciales para analizar datos de cuestionarios y encuestas en R. Trabajaremos con un conjunto de datos simulado pero realista de una encuesta de satisfacción laboral. Asumiremos que la encuesta no usa muestreo aleatorio sino que muestreamos en estratos **urbanos** y **rurales** con diferentes probabilidades.
+
+Primero, carguemos los paquetes necesarios y leemos nuestro conjunto de datos sintético.
+
+```{r packages}
+# Load required packages
+library(tidyverse) # Data manipulation and visualization
+library(psych) # Psychological research tools (includes alpha)
+library(corrplot) # Correlation plots
+library(survey) # Survey analysis with weights
+```
+
+```{r load-data}
+survey_data <- read_csv("encuesta_empleados.csv")
+```
+
+Examinemos la estructura de nuestros datos:
+
+```{r data-overview}
+# Visión general rápida de los datos
+glimpse(survey_data)
+
+# Estadísticas resumen
+summary(survey_data)
+
+# Verificar valores faltantes
+cat("Total de valores faltantes:", sum(is.na(survey_data)), "\n")
+cat("Valores faltantes por variable:\n")
+colSums(is.na(survey_data))
+```
+
+# 1. Limpieza y Preparación de Datos
+
+```{r data-cleaning-factors}
+# 1. Forzamos factores
+survey_clean <- survey_data %>%
+    mutate(
+        # Convertir variables categóricas a factores con orden apropiado
+        stratum = factor(stratum),
+        sex = factor(sex),
+        department = factor(department),
+        # Likely to staty es un Ordered Factor!!
+        likely_to_stay = factor(likely_to_stay,
+            levels = c("Muy improbable", "Improbable", "Neutral", "Probable", "Muy probable"),
+            ordered = TRUE
+        )
+    )
+```
+
+## Recodificación de Ítems Negativos y Puntuaciones Compuestas
+
+### ¿Qué son los ítems formulados negativamente?
+
+En las encuestas, algunos ítems se formulan de manera **negativa** para evitar el **sesgo de aquiescencia** (la tendencia a estar de acuerdo con todo). Por ejemplo:
+
+-   **Ítem positivo**: "Disfruto mi trabajo"
+-   **Ítem negativo**: "Mi trabajo es estresante"
+
+Si alguien está muy satisfecho laboralmente, debería puntuar **alto** en el primer ítem pero **bajo** en el segundo. Para crear una escala coherente, necesitamos **recodificar** (invertir) los ítems negativos.
+
+### ¿Qué son las puntuaciones compuestas?
+
+Una **puntuación compuesta** es el promedio (o suma) de varios ítems que miden el mismo constructo. En lugar de analizar ítem por ítem, creamos una sola puntuación que represente el nivel general de satisfacción, estrés, etc.
+
+**Ventajas**: - Mayor confiabilidad (varios ítems \> un ítem) - Reduce el ruido de medición - Facilita interpretación y análisis
+
+```{r data-cleaning-recoding}
+survey_clean <- survey_clean %>%
+    mutate(
+        # RECODIFICACIÓN INVERSA: Algunos ítems están formulados negativamente
+        # Fórmula: nuevo_valor = (máximo + mínimo) - valor_original
+        # Para escala 1-5: nuevo_valor = 6 - valor_original
+        js3_work_stressful_rev = 6 - js3_work_stressful, # Revertir "Mi trabajo es estresante"
+        wl2_work_interferes_life_rev = 6 - wl2_work_interferes_life, # Revertir "El trabajo interfiere con mi vida"
+
+        # Crear puntuaciones compuestas (después de recodificación)
+        job_satisfaction_score = (js1_enjoy_work + js2_motivated + js3_work_stressful_rev + js4_recommend_workplace) / 4,
+        work_life_balance_score = (wl1_reasonable_hours + wl2_work_interferes_life_rev + wl3_flexible_schedule) / 3,
+    )
+```
+
+Finalmente, podemos crear versiones categóricas de algunas variables para una interpretación más sencilla.
+
+```{r data-cleaning-categories}
+survey_clean <- survey_clean %>%
+    mutate(
+        # Crear versiones categóricas para interpretación más fácil
+        job_sat_category = case_when(
+            job_satisfaction_score >= 4 ~ "Alta",
+            job_satisfaction_score >= 3 ~ "Media",
+            TRUE ~ "Baja"
+        ),
+        job_sat_category = factor(job_sat_category, levels = c("Baja", "Media", "Alta"))
+    )
+```
+
+## Manejo de Valores Faltantes
+
+Los valores faltantes (NA) **no siempre son aleatorios** y debemos manejarlos con cuidado. A veces, el hecho de que alguien no responda una pregunta es informativo por sí mismo. A modo ilustrativo, analicemos los valores faltantes en `income_satisfaction`:
+
+```{r data-cleaning-na}
+survey_clean %>%
+    mutate(income_missing = is.na(income_satisfaction)) %>%
+    group_by(income_missing) %>%
+    summarise(
+        n = n(),
+        avg_job_satisfaction = mean(job_satisfaction_score),
+        avg_overall_satisfaction = mean(overall_satisfaction)
+    )
+```
+
+¡Los valores faltantes son informativos! Los empleados con menor satisfacción general tienden más a no responder sobre ingresos. En este caso, una solución como la IMPUTACIÓN podría sesgar los resultados. Mejor: crear una categoría 'No responde' o usar métodos avanzados.
+
+```{r data-cleaning-na-2}
+# Para este taller, creamos una categoría explícita para NA
+survey_clean <- survey_clean %>%
+    mutate(
+        income_satisfaction_cat = case_when(
+            is.na(income_satisfaction) ~ "No responde",
+            income_satisfaction <= 2 ~ "Insatisfecho",
+            income_satisfaction == 3 ~ "Neutral",
+            income_satisfaction >= 4 ~ "Satisfecho"
+        ),
+        income_satisfaction_cat = factor(income_satisfaction_cat,
+            levels = c("Insatisfecho", "Neutral", "Satisfecho", "No responde")
+        )
+    )
+```
+
+# 2. Visualizaciones Esenciales
+
+## Respuestas de Escala Likert
+
+```{r viz-likert}
+# Visualizar ítems individuales de Likert (incluyendo los recodificados)
+likert_data <- survey_clean %>%
+    select(js1_enjoy_work, js2_motivated, js3_work_stressful_rev, js4_recommend_workplace) %>%
+    pivot_longer(everything(), names_to = "item", values_to = "response") %>%
+    mutate(
+        item = recode(item,
+            "js1_enjoy_work" = "Disfruto mi trabajo",
+            "js2_motivated" = "Me siento motivado/a",
+            "js3_work_stressful_rev" = "Mi trabajo NO es estresante (recodificado)",
+            "js4_recommend_workplace" = "Recomendaría este lugar de trabajo"
+        )
+    ) %>%
+    mutate(response = factor(response), item = factor(item))
+
+ggplot(likert_data, aes(x = response, fill = response)) +
+    geom_bar() +
+    facet_wrap(~item, scales = "free_y") +
+    labs(
+        title = "Distribución de Ítems de Satisfacción Laboral",
+        x = "Respuesta (1=Totalmente en desacuerdo, 5=Totalmente de acuerdo)",
+        y = "Frecuencia"
+    ) +
+    guides(fill = "none")
+```
+
+## Comparaciones por Grupos
+
+```{r viz-groups}
+# Comparar satisfacción por estrato
+ggplot(survey_clean, aes(x = stratum, y = job_satisfaction_score, fill = stratum)) +
+    geom_boxplot(alpha = 0.7) +
+    geom_jitter(width = 0.2, alpha = 0.3) +
+    labs(
+        title = "Satisfacción Laboral por Estrato",
+        x = "Estrato",
+        y = "Puntuación Promedio de Satisfacción Laboral (1-5)"
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none")
+
+# Gráfico de barras apiladas para intención de permanencia
+ggplot(survey_clean, aes(x = department, fill = likely_to_stay)) +
+    geom_bar(position = "fill") +
+    labs(
+        title = "Intención de Permanencia por Departamento",
+        x = "Departamento",
+        y = "Proporción",
+        fill = "Intención de Permanencia"
+    ) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Análisis de Correlación
+
+```{r viz-correlation}
+# Matriz de correlación de variables clave
+cor_data <- survey_clean %>%
+    select(
+        js1_enjoy_work, js2_motivated, js3_work_stressful_rev, js4_recommend_workplace,
+        wl1_reasonable_hours, wl2_work_interferes_life_rev, wl3_flexible_schedule,
+        overall_satisfaction, age
+    ) %>%
+    cor(use = "complete.obs")
+
+# Gráfico de correlación
+corrplot(cor_data,
+    method = "color", type = "upper",
+    order = "hclust", tl.cex = 0.8, tl.col = "black",
+    title = "Matriz de Correlación de Ítems de Encuesta",
+    mar = c(0, 0, 2, 0)
+)
+
+# Gráfico de dispersión de relaciones clave
+ggplot(survey_clean, aes(x = job_satisfaction_score, y = income_satisfaction)) +
+    geom_jitter(width = 0.01, alpha = 0.6, aes(color = stratum)) +
+    geom_smooth(method = "lm", color = "red") +
+    labs(
+        title = "Satisfacción Laboral vs Satisfacción Retribución",
+        x = "Puntuación de Satisfacción Laboral (1-5)",
+        y = "Puntuación de Satisfacción Retributiva (1-5)",
+        color = "Estrato"
+    )
+```
+
+# 3. Análisis de Confiabilidad (Alfa de Cronbach)
+
+Las escalas de encuesta están compuestas por varios ítems que intentan medir un mismo constructo (como la satisfacción laboral). Para asegurarnos de que esos ítems efectivamente están capturando algo coherente entre sí, evaluamos la confiabilidad interna.
+
+Una medida muy común es el Alfa de Cronbach, que varía entre 0 y 1:
+
+-   Valores ≥ 0.8 indican muy buena consistencia interna.
+
+-   Valores entre 0.7 y 0.8 se consideran aceptables.
+
+-   Valores menores a 0.7 podrían sugerir que los ítems no están bien alineados.
+
+El alfa se basa en las correlaciones entre ítems: si todos miden lo mismo, deberían estar correlacionados.
+
+```{r reliability}
+interpret_alpha <- function(alpha) {
+    if (alpha$total$std.alpha >= 0.8) {
+        cat("Confiabilidad excelente (≥0.8)\n")
+    } else if (alpha$total$std.alpha >= 0.7) {
+        cat("Confiabilidad aceptable (≥0.7)\n")
+    } else {
+        cat("Confiabilidad cuestionable (<0.7)\n")
+    }
+}
+
+# Verificar confiabilidad de nuestra escala de satisfacción laboral
+job_sat_items <- survey_clean %>%
+    select(js1_enjoy_work, js2_motivated, js3_work_stressful_rev, js4_recommend_workplace)
+
+alpha_job_sat <- psych::alpha(job_sat_items)
+cat("Confiabilidad de la Escala de Satisfacción Laboral:\n")
+cat("Alfa de Cronbach =", round(alpha_job_sat$total$std.alpha, 3), "\n")
+interpret_alpha(alpha_job_sat)
+
+
+# Verificar escala de balance trabajo-vida
+wl_items <- survey_clean %>%
+    select(wl1_reasonable_hours, wl2_work_interferes_life_rev, wl3_flexible_schedule)
+
+alpha_wl <- psych::alpha(wl_items)
+cat("\nConfiabilidad de la Escala de Balance Trabajo-Vida:\n")
+cat("Alfa de Cronbach =", round(alpha_wl$total$std.alpha, 3), "\n")
+interpret_alpha(alpha_wl)
+```
+
+# 4. Diseño Muestral y Ponderación
+
+Supongamos que realizamos una encuesta a empleados de una gran organización con presencia tanto en áreas **urbanas** como **rurales**. Asumamos que, en nuestro ejemplo:
+
+- La **población real** está compuesta por:
+  - 80% empleados urbanos (U)
+  - 20% empleados rurales (R)
+  
+- Sin embargo, en la **muestra** obtuvimos:
+  - 60% empleados urbanos
+  - 40% empleados rurales
+
+Esto significa que los empleados rurales están **sobrerrepresentados** en la muestra: mientras que solo constituyen el 20% de la población, representan el 40% de la muestra.
+
+### ¿Por qué necesitamos ponderar?
+
+Si calculáramos estadísticas directamente sobre esta muestra (por ejemplo, satisfacción media), daríamos **demasiado peso** a las respuestas rurales. Esto introduciría **sesgo** en las estimaciones porque la muestra **no refleja la estructura real** de la población.
+
+Para corregir esto, usamos **pesos muestrales**, que consisten en:
+
+> **peso = proporción en la población / proporción en la muestra**
+
+
+
+```{r survey-design}
+survey_clean <- survey_clean %>%
+    mutate(
+        weight = case_when(
+            stratum == "Urbano" ~ 0.8 / 0.6,
+            stratum == "Rural" ~ 0.2 / 0.4
+        )
+    )
+
+# Crear objeto de diseño muestral
+design <- svydesign(
+    ids = ~1, # sin  clustering
+    strata = ~stratum, # estratificado por urbano/rural
+    weights = ~weight, # pesos de muestreo
+    data = survey_clean
+)
+
+cat("Diseño muestral creado. Resumen:\n")
+print(design)
+```
+
+Ahora podemos usar este diseño para calcular estimaciones que sean **representativas** de la población.
+
+# 5. Análisis Estadístico con Diseño Muestral
+
+## Pruebas de Asociación e Independencia
+
+Vamos a examinar si existe una relación significativa entre el estrato (urbano/rural) y la intención de permanencia en la empresa.
+
+Recordatorio: la prueba de Chi-cuadrado de independencia evalúa si dos variables categóricas están asociadas. En contexto de encuestas, usamos `svychisq()` que ajusta por pesos y estratificación.
+
+```{r stats-survey}
+# Usando el paquete survey para pruebas que respetan el diseño muestral
+
+# Tabla de contingencia ponderada
+contingency_table <- svytable(~ stratum + likely_to_stay, design)
+print(contingency_table)
+
+# Prueba de independencia ajustada por diseño
+independence_test <- svychisq(~ stratum + likely_to_stay, design)
+print(independence_test)
+```
+
+Ahora vamos a comparar la satisfacción laboral promedio entre hombres y mujeres, ajustando por el diseño muestral.
+
+Usamos `svyttest()` en lugar de `t.test()` porque respeta el peso de cada observación
+
+```{r stats-survey-2}
+# Medias por grupo con intervalos de confianza
+means_by_sex <- svyby(~job_satisfaction_score, ~sex, design, svymean)
+print(means_by_sex)
+
+# Prueba de diferencia de medias
+ttest_survey <- svyttest(job_satisfaction_score ~ sex, design)
+print(ttest_survey)
+```
+
+Fíjate que hemos usado `svychisq()` y `svyttest()` en lugar de `chisq.test()` y `t.test()` para gestionar nuestro diseño muestral complejo. Los métodos estándar pueden dar resultados incorrectos al ignorar pesos y estratificación.
+
+# 6. Análisis Ponderado de Satisfacción
+
+Queremos entender qué factores predicen la satisfacción laboral promedio. Usamos una regresión ponderada con `svyglm()`, que incorpora el diseño muestral.
+
+
+```{r weighted-model}
+model <- svyglm(job_satisfaction_score ~ age + sex, design = design)
+summary(model)
+```
