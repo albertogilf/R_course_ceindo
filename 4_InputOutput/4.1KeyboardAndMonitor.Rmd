@@ -37,7 +37,8 @@ Se define la entrada y salida del ordenador como la comunicación entre un progr
 
 # 2. Reading from the Keyboard
 
-Para solicitar la entrada de datos de teclado del usuario podemos utilizar tres funciones: scan(), readline() y print(). 
+Para solicitar la entrada de datos por teclado podemos utilizar principalmente las funciones `scan()` y `readline()`. La función `print()` no se utiliza para leer datos, sino para mostrar resultados por pantalla.
+
 
 ## 2.1 scan() 
 
@@ -50,7 +51,7 @@ number_iterations = scan()
 
 Se pueden apreciar todos los parámetros que recibe esta función y sus valores por defecto, pero algunos de ellos
 
-```{r}
+```{r, eval=false}
 inp = scan() # estoy leyendo datos por pantalla y guardándolos en la variable inp
 inp # imprimo los datos leídos por pantalla. 
 typeof (inp) # ¿De qué tipo son los datos leídos?
@@ -69,7 +70,8 @@ typeof (inp) # ¿De qué tipo son los datos leídos?
 
 Esta función nos va a permitir a través de sus parámetros especificar diferentes opciones, siendo las más relevantes las siguientes:
 
-1. **file**: el nombre del fichero sobre el que se van a leer los datos. Este parámetro es opcional y, en caso de tomar el valor por defecto '""', esperará la introducción de datos por la entrada estándar del programa, que habitualmente es el teclado. En este caso, la entrada de datos terminará cuando se introduzca un retorno de carro. Si se indica un fichero, se puede indicar el path relativo al lugar de ejecución de R (ejecutar función 'getwd()' para conocer el path), o el path relativo si es un path absoluto. 
+1. **file**: el nombre del fichero sobre el que se van a leer los datos. Este parámetro es opcional y, en caso de tomar el valor por defecto '""', esperará la introducción de datos por la entrada estándar del programa, que habitualmente es el teclado. En este caso, la entrada de datos terminará cuando se introduzca un retorno de carro. Si se indica un fichero, se puede proporcionar un path relativo al directorio de trabajo actual de R —que podemos consultar con `getwd()`— o un path absoluto.
+
 
 **Recordatorio**: un path es un directorio del equipo donde se ejecuta el programa. Puede ser absoluto empieza por '/...' en sistemas operativos unix-like o por el nombre de la unidad ('C:/...') en sistemas operativos windows-like, o relativo si comienza por cualquier otro directorio. 
 
@@ -104,22 +106,21 @@ typeof (other_input) # ¿De qué tipo son los datos ahora?
 other_input = scan(text = "1 2 2223 5 7 8 9 10 11", what=list(integer()))  # Ahora podemos leer los datos como una serie de listas. En este caso, son dos listas, la primera de enteros y la segunda de caracteres. 
 typeof (other_input) # ¿De qué tipo son los datos ahora?
 # other_input = scan(text = "asd") # ¿Qué ocurre si intento leer una cadena de carácteres?
-other_variable = scan(what="integer")
+other_variable = scan(what=integer(), n = 1)
 ```
 
-```{r}
-
+```{r, eval=FALSE}
 print("How many goats got one embryo?")
-embryos_number = scan(what=integer(),n=1)
+embryos_number = scan(what = integer(),n = 1, quiet = TRUE)
 print("What is the percentage of embryos that were actually born?")
-success_embryos_percentage = scan(what=double())
+success_embryos_percentage = scan(what = double(), n = 1, quiet = TRUE)
 newborn_goats = embryos_number * success_embryos_percentage
 print(newborn_goats)
 
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 getwd() # conocer el path de ejecución del programa
 ```
 
@@ -129,7 +130,7 @@ getwd() # conocer el path de ejecución del programa
 
 La función readline es mucho más simple que scan. Lee una línea de texto 
 
-```{r}
+```{r, eval=FALSE}
 myLine = readline()
 print(myLine)
 typeof(myLine)
@@ -154,11 +155,12 @@ E imprimamos nuestra primera variable
 print(myLine) # Deberá imprimir la línea leída anteriormente. En caso contrario, puedo crear una variable e imprimirla. 
 ```
 
-Si quiero imprimir valores numéricos, puedo especificar el número de decimales significativos a imprimir:
+Si quiero imprimir valores numéricos, puedo especificar el número de dígitos significativos. Si necesito fijar el número de decimales, es preferible usar funciones como `round()`, `sprintf()` o `formatC()`.
+
 ```{r}
 myValue = 6/7
-print(myValue, digits = 2) # 2 decimales impresos
-print(myValue, digits = 4) # 4 decimales impresos
+print(myValue, digits = 2) # 2 dígitos significativos
+print(myValue, digits = 4) # 4 dígitos significativos
 ```
 
 

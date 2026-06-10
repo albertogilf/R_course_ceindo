@@ -37,7 +37,7 @@ Se define la entrada y salida del ordenador como la comunicación entre un progr
 
 # 2. Reading from the Keyboard
 
-Para solicitar la entrada de datos de teclado del usuario podemos utilizar tres funciones: scan(), readline() y print(). 
+Para solicitar la entrada de datos por teclado podemos utilizar principalmente las funciones `scan()` y `readline()`. La función `print()` no se utiliza para leer datos, sino para mostrar resultados por pantalla.
 
 ## 2.1 scan() 
 
