@@ -1,0 +1,144 @@
+---
+title: "Evaluación curso R"
+author: "Sergio Gallego Montejo"
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Entrega
+
+- Recuerda completar tu **nombre en el apartado author**.
+- Además del código, no olvides completar las respuestas a las preguntas
+  indicadas en negrita.
+- Si tienes dudas/dificultades, **puedes contactar con los profesores**.
+- Deadline: **24-06-2026**
+- Puedes realizar la entrega en el mail:
+  [**constantino.garciama\@ceu.es**](mailto:constantino.garciama@ceu.es){.email}.
+- La entrega consistirá en el fichero que se genera al hacer `Knit` (un
+  fichero `html` o `pdf`).
+
+## Apuestas de adolescentes en UK
+
+El conjunto de datos `teengamb.csv` contiene datos sobre las tasas de
+juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es **si los
+ingresos del adolescente y su sexo influyen en la cantidad de dinero
+apostado (céntrate solo en las variables `income`, `sex` y `gamble`)**
+... Sigue los siguientes pasos para crear un ANCOVA...
+
+### 1a) Carga los datos...
+
+```{r}
+library(readr)
+teengamb <- read_csv("teengamb.csv")
+teengamb
+
+```
+
+### 1b) Visualiza los datos...
+
+...para valorar si el modelo debe incluir interacciones. Para ello,
+escribe el código que genera una gráfica similar a la siguiente:
+
+![](expected-plot.png)
+
+```{r, dev='png'}
+library("tidyverse")  # carga ggplot
+
+# completa el siguiente código
+ggplot(teengamb, aes(x = income, y = gamble, col = sex)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+```
+
+La gráfica anterior apoya que hay interacciones entre las variables
+`sex` e `income`. **Explica los motivos brevemente** (Pista: ¿son las
+rectas paralelas?)
+
+Sí, existe una relación entre el sexo y los ingresos, ya que se observa
+que las rectas de regresión no son paralelas. En el caso de los hombres,
+la recta presenta una pendiente ascendente, lo que indica que, a medida
+que aumentan sus ingresos, existe una tendencia a apostar más. En
+cambio, en el caso de las mujeres, la recta tiene una pendiente
+prácticamente nula (ligeramente descendente), lo que sugiere que, a
+diferencia de los hombres, sus apuestas no aumentan al incrementar sus
+ingresos e incluso podrían disminuir ligeramente a medida que aumenta su
+poder adquisitivo. Por tanto, la gráfica proporciona evidencia de una
+posible interacción entre el sexo y los ingresos.
+
+### 2) Crea el modelo...
+
+... y obtén los intervalos de confianza para los coeficientes y su
+significación.
+
+```{r}
+# Crea un modelo con interacciones en base a tu conclusión del apartado anterior
+gamb_model <- lm(gamble ~ income * sex, data = teengamb)
+
+# Obtén p-valores e intervalos de confianza. Usa summary y confint
+summary(gamb_model)
+confint(gamb_model)
+```
+
+### 3) Valora si las asunciones del modelo se cumplen
+
+```{r}
+# Interpretar las 4 gráficas siguientes para decidir si las asunciones del modelo
+# se cumplen
+plot(gamb_model, ask = FALSE)
+
+
+```
+
+**¿Es el modelo correcto?:** Las gráficas diagnósticas indican que las
+asunciones del modelo lineal se cumplen razonablemente bien. Los
+residuos no muestran patrones sistemáticos, presentan aproximadamente
+normalidad y varianza constante. Se observan algunos valores atípicos
+(observaciones 23, 34 y 41), pero no parecen afectar de forma importante
+al ajuste global del modelo, por lo que el modelo se considera válido
+
+### 4) Interpreta los coeficientes y escribe tus conclusiones.
+
+De la tabla de p-valores, podemos concluir que para las mujeres:
+$$gambling = 6.87 - 0.5489 * income$$ Mientras que para hombres:
+$$gambling =  8.72  + 4.8561 * income.$$ Fíjate que el coeficiente
+-0.5489 no es significativo, mientras que el salto en las pendientes
+entre mujeres y hombres es de 5.4050 y sí es significativo.
+
+**¿Cuáles de las siguientes conclusiones son correctas? (puede haber
+varias)**
+
+a)  Los hombres y mujeres adolescentes apuestan de la misma forma.
+b)  No evidencia suficiente de que las mujeres apuesten de forma
+    diferente según sus ingresos.
+c)  Para los hombres: a mayor nivel de ingresos, mayor cantidad
+    apostada.
+d)  La diferencia entre las pendientes de hombres y mujeres no es
+    significativa.
+
+Las opciones correctas son b y c. La justificación es la siguiente:
+
+a\. Es falsa porque la interacción income:sexmale tiene un p-valor
+significativo. Eso significa que la pendiente de income es diferente
+según el sexo. Si apostaran igual, esa diferencia de pendientes (5.4050)
+no sería significativa.
+
+b\. Es verdadera porque el coeficiente income (-0.5489) corresponde a la
+pendiente de las mujeres, y su p-valor no es significativo (\> 0,05). No
+podemos afirmar que el ingreso afecte al juego en mujeres.
+
+c\. Es verdadera porque la pendiente de los hombres es −0.5489 + 5.4050
+=4.8561, que es positiva, por lo que puede decirse que conforme aumentan
+los ingresos de los hombres, también aumenta la cantidad que apuestan.
+Sin embargo, no podemos determinar que esto sea estadisticamente
+significativo, ya que tendríamos que cambiar el test para que la
+referencia pasaran a ser los hombres.
+
+d\. Es falsa porque income:sexmale = 5.4050 tiene p-valor significativo,
+lo que indica exactamente que esa diferencia de pendientes sí existe en
+la población.
